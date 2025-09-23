@@ -1,7 +1,9 @@
 import SwiftUI
+import AppKit
 
 public struct SettingsView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
+    @Environment(\.dismiss) private var dismiss
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
@@ -44,6 +46,35 @@ public struct SettingsView: View {
                         }
                         .pickerStyle(.segmented)
                     }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("選單列顯示模式:")
+                        Picker("顯示模式", selection: $viewModel.preferences.menuBarDisplayMode) {
+                            ForEach(UserPreferences.MenuBarDisplayMode.allCases, id: \.self) { mode in
+                                VStack(alignment: .leading) {
+                                    Text(mode.displayName)
+                                    Text(mode.description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .tag(mode)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        // Preview
+                        HStack {
+                            Text("預覽:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(viewModel.menuBarText)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(Color.secondary.opacity(0.1))
+                                .cornerRadius(4)
+                        }
+                    }
                 }
 
                 Section("系統設定") {
@@ -61,12 +92,12 @@ public struct SettingsView: View {
                 Spacer()
 
                 Button("關閉") {
-                    NSApplication.shared.keyWindow?.close()
+                    dismiss()
                 }
                 .buttonStyle(.borderedProminent)
             }
         }
         .padding()
-        .frame(width: 400, height: 400)
+        .frame(width: 400, height: 500)
     }
 }

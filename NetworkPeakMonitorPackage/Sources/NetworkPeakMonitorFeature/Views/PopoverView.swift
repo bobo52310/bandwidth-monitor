@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 public struct PopoverView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
@@ -56,6 +57,14 @@ public struct PopoverView: View {
                     planSpeed: viewModel.preferences.downloadPlanSpeed,
                     viewModel: viewModel
                 )
+
+                HourlyPeakRow(
+                    label: "1小時峰值",
+                    speed: viewModel.peakRecorder.hourlyPeakDownload,
+                    time: viewModel.peakRecorder.hourlyPeakDownloadTime,
+                    unit: viewModel.preferences.displayUnit,
+                    viewModel: viewModel
+                )
             }
 
             Divider()
@@ -93,6 +102,49 @@ public struct PopoverView: View {
                     planSpeed: viewModel.preferences.uploadPlanSpeed,
                     viewModel: viewModel
                 )
+
+                HourlyPeakRow(
+                    label: "1小時峰值",
+                    speed: viewModel.peakRecorder.hourlyPeakUpload,
+                    time: viewModel.peakRecorder.hourlyPeakUploadTime,
+                    unit: viewModel.preferences.displayUnit,
+                    viewModel: viewModel
+                )
+            }
+
+            Divider()
+
+            // Peak Approach Counter Section
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    Text("今日接近峰值")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+
+                HStack {
+                    Text("次數: \(viewModel.peakApproachTracker.todayApproachCount)")
+                        .font(.body)
+                    Spacer()
+                }
+
+                if !viewModel.peakApproachTracker.approachTimestamps.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 4) {
+                            ForEach(viewModel.peakApproachTracker.getFormattedApproachTimes(), id: \.self) { time in
+                                Text(time)
+                                    .font(.caption)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.orange.opacity(0.2))
+                                    .cornerRadius(4)
+                            }
+                        }
+                        .padding(.horizontal, 1)
+                    }
+                }
             }
 
             Divider()
@@ -102,9 +154,16 @@ public struct PopoverView: View {
                 viewModel.resetPeaks()
             }
             .buttonStyle(.bordered)
+
+            // Quit Button
+            Button("退出應用程式") {
+                NSApplication.shared.terminate(nil)
+            }
+            .buttonStyle(.borderedProminent)
         }
         .padding()
-        .frame(width: 350, height: 320)
+        .padding(.top, 8)
+        .frame(width: 350, height: 500)
         .sheet(isPresented: $showingSettings) {
             SettingsView(viewModel: viewModel)
         }
@@ -134,6 +193,31 @@ struct SpeedRow: View {
                     .foregroundColor(.red)
                     .font(.caption)
                     .fontWeight(.bold)
+            }
+            Spacer()
+        }
+    }
+}
+
+struct HourlyPeakRow: View {
+    let label: String
+    let speed: Double
+    let time: Date?
+    let unit: UserPreferences.SpeedUnit
+    let viewModel: NetworkMonitorViewModel
+
+    var body: some View {
+        HStack {
+            Text(label + ":")
+                .frame(maxWidth: 80, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(viewModel.formatSpeed(speed, unit: unit) + " " + unit.displayName)
+                    .font(.body)
+                if let time = time {
+                    Text(viewModel.formatTime(time))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
             Spacer()
         }

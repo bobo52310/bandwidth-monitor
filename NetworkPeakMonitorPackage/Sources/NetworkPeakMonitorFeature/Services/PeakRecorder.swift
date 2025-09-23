@@ -6,17 +6,33 @@ public class PeakRecorder: ObservableObject {
     @Published public var todayPeakUpload: Double = 0
     @Published public var allTimePeakDownload: Double = 0
     @Published public var allTimePeakUpload: Double = 0
+    @Published public var hourlyPeakDownload: Double = 0
+    @Published public var hourlyPeakUpload: Double = 0
+    @Published public var hourlyPeakDownloadTime: Date?
+    @Published public var hourlyPeakUploadTime: Date?
 
     private let userDefaults = UserDefaults.standard
     private var cancellables = Set<AnyCancellable>()
+    private var speedHistory: [(speed: NetworkSpeed, timestamp: Date)] = []
 
     public init() {
         loadPeakData()
     }
 
     public func recordSpeed(_ speed: NetworkSpeed) {
-        let today = Calendar.current.startOfDay(for: Date())
+        let now = Date()
+        let today = Calendar.current.startOfDay(for: now)
         let lastRecordDate = userDefaults.object(forKey: "lastRecordDate") as? Date ?? Date.distantPast
+
+        // Add to speed history
+        speedHistory.append((speed: speed, timestamp: now))
+
+        // Clean old entries (keep only last hour)
+        let oneHourAgo = now.addingTimeInterval(-3600)
+        speedHistory = speedHistory.filter { $0.timestamp > oneHourAgo }
+
+        // Update hourly peaks
+        updateHourlyPeaks()
 
         // Reset today's peaks if it's a new day
         if !Calendar.current.isDate(lastRecordDate, inSameDayAs: today) {
@@ -53,12 +69,34 @@ public class PeakRecorder: ObservableObject {
         todayPeakUpload = 0
         allTimePeakDownload = 0
         allTimePeakUpload = 0
+        hourlyPeakDownload = 0
+        hourlyPeakUpload = 0
+        hourlyPeakDownloadTime = nil
+        hourlyPeakUploadTime = nil
+        speedHistory.removeAll()
 
         userDefaults.removeObject(forKey: "todayPeakDownload")
         userDefaults.removeObject(forKey: "todayPeakUpload")
         userDefaults.removeObject(forKey: "allTimePeakDownload")
         userDefaults.removeObject(forKey: "allTimePeakUpload")
         userDefaults.removeObject(forKey: "lastRecordDate")
+    }
+
+    private func updateHourlyPeaks() {
+        guard !speedHistory.isEmpty else { return }
+
+        let downloadPeak = speedHistory.max(by: { $0.speed.downloadMbps < $1.speed.downloadMbps })
+        let uploadPeak = speedHistory.max(by: { $0.speed.uploadMbps < $1.speed.uploadMbps })
+
+        if let downloadPeak = downloadPeak {
+            hourlyPeakDownload = downloadPeak.speed.downloadMbps
+            hourlyPeakDownloadTime = downloadPeak.timestamp
+        }
+
+        if let uploadPeak = uploadPeak {
+            hourlyPeakUpload = uploadPeak.speed.uploadMbps
+            hourlyPeakUploadTime = uploadPeak.timestamp
+        }
     }
 
     private func loadPeakData() {

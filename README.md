@@ -10,7 +10,11 @@
 
 - **即時網速顯示** - 在選單列顯示當前上傳/下載速度
 - **峰值記錄追蹤** - 自動記錄今日峰值和歷史最高峰值
+- **1小時峰值追蹤** - 顯示最近1小時內的最高速度和發生時間
+- **接近峰值計數器** - 記錄每日接近合約速度的次數和時間點
 - **智能警示提醒** - 當速度接近方案上限時顯示警示
+- **選單列顯示自訂** - 可選擇顯示上傳、下載或兩者，支援簡潔模式
+- **一鍵退出功能** - 從選單列直接退出應用程式
 - **方案設定管理** - 輕鬆設定您的網路方案速度
 - **數據持久化** - 自動保存歷史峰值記錄
 - **開機自啟動** - 可設定登入時自動啟動
@@ -47,6 +51,10 @@
 
    # 執行
    open ~/Library/Developer/Xcode/DerivedData/NetworkPeakMonitor-*/Build/Products/Debug/NetworkPeakMonitor.app
+
+   # 或使用便利腳本 (建置並執行)
+   ./build.sh        # Debug 版本
+   ./build.sh Release # Release 版本
    ```
 
 ### 方法二：使用 Claude Code Xcode Build Tools
@@ -60,6 +68,44 @@ mcp_xcode_build build_macos --workspace NetworkPeakMonitor.xcworkspace --scheme 
 mcp_xcode_build get_mac_app_path --workspace NetworkPeakMonitor.xcworkspace --scheme NetworkPeakMonitor
 mcp_xcode_build launch_mac_app --appPath [取得的路徑]
 ```
+
+### 方法三：CLI 快速建置
+
+專案包含便利腳本 `build.sh`，讓您輕鬆從命令列建置和執行：
+
+```bash
+# 建置 Debug 版本並自動執行
+./build.sh
+
+# 建置 Release 版本並自動執行
+./build.sh Release
+
+# 手動命令 (如果您喜歡完整控制)
+# Debug 版本
+xcodebuild -workspace NetworkPeakMonitor.xcworkspace \
+           -scheme NetworkPeakMonitor \
+           -configuration Debug \
+           build
+
+# Release 版本
+xcodebuild -workspace NetworkPeakMonitor.xcworkspace \
+           -scheme NetworkPeakMonitor \
+           -configuration Release \
+           build
+
+# 清理建置快取
+xcodebuild -workspace NetworkPeakMonitor.xcworkspace \
+           -scheme NetworkPeakMonitor \
+           clean
+
+# 執行建置好的應用程式
+open ~/Library/Developer/Xcode/DerivedData/NetworkPeakMonitor-*/Build/Products/Debug/NetworkPeakMonitor.app
+```
+
+**建議工作流程：**
+1. 使用 `./build.sh` 進行日常開發測試
+2. 使用 `./build.sh Release` 建置發行版本
+3. 出現問題時使用 `clean` 清理後重新建置
 
 ## ✅ 功能驗證清單
 
@@ -76,7 +122,9 @@ mcp_xcode_build launch_mac_app --appPath [取得的路徑]
    - [ ] 點擊選單列圖示彈出詳細視窗
    - [ ] 顯示下載和上傳的即時速度
    - [ ] 顯示今日峰值和歷史總峰值
-   - [ ] 視窗包含設定按鈕和重置按鈕
+   - [ ] 顯示1小時峰值和發生時間
+   - [ ] 顯示今日接近峰值的次數和時間點
+   - [ ] 視窗包含設定按鈕、重置按鈕和退出按鈕
 
 3. **峰值記錄功能**
    - [ ] 下載大檔案時觀察峰值是否正確記錄
@@ -90,8 +138,10 @@ mcp_xcode_build launch_mac_app --appPath [取得的路徑]
    - [ ] 能夠設定上傳速度上限 (如 300 Mbps)
    - [ ] 設定值在重啟後是否保存
 
-5. **顯示單位切換**
-   - [ ] 可在 Mbps 和 MB/s 之間切換
+5. **顯示設定**
+   - [ ] 可在 Mbps 和 MB/s 之間切換顯示單位
+   - [ ] 可選擇選單列顯示模式（顯示兩者/僅下載/僅上傳/簡潔模式）
+   - [ ] 設定中有即時預覽功能
    - [ ] 切換後選單列和詳細視窗都正確顯示
 
 6. **峰值警示功能**
@@ -103,17 +153,22 @@ mcp_xcode_build launch_mac_app --appPath [取得的路徑]
 7. **重置功能**
    - [ ] 點擊重置按鈕清除所有峰值記錄
    - [ ] 重置後峰值數值歸零
+   - [ ] 重置後接近峰值計數器歸零
 
-8. **開機自啟動**
+8. **退出功能**
+   - [ ] 點擊退出按鈕可完全關閉應用程式
+   - [ ] 退出後選單列圖示消失
+
+9. **開機自啟動**
    - [ ] 設定中可開啟/關閉 "登入時開啟"
    - [ ] 重新登入系統後應用程式自動啟動
 
 ### 性能驗證
 
-9. **系統資源使用**
-   - [ ] 使用活動監視器檢查 CPU 使用率 < 1%
-   - [ ] 記憶體使用量 < 50MB
-   - [ ] 無異常崩潰或錯誤
+10. **系統資源使用**
+    - [ ] 使用活動監視器檢查 CPU 使用率 < 1%
+    - [ ] 記憶體使用量 < 50MB
+    - [ ] 無異常崩潰或錯誤
 
 ## 📖 使用指南
 
@@ -150,10 +205,13 @@ mcp_xcode_build launch_mac_app --appPath [取得的路徑]
 ### 介面說明
 
 #### 選單列顯示格式
-```
-↑ [上傳速度] ↓ [下載速度] [單位]
-例如：↑ 15.2 ↓ 288.9 Mbps
-```
+
+根據設定的顯示模式，選單列會顯示不同格式：
+
+- **顯示兩者**: `↑ 15.2 ↓ 288.9 Mbps`
+- **僅顯示下載**: `↓ 288.9 Mbps`
+- **僅顯示上傳**: `↑ 15.2 Mbps`
+- **簡潔模式**: `15.2/288.9 Mbps` (上傳/下載)
 
 #### 詳細視窗內容
 ```
@@ -163,13 +221,19 @@ Network Peak Monitor                    ⚙️
    即時: 288.9 Mbps
    今日峰值: 295.4 Mbps (!! 高 !!)
    歷史總峰值: 298.1 Mbps
+   1小時峰值: 290.2 Mbps (14:35)
 
 ▲ 上傳 (Upload)
    即時: 15.2 Mbps
    今日峰值: 250.7 Mbps
    歷史總峰值: 280.5 Mbps
+   1小時峰值: 245.1 Mbps (14:22)
 
-[重置峰值記錄]
+⚠️ 今日接近峰值
+   次數: 3
+   時間: 09:15 13:42 14:35
+
+[重置峰值記錄]  [退出應用程式]
 ```
 
 ## 🏗️ 專案架構
@@ -194,7 +258,8 @@ NetworkPeakMonitor/
 ### 核心組件
 
 - **NetworkMonitor** - 網路監控服務，使用系統 API 獲取流量數據
-- **PeakRecorder** - 峰值記錄管理，負責追蹤和持久化峰值數據
+- **PeakRecorder** - 峰值記錄管理，負責追蹤和持久化峰值數據 (含1小時峰值)
+- **PeakApproachTracker** - 接近峰值計數器，記錄每日接近合約速度的次數和時間
 - **NetworkMonitorViewModel** - 主要業務邏輯，協調各個服務
 - **StatusBarController** - 選單列控制器，管理 UI 顯示
 - **UserPreferences** - 使用者偏好設定管理
