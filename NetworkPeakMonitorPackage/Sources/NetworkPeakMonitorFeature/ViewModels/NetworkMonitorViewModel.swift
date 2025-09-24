@@ -7,6 +7,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     @Published public var preferences = UserPreferences()
     @Published public var peakRecorder = PeakRecorder()
     @Published public var peakApproachTracker = PeakApproachTracker()
+    @Published public var historyRecorder = NetworkHistoryRecorder()
 
     private let networkMonitor = NetworkMonitor()
     private var cancellables = Set<AnyCancellable>()
@@ -28,6 +29,7 @@ public class NetworkMonitorViewModel: ObservableObject {
                 guard let self = self else { return }
                 self.currentSpeed = speed
                 self.peakRecorder.recordSpeed(speed)
+                self.historyRecorder.recordSpeed(speed)
                 self.peakApproachTracker.checkForApproach(
                     speed,
                     downloadPlanSpeed: self.preferences.downloadPlanSpeed,
@@ -48,6 +50,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     public func resetPeaks() {
         peakRecorder.resetPeaks()
         peakApproachTracker.resetApproachData()
+        historyRecorder.clearHistory()
     }
 
     // Format speed for display

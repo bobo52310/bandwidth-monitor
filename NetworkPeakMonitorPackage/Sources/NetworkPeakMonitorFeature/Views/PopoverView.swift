@@ -4,6 +4,7 @@ import AppKit
 public struct PopoverView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     @State private var showingSettings = false
+    @State private var showingChart = true  // 預設開啟圖表顯示
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
@@ -16,13 +17,45 @@ public struct PopoverView: View {
                 Text("Network Peak Monitor")
                     .font(.headline)
                 Spacer()
+
+                // Chart toggle button
+                Button(action: { showingChart.toggle() }) {
+                    Image(systemName: showingChart ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
+                        .foregroundColor(showingChart ? .blue : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Toggle Chart View")
+
                 Button(action: { showingSettings = true }) {
                     Image(systemName: "gear")
                 }
                 .buttonStyle(.plain)
+                .help("Settings")
             }
 
             Divider()
+
+            // Chart Section (when enabled)
+            if showingChart {
+                if #available(macOS 13.0, *) {
+                    NetworkChartView(
+                        historyRecorder: viewModel.historyRecorder,
+                        preferences: viewModel.preferences
+                    )
+                } else {
+                    VStack {
+                        Text("圖表功能需要 macOS 13.0 或更新版本")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding()
+                    }
+                    .frame(height: 100)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                }
+
+                Divider()
+            }
 
             // Download Section
             VStack(alignment: .leading, spacing: 8) {
@@ -163,7 +196,8 @@ public struct PopoverView: View {
         }
         .padding()
         .padding(.top, 8)
-        .frame(width: 350, height: 500)
+        .frame(width: showingChart ? 450 : 350, height: showingChart ? 750 : 500)
+        .animation(.easeInOut(duration: 0.3), value: showingChart)
         .sheet(isPresented: $showingSettings) {
             SettingsView(viewModel: viewModel)
         }

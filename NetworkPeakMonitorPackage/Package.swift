@@ -5,13 +5,17 @@ import PackageDescription
 
 let package = Package(
     name: "NetworkPeakMonitorFeature",
-    platforms: [.macOS(.v12)],
+    platforms: [.macOS(.v13)], // Updated to macOS 13 for Swift Charts support
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "NetworkPeakMonitorFeature",
             targets: ["NetworkPeakMonitorFeature"]
         ),
+    ],
+    dependencies: [
+        // Add any external package dependencies here if needed
+        // Swift Charts is built-in for macOS 13+
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
