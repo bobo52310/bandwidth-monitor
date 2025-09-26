@@ -16,49 +16,52 @@ public struct PopoverView: View {
         VStack(spacing: 0) {
             // Header - Fixed at top
             VStack(spacing: 16) {
+                // Title and Control Buttons
                 HStack {
                     Text("Network Peak Monitor")
                         .font(.headline)
                     Spacer()
 
-                    // Data type checkboxes
-                    HStack(spacing: 12) {
-                        HStack(spacing: 4) {
-                            Toggle("", isOn: $showDownload)
-                                .toggleStyle(.checkbox)
-                                .scaleEffect(0.8)
-                            Image(systemName: "arrow.down.circle.fill")
-                                .foregroundColor(showDownload ? .blue : .gray)
-                                .font(.caption)
+                    // Control buttons
+                    HStack(spacing: 8) {
+                        // Chart toggle button
+                        Button(action: { showingChart.toggle() }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: showingChart ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
+                                    .foregroundColor(showingChart ? .white : .blue)
+                                    .font(.caption)
+                                Text("Chart")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(showingChart ? .blue : Color.blue.opacity(0.1))
+                            .foregroundColor(showingChart ? .white : .blue)
+                            .cornerRadius(6)
                         }
-                        .help("Toggle Download Data")
+                        .buttonStyle(.plain)
+                        .help("Toggle Chart View")
 
-                        HStack(spacing: 4) {
-                            Toggle("", isOn: $showUpload)
-                                .toggleStyle(.checkbox)
-                                .scaleEffect(0.8)
-                            Image(systemName: "arrow.up.circle.fill")
-                                .foregroundColor(showUpload ? .green : .gray)
-                                .font(.caption)
+                        // Settings button
+                        Button(action: { showingSettings = true }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "gear")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                                Text("Settings")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.secondary.opacity(0.1))
+                            .foregroundColor(.secondary)
+                            .cornerRadius(6)
                         }
-                        .help("Toggle Upload Data")
+                        .buttonStyle(.plain)
+                        .help("Settings")
                     }
-
-                    Spacer().frame(width: 8)
-
-                    // Chart toggle button
-                    Button(action: { showingChart.toggle() }) {
-                        Image(systemName: showingChart ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
-                            .foregroundColor(showingChart ? .blue : .secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Toggle Chart View")
-
-                    Button(action: { showingSettings = true }) {
-                        Image(systemName: "gear")
-                    }
-                    .buttonStyle(.plain)
-                    .help("Settings")
                 }
 
                 Divider()
@@ -76,8 +79,8 @@ public struct PopoverView: View {
                             NetworkChartView(
                                 historyRecorder: viewModel.historyRecorder,
                                 preferences: viewModel.preferences,
-                                showDownload: showDownload,
-                                showUpload: showUpload
+                                showDownload: $showDownload,
+                                showUpload: $showUpload
                             )
                         } else {
                             VStack {

@@ -6,19 +6,19 @@ public struct NetworkChartView: View {
     @ObservedObject var historyRecorder: NetworkHistoryRecorder
     @ObservedObject var preferences: UserPreferences
     @State private var selectedTimeRange: TimeRange = .oneHour
-    let showDownload: Bool
-    let showUpload: Bool
+    @Binding var showDownload: Bool
+    @Binding var showUpload: Bool
 
     public enum TimeRange: String, CaseIterable {
         case oneHour = "1 小時"
         case twentyFourHours = "24 小時"
     }
 
-    public init(historyRecorder: NetworkHistoryRecorder, preferences: UserPreferences, showDownload: Bool = true, showUpload: Bool = true) {
+    public init(historyRecorder: NetworkHistoryRecorder, preferences: UserPreferences, showDownload: Binding<Bool>, showUpload: Binding<Bool>) {
         self.historyRecorder = historyRecorder
         self.preferences = preferences
-        self.showDownload = showDownload
-        self.showUpload = showUpload
+        self._showDownload = showDownload
+        self._showUpload = showUpload
     }
 
     public var body: some View {
@@ -187,31 +187,45 @@ public struct NetworkChartView: View {
 
     private var legendView: some View {
         HStack(spacing: 20) {
-            // Download legend
-            if showDownload {
+            // Interactive Download legend button
+            Button(action: { showDownload.toggle() }) {
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(.blue)
+                        .fill(showDownload ? .blue : .gray.opacity(0.4))
                         .frame(width: 8, height: 8)
                     Text("下載")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(showDownload ? .primary : .secondary)
+                        .fontWeight(showDownload ? .medium : .regular)
                 }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(showDownload ? Color.blue.opacity(0.1) : Color.clear)
+                .cornerRadius(4)
             }
+            .buttonStyle(.plain)
+            .help("Toggle Download Data")
 
-            // Upload legend
-            if showUpload {
+            // Interactive Upload legend button
+            Button(action: { showUpload.toggle() }) {
                 HStack(spacing: 4) {
                     Rectangle()
-                        .fill(.green)
+                        .fill(showUpload ? .green : .gray.opacity(0.4))
                         .frame(width: 8, height: 8)
                     Text("上傳")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(showUpload ? .primary : .secondary)
+                        .fontWeight(showUpload ? .medium : .regular)
                 }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(showUpload ? Color.green.opacity(0.1) : Color.clear)
+                .cornerRadius(4)
             }
+            .buttonStyle(.plain)
+            .help("Toggle Upload Data")
 
-            // Plan speed legend
+            // Plan speed legend (non-interactive)
             if (showDownload && preferences.downloadPlanSpeed > 0) || (showUpload && preferences.uploadPlanSpeed > 0) {
                 HStack(spacing: 4) {
                     Rectangle()
