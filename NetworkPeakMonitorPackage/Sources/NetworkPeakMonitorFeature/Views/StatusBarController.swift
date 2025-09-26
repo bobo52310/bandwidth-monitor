@@ -3,13 +3,15 @@ import AppKit
 import Combine
 
 @MainActor
-public class StatusBarController: ObservableObject {
+public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate {
     private var statusBarItem: NSStatusItem?
     private var popover: NSPopover?
     private let viewModel = NetworkMonitorViewModel()
     private var cancellables = Set<AnyCancellable>()
+    private var eventMonitor: Any?
 
-    public init() {
+    public override init() {
+        super.init()
         setupStatusBar()
         setupPopover()
         viewModel.initialize()
@@ -35,8 +37,10 @@ public class StatusBarController: ObservableObject {
 
     private func setupPopover() {
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 350, height: 500)
+        popover?.contentSize = NSSize(width: 350, height: 600)
         popover?.behavior = .transient
+        popover?.animates = true
+        popover?.delegate = self
         popover?.contentViewController = NSHostingController(
             rootView: PopoverView(viewModel: viewModel)
         )
@@ -46,11 +50,50 @@ public class StatusBarController: ObservableObject {
         guard let popover = popover else { return }
 
         if popover.isShown {
-            popover.performClose(nil)
+            closePopover()
         } else {
-            if let button = statusBarItem?.button {
-                popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            showPopover()
+        }
+    }
+
+    private func showPopover() {
+        guard let popover = popover, let button = statusBarItem?.button else { return }
+
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        setupEventMonitor()
+    }
+
+    private func closePopover() {
+        popover?.performClose(nil)
+        removeEventMonitor()
+    }
+
+    private func setupEventMonitor() {
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
+            if let popover = self?.popover, popover.isShown {
+                // Check if the click is outside the popover
+                if let popoverWindow = popover.contentViewController?.view.window {
+                    let clickLocation = event.locationInWindow
+                    let windowFrame = popoverWindow.frame
+                    let screenClickLocation = NSEvent.mouseLocation
+
+                    if !windowFrame.contains(screenClickLocation) {
+                        self?.closePopover()
+                    }
+                }
+
+                // Close on Escape key
+                if event.type == .keyDown && event.keyCode == 53 { // Escape key
+                    self?.closePopover()
+                }
             }
+        }
+    }
+
+    private func removeEventMonitor() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
         }
     }
 
@@ -61,9 +104,24 @@ public class StatusBarController: ObservableObject {
     }
 
     public func cleanUp() {
+        removeEventMonitor()
         Task {
             await viewModel.stopMonitoring()
         }
         statusBarItem = nil
+    }
+
+    // MARK: - NSPopoverDelegate
+
+    public func popoverShouldClose(_ popover: NSPopover) -> Bool {
+        return true
+    }
+
+    public func popoverDidClose(_ notification: Notification) {
+        removeEventMonitor()
+    }
+
+    public func popoverShouldDetach(_ popover: NSPopover) -> Bool {
+        return false // Prevent detaching the popover
     }
 }

@@ -5,203 +5,349 @@ public struct PopoverView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     @State private var showingSettings = false
     @State private var showingChart = true  // 預設開啟圖表顯示
+    @State private var showDownload = true  // 預設顯示下載資料
+    @State private var showUpload = true    // 預設顯示上傳資料
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
     }
 
     public var body: some View {
-        VStack(spacing: 16) {
-            // Header
-            HStack {
-                Text("Network Peak Monitor")
-                    .font(.headline)
-                Spacer()
+        VStack(spacing: 0) {
+            // Header - Fixed at top
+            VStack(spacing: 16) {
+                HStack {
+                    Text("Network Peak Monitor")
+                        .font(.headline)
+                    Spacer()
 
-                // Chart toggle button
-                Button(action: { showingChart.toggle() }) {
-                    Image(systemName: showingChart ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
-                        .foregroundColor(showingChart ? .blue : .secondary)
-                }
-                .buttonStyle(.plain)
-                .help("Toggle Chart View")
+                    // Data type checkboxes
+                    HStack(spacing: 12) {
+                        HStack(spacing: 4) {
+                            Toggle("", isOn: $showDownload)
+                                .toggleStyle(.checkbox)
+                                .scaleEffect(0.8)
+                            Image(systemName: "arrow.down.circle.fill")
+                                .foregroundColor(showDownload ? .blue : .gray)
+                                .font(.caption)
+                        }
+                        .help("Toggle Download Data")
 
-                Button(action: { showingSettings = true }) {
-                    Image(systemName: "gear")
-                }
-                .buttonStyle(.plain)
-                .help("Settings")
-            }
-
-            Divider()
-
-            // Chart Section (when enabled)
-            if showingChart {
-                if #available(macOS 13.0, *) {
-                    NetworkChartView(
-                        historyRecorder: viewModel.historyRecorder,
-                        preferences: viewModel.preferences
-                    )
-                } else {
-                    VStack {
-                        Text("圖表功能需要 macOS 13.0 或更新版本")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding()
+                        HStack(spacing: 4) {
+                            Toggle("", isOn: $showUpload)
+                                .toggleStyle(.checkbox)
+                                .scaleEffect(0.8)
+                            Image(systemName: "arrow.up.circle.fill")
+                                .foregroundColor(showUpload ? .green : .gray)
+                                .font(.caption)
+                        }
+                        .help("Toggle Upload Data")
                     }
-                    .frame(height: 100)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+
+                    Spacer().frame(width: 8)
+
+                    // Chart toggle button
+                    Button(action: { showingChart.toggle() }) {
+                        Image(systemName: showingChart ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
+                            .foregroundColor(showingChart ? .blue : .secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Toggle Chart View")
+
+                    Button(action: { showingSettings = true }) {
+                        Image(systemName: "gear")
+                    }
+                    .buttonStyle(.plain)
+                    .help("Settings")
                 }
 
                 Divider()
             }
+            .padding()
+            .padding(.top, 8)
+            .background(Color(NSColor.windowBackgroundColor))
 
-            // Download Section
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "arrow.down.circle.fill")
-                        .foregroundColor(.blue)
-                    Text("下載 (Download)")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                }
-
-                SpeedRow(
-                    label: "即時",
-                    speed: viewModel.currentSpeed.downloadMbps,
-                    unit: viewModel.preferences.displayUnit,
-                    planSpeed: viewModel.preferences.downloadPlanSpeed,
-                    viewModel: viewModel
-                )
-
-                SpeedRow(
-                    label: "今日峰值",
-                    speed: viewModel.peakRecorder.todayPeakDownload,
-                    unit: viewModel.preferences.displayUnit,
-                    planSpeed: viewModel.preferences.downloadPlanSpeed,
-                    viewModel: viewModel
-                )
-
-                SpeedRow(
-                    label: "歷史總峰值",
-                    speed: viewModel.peakRecorder.allTimePeakDownload,
-                    unit: viewModel.preferences.displayUnit,
-                    planSpeed: viewModel.preferences.downloadPlanSpeed,
-                    viewModel: viewModel
-                )
-
-                HourlyPeakRow(
-                    label: "1小時峰值",
-                    speed: viewModel.peakRecorder.hourlyPeakDownload,
-                    time: viewModel.peakRecorder.hourlyPeakDownloadTime,
-                    unit: viewModel.preferences.displayUnit,
-                    viewModel: viewModel
-                )
-            }
-
-            Divider()
-
-            // Upload Section
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .foregroundColor(.green)
-                    Text("上傳 (Upload)")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                }
-
-                SpeedRow(
-                    label: "即時",
-                    speed: viewModel.currentSpeed.uploadMbps,
-                    unit: viewModel.preferences.displayUnit,
-                    planSpeed: viewModel.preferences.uploadPlanSpeed,
-                    viewModel: viewModel
-                )
-
-                SpeedRow(
-                    label: "今日峰值",
-                    speed: viewModel.peakRecorder.todayPeakUpload,
-                    unit: viewModel.preferences.displayUnit,
-                    planSpeed: viewModel.preferences.uploadPlanSpeed,
-                    viewModel: viewModel
-                )
-
-                SpeedRow(
-                    label: "歷史總峰值",
-                    speed: viewModel.peakRecorder.allTimePeakUpload,
-                    unit: viewModel.preferences.displayUnit,
-                    planSpeed: viewModel.preferences.uploadPlanSpeed,
-                    viewModel: viewModel
-                )
-
-                HourlyPeakRow(
-                    label: "1小時峰值",
-                    speed: viewModel.peakRecorder.hourlyPeakUpload,
-                    time: viewModel.peakRecorder.hourlyPeakUploadTime,
-                    unit: viewModel.preferences.displayUnit,
-                    viewModel: viewModel
-                )
-            }
-
-            Divider()
-
-            // Peak Approach Counter Section
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
-                    Text("今日接近峰值")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                }
-
-                HStack {
-                    Text("次數: \(viewModel.peakApproachTracker.todayApproachCount)")
-                        .font(.body)
-                    Spacer()
-                }
-
-                if !viewModel.peakApproachTracker.approachTimestamps.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 4) {
-                            ForEach(viewModel.peakApproachTracker.getFormattedApproachTimes(), id: \.self) { time in
-                                Text(time)
+            // Scrollable content area
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(spacing: 16) {
+                    // Chart Section (when enabled)
+                    if showingChart {
+                        if #available(macOS 13.0, *) {
+                            NetworkChartView(
+                                historyRecorder: viewModel.historyRecorder,
+                                preferences: viewModel.preferences,
+                                showDownload: showDownload,
+                                showUpload: showUpload
+                            )
+                        } else {
+                            VStack {
+                                Text("圖表功能需要 macOS 13.0 或更新版本")
                                     .font(.caption)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.orange.opacity(0.2))
-                                    .cornerRadius(4)
+                                    .foregroundColor(.secondary)
+                                    .padding()
+                            }
+                            .frame(height: 100)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                        }
+
+                        Divider()
+                    }
+
+                    // Download and Upload Sections
+                    if showDownload && showUpload {
+                        // Side-by-side layout when both are visible
+                        HStack(alignment: .top, spacing: 16) {
+                            // Download Section
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "arrow.down.circle.fill")
+                                        .foregroundColor(.blue)
+                                    Text("下載 (Download)")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+
+                                SpeedRow(
+                                    label: "即時",
+                                    speed: viewModel.currentSpeed.downloadMbps,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                SpeedRow(
+                                    label: "今日峰值",
+                                    speed: viewModel.peakRecorder.todayPeakDownload,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                SpeedRow(
+                                    label: "歷史總峰值",
+                                    speed: viewModel.peakRecorder.allTimePeakDownload,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                HourlyPeakRow(
+                                    label: "1小時峰值",
+                                    speed: viewModel.peakRecorder.hourlyPeakDownload,
+                                    time: viewModel.peakRecorder.hourlyPeakDownloadTime,
+                                    unit: viewModel.preferences.displayUnit,
+                                    viewModel: viewModel
+                                )
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                            // Upload Section
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "arrow.up.circle.fill")
+                                        .foregroundColor(.green)
+                                    Text("上傳 (Upload)")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+
+                                SpeedRow(
+                                    label: "即時",
+                                    speed: viewModel.currentSpeed.uploadMbps,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                SpeedRow(
+                                    label: "今日峰值",
+                                    speed: viewModel.peakRecorder.todayPeakUpload,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                SpeedRow(
+                                    label: "歷史總峰值",
+                                    speed: viewModel.peakRecorder.allTimePeakUpload,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                HourlyPeakRow(
+                                    label: "1小時峰值",
+                                    speed: viewModel.peakRecorder.hourlyPeakUpload,
+                                    time: viewModel.peakRecorder.hourlyPeakUploadTime,
+                                    unit: viewModel.preferences.displayUnit,
+                                    viewModel: viewModel
+                                )
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        Divider()
+                    } else if showDownload {
+                        // Download Section only
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .foregroundColor(.blue)
+                                Text("下載 (Download)")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+
+                            SpeedRow(
+                                label: "即時",
+                                speed: viewModel.currentSpeed.downloadMbps,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            SpeedRow(
+                                label: "今日峰值",
+                                speed: viewModel.peakRecorder.todayPeakDownload,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            SpeedRow(
+                                label: "歷史總峰值",
+                                speed: viewModel.peakRecorder.allTimePeakDownload,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            HourlyPeakRow(
+                                label: "1小時峰值",
+                                speed: viewModel.peakRecorder.hourlyPeakDownload,
+                                time: viewModel.peakRecorder.hourlyPeakDownloadTime,
+                                unit: viewModel.preferences.displayUnit,
+                                viewModel: viewModel
+                            )
+                        }
+
+                        Divider()
+                    } else if showUpload {
+                        // Upload Section only
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "arrow.up.circle.fill")
+                                    .foregroundColor(.green)
+                                Text("上傳 (Upload)")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+
+                            SpeedRow(
+                                label: "即時",
+                                speed: viewModel.currentSpeed.uploadMbps,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            SpeedRow(
+                                label: "今日峰值",
+                                speed: viewModel.peakRecorder.todayPeakUpload,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            SpeedRow(
+                                label: "歷史總峰值",
+                                speed: viewModel.peakRecorder.allTimePeakUpload,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            HourlyPeakRow(
+                                label: "1小時峰值",
+                                speed: viewModel.peakRecorder.hourlyPeakUpload,
+                                time: viewModel.peakRecorder.hourlyPeakUploadTime,
+                                unit: viewModel.preferences.displayUnit,
+                                viewModel: viewModel
+                            )
+                        }
+
+                        Divider()
+                    }
+
+                    // Peak Approach Counter Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                            Text("今日接近峰值")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        }
+
+                        HStack {
+                            Text("次數: \(viewModel.peakApproachTracker.todayApproachCount)")
+                                .font(.body)
+                            Spacer()
+                        }
+
+                        if !viewModel.peakApproachTracker.approachTimestamps.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 4) {
+                                    ForEach(viewModel.peakApproachTracker.getFormattedApproachTimes(), id: \.self) { time in
+                                        Text(time)
+                                            .font(.caption)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Color.orange.opacity(0.2))
+                                            .cornerRadius(4)
+                                    }
+                                }
+                                .padding(.horizontal, 1)
                             }
                         }
-                        .padding(.horizontal, 1)
                     }
                 }
+                .padding(.horizontal)
+                .padding(.bottom, 16)
             }
 
-            Divider()
+            // Bottom buttons - Fixed at bottom
+            VStack(spacing: 12) {
+                Divider()
 
-            // Reset Button
-            Button("重置峰值記錄") {
-                viewModel.resetPeaks()
-            }
-            .buttonStyle(.bordered)
+                HStack(spacing: 12) {
+                    // Reset Button
+                    Button("重置峰值記錄") {
+                        viewModel.resetPeaks()
+                    }
+                    .buttonStyle(.bordered)
 
-            // Quit Button
-            Button("退出應用程式") {
-                NSApplication.shared.terminate(nil)
+                    // Quit Button
+                    Button("退出應用程式") {
+                        NSApplication.shared.terminate(nil)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 16)
             }
-            .buttonStyle(.borderedProminent)
+            .background(Color(NSColor.windowBackgroundColor))
         }
-        .padding()
-        .padding(.top, 8)
-        .frame(width: showingChart ? 450 : 350, height: showingChart ? 750 : 500)
+        .frame(width: showingChart ? 450 : 350, height: 600)
         .animation(.easeInOut(duration: 0.3), value: showingChart)
+        .animation(.easeInOut(duration: 0.3), value: showDownload)
+        .animation(.easeInOut(duration: 0.3), value: showUpload)
         .sheet(isPresented: $showingSettings) {
             SettingsView(viewModel: viewModel)
         }
     }
+
 }
 
 struct SpeedRow: View {

@@ -20,6 +20,7 @@ public class NetworkHistoryRecorder: ObservableObject {
 
     public init() {
         loadStoredData()
+        createInitialHourlyAggregates()
         startHourlyAggregation()
     }
 
@@ -63,6 +64,52 @@ public class NetworkHistoryRecorder: ObservableObject {
         return date.timeIntervalSince(lastTime) >= oneHourInterval
     }
 
+    private func createInitialHourlyAggregates() {
+        guard !oneHourData.isEmpty else { return }
+
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Group existing one-hour data by hour
+        let hourGroups = Dictionary(grouping: oneHourData) { dataPoint in
+            calendar.dateInterval(of: .hour, for: dataPoint.timestamp)?.start ?? dataPoint.timestamp
+        }
+
+        // Create hourly aggregates for each hour that has data
+        for (hourStart, hourData) in hourGroups {
+            // Skip if we already have an aggregate for this hour
+            if twentyFourHourData.contains(where: { calendar.isDate($0.timestamp, equalTo: hourStart, toGranularity: .hour) }) {
+                continue
+            }
+
+            let avgDownload = hourData.map { $0.downloadSpeed }.reduce(0, +) / Double(hourData.count)
+            let avgUpload = hourData.map { $0.uploadSpeed }.reduce(0, +) / Double(hourData.count)
+            let maxDownload = hourData.map { $0.downloadSpeed }.max() ?? 0
+            let maxUpload = hourData.map { $0.uploadSpeed }.max() ?? 0
+
+            let hourlyPoint = HourlyDataPoint(
+                timestamp: hourStart,
+                avgDownloadSpeed: avgDownload,
+                avgUploadSpeed: avgUpload,
+                maxDownloadSpeed: maxDownload,
+                maxUploadSpeed: maxUpload
+            )
+
+            twentyFourHourData.append(hourlyPoint)
+        }
+
+        // Sort by timestamp and keep only last 24 hours
+        twentyFourHourData.sort { $0.timestamp < $1.timestamp }
+        let twentyFourHoursAgo = now.addingTimeInterval(-24 * 3600)
+        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
+
+        if twentyFourHourData.count > maxTwentyFourHourPoints {
+            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
+        }
+
+        saveTwentyFourHourData()
+    }
+
     private func startHourlyAggregation() {
         // Check every minute if we need to create a new hourly aggregate
         Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
@@ -75,7 +122,27 @@ public class NetworkHistoryRecorder: ObservableObject {
         let calendar = Calendar.current
         let currentHour = calendar.dateInterval(of: .hour, for: now)?.start ?? now
 
-        // Check if we have data for the previous hour that hasn't been aggregated
+        // Group all one-hour data by hour
+        let hourGroups = Dictionary(grouping: oneHourData) { dataPoint in
+            calendar.dateInterval(of: .hour, for: dataPoint.timestamp)?.start ?? dataPoint.timestamp
+        }
+
+        // Process each hour that has data
+        for (hourStart, hourData) in hourGroups {
+            // Check if this is a completed hour (not current hour) that hasn't been aggregated yet
+            let isCompletedHour = hourStart < currentHour
+            let alreadyExists = twentyFourHourData.contains { calendar.isDate($0.timestamp, equalTo: hourStart, toGranularity: .hour) }
+
+            if isCompletedHour && !alreadyExists {
+                // Aggregate completed hour
+                aggregateHourlyData(for: hourStart, with: hourData)
+            } else if hourStart == currentHour {
+                // Update or create current hour aggregate (partial data)
+                updateCurrentHourAggregate(for: hourStart, with: hourData)
+            }
+        }
+
+        // Also handle legacy currentHourData if it exists
         if !currentHourData.isEmpty {
             let oldestData = currentHourData.min(by: { $0.timestamp < $1.timestamp })?.timestamp ?? now
             let dataHour = calendar.dateInterval(of: .hour, for: oldestData)?.start ?? oldestData
@@ -121,6 +188,79 @@ public class NetworkHistoryRecorder: ObservableObject {
 
         // Remove aggregated data from current hour accumulator
         currentHourData = currentHourData.filter { !hourInterval.contains($0.timestamp) }
+
+        saveTwentyFourHourData()
+    }
+
+    private func aggregateHourlyData(for hour: Date, with hourData: [NetworkDataPoint]) {
+        guard !hourData.isEmpty else { return }
+
+        let avgDownload = hourData.map { $0.downloadSpeed }.reduce(0, +) / Double(hourData.count)
+        let avgUpload = hourData.map { $0.uploadSpeed }.reduce(0, +) / Double(hourData.count)
+        let maxDownload = hourData.map { $0.downloadSpeed }.max() ?? 0
+        let maxUpload = hourData.map { $0.uploadSpeed }.max() ?? 0
+
+        let hourlyPoint = HourlyDataPoint(
+            timestamp: hour,
+            avgDownloadSpeed: avgDownload,
+            avgUploadSpeed: avgUpload,
+            maxDownloadSpeed: maxDownload,
+            maxUploadSpeed: maxUpload
+        )
+
+        // Add to 24-hour data
+        twentyFourHourData.append(hourlyPoint)
+
+        // Keep only last 24 hours
+        let twentyFourHoursAgo = Date().addingTimeInterval(-24 * 3600)
+        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
+
+        // Sort by timestamp
+        twentyFourHourData.sort { $0.timestamp < $1.timestamp }
+
+        // Limit to max points
+        if twentyFourHourData.count > maxTwentyFourHourPoints {
+            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
+        }
+
+        saveTwentyFourHourData()
+    }
+
+    private func updateCurrentHourAggregate(for hour: Date, with hourData: [NetworkDataPoint]) {
+        guard !hourData.isEmpty else { return }
+
+        let calendar = Calendar.current
+
+        // Remove existing aggregate for this hour
+        twentyFourHourData.removeAll { calendar.isDate($0.timestamp, equalTo: hour, toGranularity: .hour) }
+
+        let avgDownload = hourData.map { $0.downloadSpeed }.reduce(0, +) / Double(hourData.count)
+        let avgUpload = hourData.map { $0.uploadSpeed }.reduce(0, +) / Double(hourData.count)
+        let maxDownload = hourData.map { $0.downloadSpeed }.max() ?? 0
+        let maxUpload = hourData.map { $0.uploadSpeed }.max() ?? 0
+
+        let hourlyPoint = HourlyDataPoint(
+            timestamp: hour,
+            avgDownloadSpeed: avgDownload,
+            avgUploadSpeed: avgUpload,
+            maxDownloadSpeed: maxDownload,
+            maxUploadSpeed: maxUpload
+        )
+
+        // Add updated aggregate to 24-hour data
+        twentyFourHourData.append(hourlyPoint)
+
+        // Keep only last 24 hours
+        let twentyFourHoursAgo = Date().addingTimeInterval(-24 * 3600)
+        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
+
+        // Sort by timestamp
+        twentyFourHourData.sort { $0.timestamp < $1.timestamp }
+
+        // Limit to max points
+        if twentyFourHourData.count > maxTwentyFourHourPoints {
+            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
+        }
 
         saveTwentyFourHourData()
     }

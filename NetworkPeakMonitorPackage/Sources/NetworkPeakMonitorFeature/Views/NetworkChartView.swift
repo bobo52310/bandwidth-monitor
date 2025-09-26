@@ -6,15 +6,19 @@ public struct NetworkChartView: View {
     @ObservedObject var historyRecorder: NetworkHistoryRecorder
     @ObservedObject var preferences: UserPreferences
     @State private var selectedTimeRange: TimeRange = .oneHour
+    let showDownload: Bool
+    let showUpload: Bool
 
     public enum TimeRange: String, CaseIterable {
         case oneHour = "1 小時"
         case twentyFourHours = "24 小時"
     }
 
-    public init(historyRecorder: NetworkHistoryRecorder, preferences: UserPreferences) {
+    public init(historyRecorder: NetworkHistoryRecorder, preferences: UserPreferences, showDownload: Bool = true, showUpload: Bool = true) {
         self.historyRecorder = historyRecorder
         self.preferences = preferences
+        self.showDownload = showDownload
+        self.showUpload = showUpload
     }
 
     public var body: some View {
@@ -50,33 +54,37 @@ public struct NetworkChartView: View {
     private var oneHourChart: some View {
         Chart {
             // Download speed line
-            ForEach(historyRecorder.oneHourData) { dataPoint in
-                LineMark(
-                    x: .value("Time", dataPoint.timestamp),
-                    y: .value("Speed", convertSpeed(dataPoint.downloadMbps))
-                )
-                .foregroundStyle(.blue)
-                .symbol(.circle)
+            if showDownload {
+                ForEach(historyRecorder.oneHourData) { dataPoint in
+                    LineMark(
+                        x: .value("Time", dataPoint.timestamp),
+                        y: .value("Speed", convertSpeed(dataPoint.downloadMbps))
+                    )
+                    .foregroundStyle(.blue)
+                    .symbol(.circle)
+                }
             }
 
             // Upload speed line
-            ForEach(historyRecorder.oneHourData) { dataPoint in
-                LineMark(
-                    x: .value("Time", dataPoint.timestamp),
-                    y: .value("Speed", convertSpeed(dataPoint.uploadMbps))
-                )
-                .foregroundStyle(.green)
-                .symbol(.square)
+            if showUpload {
+                ForEach(historyRecorder.oneHourData) { dataPoint in
+                    LineMark(
+                        x: .value("Time", dataPoint.timestamp),
+                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps))
+                    )
+                    .foregroundStyle(.green)
+                    .symbol(.square)
+                }
             }
 
             // Plan speed reference lines
-            if preferences.downloadPlanSpeed > 0 {
+            if showDownload && preferences.downloadPlanSpeed > 0 {
                 RuleMark(y: .value("Plan", convertSpeed(preferences.downloadPlanSpeed)))
                     .foregroundStyle(.blue.opacity(0.3))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
             }
 
-            if preferences.uploadPlanSpeed > 0 {
+            if showUpload && preferences.uploadPlanSpeed > 0 {
                 RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
                     .foregroundStyle(.green.opacity(0.3))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
@@ -107,23 +115,27 @@ public struct NetworkChartView: View {
     private var twentyFourHourChart: some View {
         Chart {
             // Average download speed line
-            ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                LineMark(
-                    x: .value("Time", dataPoint.timestamp),
-                    y: .value("Speed", convertSpeed(dataPoint.avgDownloadMbps))
-                )
-                .foregroundStyle(.blue)
-                .symbol(.circle)
+            if showDownload {
+                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
+                    LineMark(
+                        x: .value("Time", dataPoint.timestamp),
+                        y: .value("Speed", convertSpeed(dataPoint.avgDownloadMbps))
+                    )
+                    .foregroundStyle(.blue)
+                    .symbol(.circle)
+                }
             }
 
             // Average upload speed line
-            ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                LineMark(
-                    x: .value("Time", dataPoint.timestamp),
-                    y: .value("Speed", convertSpeed(dataPoint.avgUploadMbps))
-                )
-                .foregroundStyle(.green)
-                .symbol(.square)
+            if showUpload {
+                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
+                    LineMark(
+                        x: .value("Time", dataPoint.timestamp),
+                        y: .value("Speed", convertSpeed(dataPoint.avgUploadMbps))
+                    )
+                    .foregroundStyle(.green)
+                    .symbol(.square)
+                }
             }
 
             // Max speed area (optional, commented out to avoid clutter)
@@ -139,13 +151,13 @@ public struct NetworkChartView: View {
             */
 
             // Plan speed reference lines
-            if preferences.downloadPlanSpeed > 0 {
+            if showDownload && preferences.downloadPlanSpeed > 0 {
                 RuleMark(y: .value("Plan", convertSpeed(preferences.downloadPlanSpeed)))
                     .foregroundStyle(.blue.opacity(0.3))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
             }
 
-            if preferences.uploadPlanSpeed > 0 {
+            if showUpload && preferences.uploadPlanSpeed > 0 {
                 RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
                     .foregroundStyle(.green.opacity(0.3))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
@@ -176,27 +188,31 @@ public struct NetworkChartView: View {
     private var legendView: some View {
         HStack(spacing: 20) {
             // Download legend
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(.blue)
-                    .frame(width: 8, height: 8)
-                Text("下載")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            if showDownload {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(.blue)
+                        .frame(width: 8, height: 8)
+                    Text("下載")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
 
             // Upload legend
-            HStack(spacing: 4) {
-                Rectangle()
-                    .fill(.green)
-                    .frame(width: 8, height: 8)
-                Text("上傳")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            if showUpload {
+                HStack(spacing: 4) {
+                    Rectangle()
+                        .fill(.green)
+                        .frame(width: 8, height: 8)
+                    Text("上傳")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
 
             // Plan speed legend
-            if preferences.downloadPlanSpeed > 0 || preferences.uploadPlanSpeed > 0 {
+            if (showDownload && preferences.downloadPlanSpeed > 0) || (showUpload && preferences.uploadPlanSpeed > 0) {
                 HStack(spacing: 4) {
                     Rectangle()
                         .fill(.gray.opacity(0.5))
