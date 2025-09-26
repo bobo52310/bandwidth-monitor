@@ -79,8 +79,8 @@ public struct PopoverView: View {
                             NetworkChartView(
                                 historyRecorder: viewModel.historyRecorder,
                                 preferences: viewModel.preferences,
-                                showDownload: $showDownload,
-                                showUpload: $showUpload
+                                showUpload: $showUpload,
+                                showDownload: $showDownload
                             )
                         } else {
                             VStack {
@@ -97,54 +97,10 @@ public struct PopoverView: View {
                         Divider()
                     }
 
-                    // Download and Upload Sections
+                    // Upload and Download Sections
                     if showDownload && showUpload {
                         // Side-by-side layout when both are visible
                         HStack(alignment: .top, spacing: 16) {
-                            // Download Section
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Image(systemName: "arrow.down.circle.fill")
-                                        .foregroundColor(.blue)
-                                    Text("下載 (Download)")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                }
-
-                                SpeedRow(
-                                    label: "即時",
-                                    speed: viewModel.currentSpeed.downloadMbps,
-                                    unit: viewModel.preferences.displayUnit,
-                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                    viewModel: viewModel
-                                )
-
-                                SpeedRow(
-                                    label: "今日峰值",
-                                    speed: viewModel.peakRecorder.todayPeakDownload,
-                                    unit: viewModel.preferences.displayUnit,
-                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                    viewModel: viewModel
-                                )
-
-                                SpeedRow(
-                                    label: "歷史總峰值",
-                                    speed: viewModel.peakRecorder.allTimePeakDownload,
-                                    unit: viewModel.preferences.displayUnit,
-                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                    viewModel: viewModel
-                                )
-
-                                HourlyPeakRow(
-                                    label: "1小時峰值",
-                                    speed: viewModel.peakRecorder.hourlyPeakDownload,
-                                    time: viewModel.peakRecorder.hourlyPeakDownloadTime,
-                                    unit: viewModel.preferences.displayUnit,
-                                    viewModel: viewModel
-                                )
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
                             // Upload Section
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
@@ -188,51 +144,50 @@ public struct PopoverView: View {
                                 )
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        }
 
-                        Divider()
-                    } else if showDownload {
-                        // Download Section only
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "arrow.down.circle.fill")
-                                    .foregroundColor(.blue)
-                                Text("下載 (Download)")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
+                            // Download Section
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "arrow.down.circle.fill")
+                                        .foregroundColor(.blue)
+                                    Text("下載 (Download)")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+
+                                SpeedRow(
+                                    label: "即時",
+                                    speed: viewModel.currentSpeed.downloadMbps,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                SpeedRow(
+                                    label: "今日峰值",
+                                    speed: viewModel.peakRecorder.todayPeakDownload,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                SpeedRow(
+                                    label: "歷史總峰值",
+                                    speed: viewModel.peakRecorder.allTimePeakDownload,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                    viewModel: viewModel
+                                )
+
+                                HourlyPeakRow(
+                                    label: "1小時峰值",
+                                    speed: viewModel.peakRecorder.hourlyPeakDownload,
+                                    time: viewModel.peakRecorder.hourlyPeakDownloadTime,
+                                    unit: viewModel.preferences.displayUnit,
+                                    viewModel: viewModel
+                                )
                             }
-
-                            SpeedRow(
-                                label: "即時",
-                                speed: viewModel.currentSpeed.downloadMbps,
-                                unit: viewModel.preferences.displayUnit,
-                                planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                viewModel: viewModel
-                            )
-
-                            SpeedRow(
-                                label: "今日峰值",
-                                speed: viewModel.peakRecorder.todayPeakDownload,
-                                unit: viewModel.preferences.displayUnit,
-                                planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                viewModel: viewModel
-                            )
-
-                            SpeedRow(
-                                label: "歷史總峰值",
-                                speed: viewModel.peakRecorder.allTimePeakDownload,
-                                unit: viewModel.preferences.displayUnit,
-                                planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                viewModel: viewModel
-                            )
-
-                            HourlyPeakRow(
-                                label: "1小時峰值",
-                                speed: viewModel.peakRecorder.hourlyPeakDownload,
-                                time: viewModel.peakRecorder.hourlyPeakDownloadTime,
-                                unit: viewModel.preferences.displayUnit,
-                                viewModel: viewModel
-                            )
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
 
                         Divider()
@@ -275,6 +230,51 @@ public struct PopoverView: View {
                                 label: "1小時峰值",
                                 speed: viewModel.peakRecorder.hourlyPeakUpload,
                                 time: viewModel.peakRecorder.hourlyPeakUploadTime,
+                                unit: viewModel.preferences.displayUnit,
+                                viewModel: viewModel
+                            )
+                        }
+
+                        Divider()
+                    } else if showDownload {
+                        // Download Section only
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .foregroundColor(.blue)
+                                Text("下載 (Download)")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+
+                            SpeedRow(
+                                label: "即時",
+                                speed: viewModel.currentSpeed.downloadMbps,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            SpeedRow(
+                                label: "今日峰值",
+                                speed: viewModel.peakRecorder.todayPeakDownload,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            SpeedRow(
+                                label: "歷史總峰值",
+                                speed: viewModel.peakRecorder.allTimePeakDownload,
+                                unit: viewModel.preferences.displayUnit,
+                                planSpeed: viewModel.preferences.downloadPlanSpeed,
+                                viewModel: viewModel
+                            )
+
+                            HourlyPeakRow(
+                                label: "1小時峰值",
+                                speed: viewModel.peakRecorder.hourlyPeakDownload,
+                                time: viewModel.peakRecorder.hourlyPeakDownloadTime,
                                 unit: viewModel.preferences.displayUnit,
                                 viewModel: viewModel
                             )
