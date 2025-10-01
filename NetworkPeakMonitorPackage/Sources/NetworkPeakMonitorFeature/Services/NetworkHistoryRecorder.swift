@@ -21,6 +21,10 @@ public class NetworkHistoryRecorder: ObservableObject {
     public init() {
         loadStoredData()
         createInitialHourlyAggregates()
+
+        // Immediately initialize current hour data for 24-hour chart display
+        checkForHourlyAggregation()
+
         startHourlyAggregation()
     }
 
@@ -56,6 +60,17 @@ public class NetworkHistoryRecorder: ObservableObject {
         // Always add to current hour data for accurate hourly aggregation
         if !currentHourData.contains(where: { abs($0.timestamp.timeIntervalSince(now)) < 1.0 }) {
             currentHourData.append(dataPoint)
+        }
+
+        // Trigger immediate update of current hour aggregate for 24-hour chart responsiveness
+        let calendar = Calendar.current
+        let currentHour = calendar.dateInterval(of: .hour, for: now)?.start ?? now
+        let currentHourData = oneHourData.filter { point in
+            guard let hourInterval = calendar.dateInterval(of: .hour, for: currentHour) else { return false }
+            return hourInterval.contains(point.timestamp)
+        }
+        if !currentHourData.isEmpty {
+            updateCurrentHourAggregate(for: currentHour, with: currentHourData)
         }
     }
 
@@ -111,8 +126,8 @@ public class NetworkHistoryRecorder: ObservableObject {
     }
 
     private func startHourlyAggregation() {
-        // Check every minute if we need to create a new hourly aggregate
-        Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
+        // Check every 10 seconds to update current hour aggregate for better 24-hour chart responsiveness
+        Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
             self?.checkForHourlyAggregation()
         }
     }
@@ -136,10 +151,24 @@ public class NetworkHistoryRecorder: ObservableObject {
             if isCompletedHour && !alreadyExists {
                 // Aggregate completed hour
                 aggregateHourlyData(for: hourStart, with: hourData)
-            } else if hourStart == currentHour {
-                // Update or create current hour aggregate (partial data)
+            } else if hourStart == currentHour && !hourData.isEmpty {
+                // Always update current hour aggregate (partial data) for immediate 24-hour chart display
                 updateCurrentHourAggregate(for: hourStart, with: hourData)
             }
+        }
+
+        // If no data exists for current hour yet, create an initial aggregate to show in 24-hour chart
+        if !hourGroups.keys.contains(currentHour) && !twentyFourHourData.contains(where: { calendar.isDate($0.timestamp, equalTo: currentHour, toGranularity: .hour) }) {
+            // Create initial zero-value aggregate for current hour
+            let initialHourlyPoint = HourlyDataPoint(
+                timestamp: currentHour,
+                avgDownloadSpeed: 0.0,
+                avgUploadSpeed: 0.0,
+                maxDownloadSpeed: 0.0,
+                maxUploadSpeed: 0.0
+            )
+            twentyFourHourData.append(initialHourlyPoint)
+            saveTwentyFourHourData()
         }
 
         // Also handle legacy currentHourData if it exists
