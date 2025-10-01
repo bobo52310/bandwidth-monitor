@@ -1,5 +1,8 @@
 import SwiftUI
 import Charts
+#if os(macOS)
+import AppKit
+#endif
 
 @available(macOS 13.0, *)
 public struct NetworkChartView: View {
@@ -204,6 +207,7 @@ public struct NetworkChartView: View {
                 .cornerRadius(4)
             }
             .buttonStyle(.plain)
+            .pointerCursor()
             .help("Toggle Upload Data")
 
             // Interactive Download legend button
@@ -223,6 +227,7 @@ public struct NetworkChartView: View {
                 .cornerRadius(4)
             }
             .buttonStyle(.plain)
+            .pointerCursor()
             .help("Toggle Download Data")
 
             // Plan speed legend (non-interactive)
@@ -271,5 +276,22 @@ public struct NetworkChartView: View {
         } else {
             return String(format: "%.0f", value)
         }
+    }
+}
+
+// Provide a pointing-hand cursor on macOS while remaining a no-op elsewhere.
+private extension View {
+    func pointerCursor() -> some View {
+#if os(macOS)
+        return self.onHover { hovering in
+            if hovering {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+#else
+        return self
+#endif
     }
 }
