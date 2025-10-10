@@ -56,18 +56,6 @@ public struct NetworkChartView: View {
 
     private var oneHourChart: some View {
         Chart {
-            // Upload speed line
-            if showUpload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
-                    LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps))
-                    )
-                    .foregroundStyle(.green)
-                    .symbol(.square)
-                }
-            }
-
             // Download speed line
             if showDownload {
                 ForEach(historyRecorder.oneHourData) { dataPoint in
@@ -80,16 +68,28 @@ public struct NetworkChartView: View {
                 }
             }
 
-            // Plan speed reference lines
-            if showUpload && preferences.uploadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
-                    .foregroundStyle(.green.opacity(0.3))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
+            // Upload speed line
+            if showUpload {
+                ForEach(historyRecorder.oneHourData) { dataPoint in
+                    LineMark(
+                        x: .value("Time", dataPoint.timestamp),
+                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps))
+                    )
+                    .foregroundStyle(.green)
+                    .symbol(.square)
+                }
             }
 
+            // Plan speed reference lines
             if showDownload && preferences.downloadPlanSpeed > 0 {
                 RuleMark(y: .value("Plan", convertSpeed(preferences.downloadPlanSpeed)))
                     .foregroundStyle(.blue.opacity(0.3))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
+            }
+
+            if showUpload && preferences.uploadPlanSpeed > 0 {
+                RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
+                    .foregroundStyle(.green.opacity(0.3))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
             }
         }
@@ -117,18 +117,6 @@ public struct NetworkChartView: View {
 
     private var twentyFourHourChart: some View {
         Chart {
-            // Average upload speed line
-            if showUpload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.avgUploadMbps))
-                    )
-                    .foregroundStyle(.green)
-                    .symbol(.square)
-                }
-            }
-
             // Average download speed line
             if showDownload {
                 ForEach(historyRecorder.twentyFourHourData) { dataPoint in
@@ -138,6 +126,18 @@ public struct NetworkChartView: View {
                     )
                     .foregroundStyle(.blue)
                     .symbol(.circle)
+                }
+            }
+
+            // Average upload speed line
+            if showUpload {
+                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
+                    LineMark(
+                        x: .value("Time", dataPoint.timestamp),
+                        y: .value("Speed", convertSpeed(dataPoint.avgUploadMbps))
+                    )
+                    .foregroundStyle(.green)
+                    .symbol(.square)
                 }
             }
 
@@ -154,15 +154,15 @@ public struct NetworkChartView: View {
             */
 
             // Plan speed reference lines
-            if showUpload && preferences.uploadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
-                    .foregroundStyle(.green.opacity(0.3))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
-            }
-
             if showDownload && preferences.downloadPlanSpeed > 0 {
                 RuleMark(y: .value("Plan", convertSpeed(preferences.downloadPlanSpeed)))
                     .foregroundStyle(.blue.opacity(0.3))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
+            }
+
+            if showUpload && preferences.uploadPlanSpeed > 0 {
+                RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
+                    .foregroundStyle(.green.opacity(0.3))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
             }
         }
@@ -190,26 +190,6 @@ public struct NetworkChartView: View {
 
     private var legendView: some View {
         HStack(spacing: 20) {
-            // Interactive Upload legend button
-            Button(action: { showUpload.toggle() }) {
-                HStack(spacing: 4) {
-                    Rectangle()
-                        .fill(showUpload ? .green : .gray.opacity(0.4))
-                        .frame(width: 8, height: 8)
-                    Text("上傳")
-                        .font(.caption)
-                        .foregroundColor(showUpload ? .primary : .secondary)
-                        .fontWeight(showUpload ? .medium : .regular)
-                }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(showUpload ? Color.green.opacity(0.1) : Color.clear)
-                .cornerRadius(4)
-            }
-            .buttonStyle(.plain)
-            .pointerCursor()
-            .help("Toggle Upload Data")
-
             // Interactive Download legend button
             Button(action: { showDownload.toggle() }) {
                 HStack(spacing: 4) {
@@ -229,6 +209,26 @@ public struct NetworkChartView: View {
             .buttonStyle(.plain)
             .pointerCursor()
             .help("Toggle Download Data")
+
+            // Interactive Upload legend button
+            Button(action: { showUpload.toggle() }) {
+                HStack(spacing: 4) {
+                    Rectangle()
+                        .fill(showUpload ? .green : .gray.opacity(0.4))
+                        .frame(width: 8, height: 8)
+                    Text("上傳")
+                        .font(.caption)
+                        .foregroundColor(showUpload ? .primary : .secondary)
+                        .fontWeight(showUpload ? .medium : .regular)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(showUpload ? Color.green.opacity(0.1) : Color.clear)
+                .cornerRadius(4)
+            }
+            .buttonStyle(.plain)
+            .pointerCursor()
+            .help("Toggle Upload Data")
 
             // Plan speed legend (non-interactive)
             if (showDownload && preferences.downloadPlanSpeed > 0) || (showUpload && preferences.uploadPlanSpeed > 0) {

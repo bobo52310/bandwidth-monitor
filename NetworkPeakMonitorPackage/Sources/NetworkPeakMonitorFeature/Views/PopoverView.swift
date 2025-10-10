@@ -101,53 +101,6 @@ public struct PopoverView: View {
                     if showDownload && showUpload {
                         // Side-by-side layout when both are visible
                         HStack(alignment: .top, spacing: 16) {
-                            // Upload Section
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Image(systemName: "arrow.up.circle.fill")
-                                        .foregroundColor(.green)
-                                    Text("上傳 (Upload)")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                }
-
-                                SpeedRow(
-                                    label: "即時",
-                                    speed: viewModel.currentSpeed.uploadMbps,
-                                    unit: viewModel.preferences.displayUnit,
-                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                    viewModel: viewModel,
-                                    timestamp: nil
-                                )
-
-                                SpeedRow(
-                                    label: "今日峰值",
-                                    speed: viewModel.peakRecorder.todayPeakUpload,
-                                    unit: viewModel.preferences.displayUnit,
-                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                    viewModel: viewModel,
-                                    timestamp: viewModel.peakRecorder.todayPeakUploadTime
-                                )
-
-                                SpeedRow(
-                                    label: "歷史總峰值",
-                                    speed: viewModel.peakRecorder.allTimePeakUpload,
-                                    unit: viewModel.preferences.displayUnit,
-                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                    viewModel: viewModel,
-                                    timestamp: viewModel.peakRecorder.allTimePeakUploadTime
-                                )
-
-                                HourlyPeakRow(
-                                    label: "1小時峰值",
-                                    speed: viewModel.peakRecorder.hourlyPeakUpload,
-                                    time: viewModel.peakRecorder.hourlyPeakUploadTime,
-                                    unit: viewModel.preferences.displayUnit,
-                                    viewModel: viewModel
-                                )
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
                             // Download Section
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
@@ -189,6 +142,53 @@ public struct PopoverView: View {
                                     label: "1小時峰值",
                                     speed: viewModel.peakRecorder.hourlyPeakDownload,
                                     time: viewModel.peakRecorder.hourlyPeakDownloadTime,
+                                    unit: viewModel.preferences.displayUnit,
+                                    viewModel: viewModel
+                                )
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                            // Upload Section
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "arrow.up.circle.fill")
+                                        .foregroundColor(.green)
+                                    Text("上傳 (Upload)")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+
+                                SpeedRow(
+                                    label: "即時",
+                                    speed: viewModel.currentSpeed.uploadMbps,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                    viewModel: viewModel,
+                                    timestamp: nil
+                                )
+
+                                SpeedRow(
+                                    label: "今日峰值",
+                                    speed: viewModel.peakRecorder.todayPeakUpload,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                    viewModel: viewModel,
+                                    timestamp: viewModel.peakRecorder.todayPeakUploadTime
+                                )
+
+                                SpeedRow(
+                                    label: "歷史總峰值",
+                                    speed: viewModel.peakRecorder.allTimePeakUpload,
+                                    unit: viewModel.preferences.displayUnit,
+                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
+                                    viewModel: viewModel,
+                                    timestamp: viewModel.peakRecorder.allTimePeakUploadTime
+                                )
+
+                                HourlyPeakRow(
+                                    label: "1小時峰值",
+                                    speed: viewModel.peakRecorder.hourlyPeakUpload,
+                                    time: viewModel.peakRecorder.hourlyPeakUploadTime,
                                     unit: viewModel.preferences.displayUnit,
                                     viewModel: viewModel
                                 )

@@ -71,13 +71,13 @@ public class NetworkMonitorViewModel: ObservableObject {
 
         switch preferences.menuBarDisplayMode {
         case .both:
-            return "↑ \(uploadText) ↓ \(downloadText) \(unitText)"
+            return "↓ \(downloadText) ↑ \(uploadText) \(unitText)"
         case .downloadOnly:
             return "↓ \(downloadText) \(unitText)"
         case .uploadOnly:
             return "↑ \(uploadText) \(unitText)"
         case .compact:
-            return "\(uploadText)/\(downloadText) \(unitText)"
+            return "\(downloadText)/\(uploadText) \(unitText)"
         }
     }
 

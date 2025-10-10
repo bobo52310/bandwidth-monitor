@@ -21,7 +21,7 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusBarItem?.button {
-            button.title = "↑ 0.0 ↓ 0.0 Mbps"
+            button.title = "↓ 0.0 ↑ 0.0 Mbps"
             button.action = #selector(togglePopover)
             button.target = self
         }
