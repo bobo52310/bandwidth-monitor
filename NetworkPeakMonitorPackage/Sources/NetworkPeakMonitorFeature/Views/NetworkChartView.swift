@@ -17,8 +17,21 @@ public struct NetworkChartView: View {
     @State private var hoverLocation: CGPoint?
 
     public enum TimeRange: String, CaseIterable {
+        case oneMinute = "1 分鐘"
+        case fiveMinutes = "5 分鐘"
+        case fifteenMinutes = "15 分鐘"
+        case thirtyMinutes = "30 分鐘"
         case oneHour = "1 小時"
-        case twentyFourHours = "24 小時"
+
+        var seconds: TimeInterval {
+            switch self {
+            case .oneMinute: return 60
+            case .fiveMinutes: return 5 * 60
+            case .fifteenMinutes: return 15 * 60
+            case .thirtyMinutes: return 30 * 60
+            case .oneHour: return 60 * 60
+            }
+        }
     }
 
     public init(historyRecorder: NetworkHistoryRecorder, preferences: UserPreferences, showUpload: Binding<Bool>, showDownload: Binding<Bool>) {
@@ -38,6 +51,15 @@ public struct NetworkChartView: View {
             }
             .pickerStyle(.segmented)
 
+            // Statistics Card
+            StatisticsCardView(
+                data: filteredData,
+                showDownload: showDownload,
+                showUpload: showUpload,
+                unit: preferences.displayUnit,
+                timeRange: selectedTimeRange
+            )
+
             // Chart
             chartView
                 .frame(height: 200)
@@ -50,29 +72,32 @@ public struct NetworkChartView: View {
 
     @ViewBuilder
     private var chartView: some View {
-        switch selectedTimeRange {
-        case .oneHour:
-            oneHourChart
-        case .twentyFourHours:
-            twentyFourHourChart
-        }
+        // All time ranges now use short-term chart with filtered data
+        shortTermChart
+    }
+
+    // Filter data based on selected time range
+    private var filteredData: [NetworkDataPoint] {
+        let now = Date()
+        let cutoffTime = now.addingTimeInterval(-selectedTimeRange.seconds)
+        return historyRecorder.oneHourData.filter { $0.timestamp > cutoffTime }
     }
 
     @ViewBuilder
-    private var oneHourChart: some View {
+    private var shortTermChart: some View {
         if #available(macOS 14.0, *) {
-            oneHourChartWithSelection
+            shortTermChartWithSelection
         } else {
-            oneHourChartBasic
+            shortTermChartBasic
         }
     }
 
     @available(macOS 14.0, *)
-    private var oneHourChartWithSelection: some View {
+    private var shortTermChartWithSelection: some View {
         Chart {
             // Download speed area (gradient fill)
             if showDownload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
+                ForEach(filteredData) { dataPoint in
                     AreaMark(
                         x: .value("Time", dataPoint.timestamp),
                         yStart: .value("Min", 0),
@@ -91,7 +116,7 @@ public struct NetworkChartView: View {
 
             // Download speed line (on top of area)
             if showDownload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
+                ForEach(filteredData) { dataPoint in
                     LineMark(
                         x: .value("Time", dataPoint.timestamp),
                         y: .value("Speed", convertSpeed(dataPoint.downloadMbps))
@@ -104,7 +129,7 @@ public struct NetworkChartView: View {
 
             // Upload speed area (gradient fill)
             if showUpload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
+                ForEach(filteredData) { dataPoint in
                     AreaMark(
                         x: .value("Time", dataPoint.timestamp),
                         yStart: .value("Min", 0),
@@ -123,7 +148,7 @@ public struct NetworkChartView: View {
 
             // Upload speed line (on top of area)
             if showUpload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
+                ForEach(filteredData) { dataPoint in
                     LineMark(
                         x: .value("Time", dataPoint.timestamp),
                         y: .value("Speed", convertSpeed(dataPoint.uploadMbps))
@@ -155,13 +180,9 @@ public struct NetworkChartView: View {
             }
         }
         .chartXSelection(value: $selectedDate)
-        .chartYScale(domain: 0...getMaxYValue())
+        .chartYScale(domain: 0...getMaxYValueShortTerm())
         .chartXAxis {
-            AxisMarks(values: .stride(by: .minute, count: 10)) { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
-            }
+            xAxisMarks
         }
         .chartYAxis {
             AxisMarks { value in
@@ -178,7 +199,7 @@ public struct NetworkChartView: View {
         }
         .overlay(alignment: .topLeading) {
             if let selectedDate = selectedDate,
-               let dataPoint = findNearestDataPoint(for: selectedDate, in: historyRecorder.oneHourData) {
+               let dataPoint = findNearestDataPoint(for: selectedDate, in: filteredData) {
                 ChartTooltipView(
                     timestamp: dataPoint.timestamp,
                     downloadSpeed: showDownload ? dataPoint.downloadMbps : nil,
@@ -191,11 +212,11 @@ public struct NetworkChartView: View {
         }
     }
 
-    private var oneHourChartBasic: some View {
+    private var shortTermChartBasic: some View {
         Chart {
             // Download speed area (gradient fill)
             if showDownload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
+                ForEach(filteredData) { dataPoint in
                     AreaMark(
                         x: .value("Time", dataPoint.timestamp),
                         yStart: .value("Min", 0),
@@ -214,7 +235,7 @@ public struct NetworkChartView: View {
 
             // Download speed line (on top of area)
             if showDownload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
+                ForEach(filteredData) { dataPoint in
                     LineMark(
                         x: .value("Time", dataPoint.timestamp),
                         y: .value("Speed", convertSpeed(dataPoint.downloadMbps))
@@ -227,7 +248,7 @@ public struct NetworkChartView: View {
 
             // Upload speed area (gradient fill)
             if showUpload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
+                ForEach(filteredData) { dataPoint in
                     AreaMark(
                         x: .value("Time", dataPoint.timestamp),
                         yStart: .value("Min", 0),
@@ -246,7 +267,7 @@ public struct NetworkChartView: View {
 
             // Upload speed line (on top of area)
             if showUpload {
-                ForEach(historyRecorder.oneHourData) { dataPoint in
+                ForEach(filteredData) { dataPoint in
                     LineMark(
                         x: .value("Time", dataPoint.timestamp),
                         y: .value("Speed", convertSpeed(dataPoint.uploadMbps))
@@ -270,13 +291,9 @@ public struct NetworkChartView: View {
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
             }
         }
-        .chartYScale(domain: 0...getMaxYValue())
+        .chartYScale(domain: 0...getMaxYValueShortTerm())
         .chartXAxis {
-            AxisMarks(values: .stride(by: .minute, count: 10)) { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
-            }
+            xAxisMarks
         }
         .chartYAxis {
             AxisMarks { value in
@@ -530,6 +547,49 @@ public struct NetworkChartView: View {
         }
     }
 
+    // Adaptive X-axis marks based on selected time range
+    @available(macOS 13.0, *)
+    @AxisContentBuilder
+    private var xAxisMarks: some AxisContent {
+        switch selectedTimeRange {
+        case .oneMinute:
+            // Every 10 seconds for 1-minute view (HH:MM:SS for precision)
+            AxisMarks(values: .stride(by: .second, count: 10)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute().second(), centered: false)
+            }
+        case .fiveMinutes:
+            // Every 1 minute for 5-minute view (HH:MM:SS for precision)
+            AxisMarks(values: .stride(by: .minute, count: 1)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute().second(), centered: false)
+            }
+        case .fifteenMinutes:
+            // Every 3 minutes for 15-minute view (HH:MM)
+            AxisMarks(values: .stride(by: .minute, count: 3)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .thirtyMinutes:
+            // Every 5 minutes for 30-minute view (HH:MM)
+            AxisMarks(values: .stride(by: .minute, count: 5)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .oneHour:
+            // Every 10 minutes for 1-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .minute, count: 10)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        }
+    }
+
     private var legendView: some View {
         HStack(spacing: 20) {
             // Interactive Download legend button
@@ -634,17 +694,17 @@ public struct NetworkChartView: View {
         return data.min(by: { abs($0.timestamp.timeIntervalSince(date)) < abs($1.timestamp.timeIntervalSince(date)) })
     }
 
-    // Calculate maximum Y value for 1-hour chart
-    private func getMaxYValue() -> Double {
+    // Calculate maximum Y value for short-term charts (5min, 15min, 30min, 1hr)
+    private func getMaxYValueShortTerm() -> Double {
         var maxValue: Double = 100.0 // Default minimum scale
 
         if showDownload {
-            let maxDownload = historyRecorder.oneHourData.map { convertSpeed($0.downloadMbps) }.max() ?? 0
+            let maxDownload = filteredData.map { convertSpeed($0.downloadMbps) }.max() ?? 0
             maxValue = max(maxValue, maxDownload)
         }
 
         if showUpload {
-            let maxUpload = historyRecorder.oneHourData.map { convertSpeed($0.uploadMbps) }.max() ?? 0
+            let maxUpload = filteredData.map { convertSpeed($0.uploadMbps) }.max() ?? 0
             maxValue = max(maxValue, maxUpload)
         }
 
@@ -866,6 +926,198 @@ struct ChartTooltipView24Hour: View {
     private func isPeakConcerning(speed: Double, planSpeed: Double) -> Bool {
         guard planSpeed > 0 else { return false }
         return speed >= planSpeed * 0.9
+    }
+}
+
+// MARK: - Statistics Card View
+
+@available(macOS 13.0, *)
+struct StatisticsCardView: View {
+    let data: [NetworkDataPoint]
+    let showDownload: Bool
+    let showUpload: Bool
+    let unit: UserPreferences.SpeedUnit
+    let timeRange: NetworkChartView.TimeRange
+
+    @State private var isExpanded: Bool = true
+
+    var body: some View {
+        VStack(spacing: 8) {
+            // Header with toggle
+            HStack {
+                HStack(spacing: 6) {
+                    Image(systemName: "chart.bar.fill")
+                        .foregroundColor(.blue)
+                        .font(.caption)
+                    Text("統計資訊")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                }
+
+                Spacer()
+
+                Button(action: { isExpanded.toggle() }) {
+                    Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                }
+                .buttonStyle(.plain)
+                .pointerCursor()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.blue.opacity(0.05))
+            .cornerRadius(6)
+
+            // Statistics content (collapsible)
+            if isExpanded {
+                HStack(spacing: 12) {
+                    // Download statistics
+                    if showDownload {
+                        StatColumnView(
+                            title: "下載",
+                            color: .blue,
+                            current: currentDownloadSpeed,
+                            peak: peakDownloadSpeed,
+                            average: averageDownloadSpeed,
+                            unit: unit
+                        )
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    // Upload statistics
+                    if showUpload {
+                        if showDownload {
+                            Divider()
+                        }
+
+                        StatColumnView(
+                            title: "上傳",
+                            color: .green,
+                            current: currentUploadSpeed,
+                            peak: peakUploadSpeed,
+                            average: averageUploadSpeed,
+                            unit: unit
+                        )
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.secondary.opacity(0.05))
+                .cornerRadius(6)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: isExpanded)
+    }
+
+    // Calculate current speed (most recent data point)
+    private var currentDownloadSpeed: Double {
+        data.last?.downloadMbps ?? 0
+    }
+
+    private var currentUploadSpeed: Double {
+        data.last?.uploadMbps ?? 0
+    }
+
+    // Calculate peak speed
+    private var peakDownloadSpeed: Double {
+        data.map { $0.downloadMbps }.max() ?? 0
+    }
+
+    private var peakUploadSpeed: Double {
+        data.map { $0.uploadMbps }.max() ?? 0
+    }
+
+    // Calculate average speed
+    private var averageDownloadSpeed: Double {
+        guard !data.isEmpty else { return 0 }
+        let sum = data.map { $0.downloadMbps }.reduce(0, +)
+        return sum / Double(data.count)
+    }
+
+    private var averageUploadSpeed: Double {
+        guard !data.isEmpty else { return 0 }
+        let sum = data.map { $0.uploadMbps }.reduce(0, +)
+        return sum / Double(data.count)
+    }
+}
+
+@available(macOS 13.0, *)
+struct StatColumnView: View {
+    let title: String
+    let color: Color
+    let current: Double
+    let peak: Double
+    let average: Double
+    let unit: UserPreferences.SpeedUnit
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Title
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(color)
+                    .frame(width: 6, height: 6)
+                Text(title)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+            }
+
+            // Current speed (prominent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("即時")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Text(formatSpeed(current))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(color)
+            }
+
+            Divider()
+
+            // Peak and Average (compact)
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("峰值")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text(formatSpeed(peak))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("平均")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text(formatSpeed(average))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+            }
+        }
+    }
+
+    private func formatSpeed(_ speedMbps: Double) -> String {
+        let convertedSpeed = convertSpeed(speedMbps)
+        if convertedSpeed < 1.0 {
+            return String(format: "%.2f %@", convertedSpeed, unit.displayName)
+        } else if convertedSpeed < 10.0 {
+            return String(format: "%.1f %@", convertedSpeed, unit.displayName)
+        } else {
+            return String(format: "%.0f %@", convertedSpeed, unit.displayName)
+        }
+    }
+
+    private func convertSpeed(_ speedMbps: Double) -> Double {
+        switch unit {
+        case .mbps:
+            return speedMbps
+        case .mbps_lower:
+            return speedMbps / 8.0
+        }
     }
 }
 

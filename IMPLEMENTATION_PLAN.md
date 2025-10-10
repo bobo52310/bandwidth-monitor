@@ -170,10 +170,72 @@ Build Status: ✅ **Success**
   - Simplified text labels
 - **Status**: ✅ Complete
 
+### Short-Term Time Range Implementation (2025-10-11)
+- **User Request**: "除了 1hr 之外, 能否讓用戶更直覺感受最近的網路速率狀況, 可能提供 5分鐘 ,10分鐘的狀況" → Updated to "time range 改成 1,5,15,30,1hr"
+- **Goal**: Provide multiple time range options (1, 5, 15, 30, 60 minutes) to help users intuitively understand recent network speed conditions
+- **Implementation**:
+  - **TimeRange enum** with 5 options: 1分鐘 | 5分鐘 | 15分鐘 | 30分鐘 | 1小時
+    - Added `seconds` computed property for time interval calculations
+    - Removed 24-hour option per user request
+  - **Dynamic data filtering**: `filteredData` computed property filters `oneHourData` based on selected time range
+  - **Adaptive X-axis labeling** based on time range:
+    - 1分鐘: Every 10 seconds (HH:MM:SS for maximum precision)
+    - 5分鐘: Every 1 minute (HH:MM:SS for precision)
+    - 15分鐘: Every 3 minutes (HH:MM)
+    - 30分鐘: Every 5 minutes (HH:MM)
+    - 1小時: Every 10 minutes (HH:MM)
+  - **Renamed chart methods** for clarity:
+    - `oneHourChartWithSelection` → `shortTermChartWithSelection`
+    - `oneHourChartBasic` → `shortTermChartBasic`
+  - **Updated Y-axis calculation**:
+    - New `getMaxYValueShortTerm()` method uses `filteredData` instead of full dataset
+    - Maintains proper scaling with plan speeds and 10% padding
+- **Benefits**:
+  - Real-time monitoring with 1-minute view (10-second intervals)
+  - Ultra-granular precision for immediate network activity
+  - Perfect range selection from instant (1 min) to trend analysis (1 hour)
+  - Smooth transitions between all time ranges
+  - Consistent visual styling across all ranges
+- **Status**: ✅ Complete - Phase 1 implementation (Core Functionality)
+
+### Statistics Card Component (2025-10-11) - Phase 2
+- **Goal**: Provide real-time statistics for the selected time range to give users immediate insight into network performance
+- **Implementation**:
+  - **StatisticsCardView component** (`NetworkChartView.swift:938-1050`):
+    - Displays current, peak, and average speeds for selected time range
+    - Collapsible design with expand/collapse toggle
+    - Side-by-side layout for download and upload statistics
+    - Shown for all time ranges (1分鐘, 5分鐘, 15分鐘, 30分鐘, 1小時)
+  - **StatColumnView component** (`NetworkChartView.swift:1052-1128`):
+    - Individual stat column for download or upload
+    - Prominent current speed display
+    - Compact peak and average values
+    - Color-coded indicators (blue for download, green for upload)
+  - **Speed calculations**:
+    - **Current**: Most recent data point (last element in filteredData)
+    - **Peak**: Maximum speed across filtered data
+    - **Average**: Mean speed across all filtered data points
+  - **Visual Design**:
+    - Blue header with chart icon and "統計資訊" title
+    - Collapsible with smooth animation (0.2s ease-in-out)
+    - Light background with rounded corners
+    - Responsive layout adapts when toggling download/upload visibility
+- **Benefits**:
+  - At-a-glance performance metrics for selected time range
+  - No need to visually estimate from chart
+  - Helps identify current vs peak performance quickly
+  - Collapsible to save space when not needed
+- **Status**: ✅ Complete - Phase 2 implementation (Statistics Card)
+
 ## File References
 
-- Main implementation: `NetworkChartView.swift:16-566`
-- Tooltip components: `NetworkChartView.swift:344-566`
-- 1-hour chart: `NetworkChartView.swift:70-151`
-- 24-hour chart: `NetworkChartView.swift:223-318`
-- Y-axis calculation helpers: `NetworkChartView.swift:490-539`
+- Main implementation: `NetworkChartView.swift:19-35` (TimeRange enum)
+- Statistics Card integration: `NetworkChartView.swift:54-63` (in body)
+- Data filtering: `NetworkChartView.swift:75-79` (filteredData)
+- Short-term charts: `NetworkChartView.swift:91-306` (chart implementations)
+- Adaptive X-axis: `NetworkChartView.swift:545-586` (xAxisMarks)
+- Y-axis calculation: `NetworkChartView.swift:692-716` (getMaxYValueShortTerm)
+- 24-hour chart: `NetworkChartView.swift:308-543`
+- Tooltip components: `NetworkChartView.swift:737-936`
+- Statistics Card: `NetworkChartView.swift:938-1050` (StatisticsCardView)
+- Stat Column: `NetworkChartView.swift:1052-1128` (StatColumnView)
