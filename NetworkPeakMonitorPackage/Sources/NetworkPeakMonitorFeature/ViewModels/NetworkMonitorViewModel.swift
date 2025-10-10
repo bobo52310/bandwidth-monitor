@@ -101,4 +101,40 @@ public class NetworkMonitorViewModel: ObservableObject {
         return "\(speedText) \(unit.displayName) (\(timeText))"
     }
 
+    // Format relative time in Chinese (e.g., "3天2小時15分鐘前")
+    public func formatRelativeTime(_ date: Date?) -> String {
+        guard let date = date else { return "" }
+
+        let now = Date()
+        let timeInterval = now.timeIntervalSince(date)
+
+        // If negative or zero, return empty string
+        guard timeInterval > 0 else { return "" }
+
+        let days = Int(timeInterval / 86400)
+        let hours = Int((timeInterval.truncatingRemainder(dividingBy: 86400)) / 3600)
+        let minutes = Int((timeInterval.truncatingRemainder(dividingBy: 3600)) / 60)
+
+        var components: [String] = []
+
+        if days > 0 {
+            components.append("\(days)天")
+        }
+
+        if hours > 0 {
+            components.append("\(hours)小時")
+        }
+
+        if minutes > 0 {
+            components.append("\(minutes)分鐘")
+        }
+
+        // If less than 1 minute, show "剛剛"
+        if components.isEmpty {
+            return "剛剛"
+        }
+
+        return components.joined() + "前"
+    }
+
 }

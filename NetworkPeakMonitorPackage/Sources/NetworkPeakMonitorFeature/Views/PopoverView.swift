@@ -116,7 +116,8 @@ public struct PopoverView: View {
                                     speed: viewModel.currentSpeed.uploadMbps,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                    viewModel: viewModel
+                                    viewModel: viewModel,
+                                    timestamp: nil
                                 )
 
                                 SpeedRow(
@@ -124,7 +125,8 @@ public struct PopoverView: View {
                                     speed: viewModel.peakRecorder.todayPeakUpload,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                    viewModel: viewModel
+                                    viewModel: viewModel,
+                                    timestamp: viewModel.peakRecorder.todayPeakUploadTime
                                 )
 
                                 SpeedRow(
@@ -132,7 +134,8 @@ public struct PopoverView: View {
                                     speed: viewModel.peakRecorder.allTimePeakUpload,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                    viewModel: viewModel
+                                    viewModel: viewModel,
+                                    timestamp: viewModel.peakRecorder.allTimePeakUploadTime
                                 )
 
                                 HourlyPeakRow(
@@ -160,7 +163,8 @@ public struct PopoverView: View {
                                     speed: viewModel.currentSpeed.downloadMbps,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                    viewModel: viewModel
+                                    viewModel: viewModel,
+                                    timestamp: nil
                                 )
 
                                 SpeedRow(
@@ -168,7 +172,8 @@ public struct PopoverView: View {
                                     speed: viewModel.peakRecorder.todayPeakDownload,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                    viewModel: viewModel
+                                    viewModel: viewModel,
+                                    timestamp: viewModel.peakRecorder.todayPeakDownloadTime
                                 )
 
                                 SpeedRow(
@@ -176,7 +181,8 @@ public struct PopoverView: View {
                                     speed: viewModel.peakRecorder.allTimePeakDownload,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                    viewModel: viewModel
+                                    viewModel: viewModel,
+                                    timestamp: viewModel.peakRecorder.allTimePeakDownloadTime
                                 )
 
                                 HourlyPeakRow(
@@ -207,7 +213,8 @@ public struct PopoverView: View {
                                 speed: viewModel.currentSpeed.uploadMbps,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                viewModel: viewModel
+                                viewModel: viewModel,
+                                timestamp: nil
                             )
 
                             SpeedRow(
@@ -215,7 +222,8 @@ public struct PopoverView: View {
                                 speed: viewModel.peakRecorder.todayPeakUpload,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                viewModel: viewModel
+                                viewModel: viewModel,
+                                timestamp: viewModel.peakRecorder.todayPeakUploadTime
                             )
 
                             SpeedRow(
@@ -223,7 +231,8 @@ public struct PopoverView: View {
                                 speed: viewModel.peakRecorder.allTimePeakUpload,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                viewModel: viewModel
+                                viewModel: viewModel,
+                                timestamp: viewModel.peakRecorder.allTimePeakUploadTime
                             )
 
                             HourlyPeakRow(
@@ -252,7 +261,8 @@ public struct PopoverView: View {
                                 speed: viewModel.currentSpeed.downloadMbps,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                viewModel: viewModel
+                                viewModel: viewModel,
+                                timestamp: nil
                             )
 
                             SpeedRow(
@@ -260,7 +270,8 @@ public struct PopoverView: View {
                                 speed: viewModel.peakRecorder.todayPeakDownload,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                viewModel: viewModel
+                                viewModel: viewModel,
+                                timestamp: viewModel.peakRecorder.todayPeakDownloadTime
                             )
 
                             SpeedRow(
@@ -268,7 +279,8 @@ public struct PopoverView: View {
                                 speed: viewModel.peakRecorder.allTimePeakDownload,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                viewModel: viewModel
+                                viewModel: viewModel,
+                                timestamp: viewModel.peakRecorder.allTimePeakDownloadTime
                             )
 
                             HourlyPeakRow(
@@ -359,6 +371,7 @@ struct SpeedRow: View {
     let unit: UserPreferences.SpeedUnit
     let planSpeed: Double
     let viewModel: NetworkMonitorViewModel
+    let timestamp: Date?
 
     var body: some View {
         HStack {
@@ -372,10 +385,13 @@ struct SpeedRow: View {
                     viewModel.isPeakConcerning(speed: speed, planSpeed: planSpeed) ? .bold : .regular
                 )
             if viewModel.isPeakConcerning(speed: speed, planSpeed: planSpeed) {
-                Text("(!! 高 !!)")
-                    .foregroundColor(.red)
-                    .font(.caption)
-                    .fontWeight(.bold)
+                let relativeTime = viewModel.formatRelativeTime(timestamp)
+                if !relativeTime.isEmpty {
+                    Text("(\(relativeTime))")
+                        .foregroundColor(.red)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                }
             }
             Spacer()
         }
