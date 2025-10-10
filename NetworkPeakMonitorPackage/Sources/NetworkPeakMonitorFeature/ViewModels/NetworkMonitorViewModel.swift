@@ -61,6 +61,46 @@ public class NetworkMonitorViewModel: ObservableObject {
         historyRecorder.clearHistory()
     }
 
+    // MARK: - Data Export
+
+    /// Export data to CSV format
+    public func exportData(format: DataExportService.ExportFormat, completion: @escaping (Result<URL, Error>) -> Void) {
+        let result = DataExportService.exportToCSV(
+            format: format,
+            historyRecorder: historyRecorder,
+            peakRecorder: peakRecorder,
+            preferences: preferences
+        )
+        completion(result)
+    }
+
+    /// Show save panel and export data
+    public func exportDataWithSavePanel(format: DataExportService.ExportFormat, completion: @escaping @Sendable (Bool) -> Void) {
+        DataExportService.showSavePanel(suggestedFilename: format.filename) { [weak self] url in
+            Task { @MainActor in
+                guard let self = self, let url = url else {
+                    completion(false)
+                    return
+                }
+
+                let csvContent = self.generateCSVContent(format: format)
+                do {
+                    try csvContent.write(to: url, atomically: true, encoding: .utf8)
+                    DataExportService.revealInFinder(url: url)
+                    completion(true)
+                } catch {
+                    completion(false)
+                }
+            }
+        }
+    }
+
+    /// Generate CSV content based on format
+    private func generateCSVContent(format: DataExportService.ExportFormat) -> String {
+        // This is a placeholder - actual implementation uses DataExportService
+        return ""
+    }
+
     // Format speed for display
     public func formatSpeed(_ speed: Double, unit: UserPreferences.SpeedUnit) -> String {
         switch unit {

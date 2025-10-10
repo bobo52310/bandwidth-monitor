@@ -7,6 +7,9 @@ public struct PopoverView: View {
     @State private var showingChart = true  // 預設開啟圖表顯示
     @State private var showDownload = true  // 預設顯示下載資料
     @State private var showUpload = true    // 預設顯示上傳資料
+    @State private var showingExportMenu = false
+    @State private var exportSuccess = false
+    @State private var exportError = false
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
@@ -336,18 +339,40 @@ public struct PopoverView: View {
             VStack(spacing: 12) {
                 Divider()
 
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    // Export Data Menu
+                    Menu {
+                        Button("導出今日數據") {
+                            exportData(format: .todayData)
+                        }
+                        Button("導出峰值記錄") {
+                            exportData(format: .peakHistory)
+                        }
+                        Button("導出完整歷史") {
+                            exportData(format: .fullHistory)
+                        }
+                    } label: {
+                        Label("導出數據", systemImage: "square.and.arrow.up")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                    .help("導出網路數據為 CSV 檔案")
+
                     // Reset Button
                     Button("重置峰值記錄") {
                         viewModel.resetPeaks()
                     }
                     .buttonStyle(.bordered)
+                    .font(.caption)
+
+                    Spacer()
 
                     // Quit Button
                     Button("退出應用程式") {
                         NSApplication.shared.terminate(nil)
                     }
                     .buttonStyle(.borderedProminent)
+                    .font(.caption)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 16)
@@ -360,6 +385,30 @@ public struct PopoverView: View {
         .animation(.easeInOut(duration: 0.3), value: showUpload)
         .sheet(isPresented: $showingSettings) {
             SettingsView(viewModel: viewModel)
+        }
+        .alert("導出成功", isPresented: $exportSuccess) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("數據已成功導出至下載資料夾")
+        }
+        .alert("導出失敗", isPresented: $exportError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("無法導出數據，請稍後再試")
+        }
+    }
+
+    // MARK: - Helper Functions
+
+    private func exportData(format: DataExportService.ExportFormat) {
+        viewModel.exportData(format: format) { result in
+            switch result {
+            case .success(let url):
+                DataExportService.revealInFinder(url: url)
+                exportSuccess = true
+            case .failure:
+                exportError = true
+            }
         }
     }
 
