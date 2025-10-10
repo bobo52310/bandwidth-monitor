@@ -4,6 +4,7 @@ import AppKit
 public struct SettingsView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var showingOnboarding = false
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
@@ -103,6 +104,12 @@ public struct SettingsView: View {
 
                 Section("系統設定") {
                     Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
+
+                    Button("重新顯示新手引導") {
+                        showingOnboarding = true
+                    }
+                    .buttonStyle(.bordered)
+                    .help("再次查看應用程式功能介紹")
                 }
             }
 
@@ -123,5 +130,8 @@ public struct SettingsView: View {
         }
         .padding()
         .frame(width: 400, height: 600)
+        .sheet(isPresented: $showingOnboarding) {
+            OnboardingView(viewModel: viewModel)
+        }
     }
 }

@@ -9,12 +9,36 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
     private let viewModel = NetworkMonitorViewModel()
     private var cancellables = Set<AnyCancellable>()
     private var eventMonitor: Any?
+    private var onboardingWindow: NSWindow?
 
     public override init() {
         super.init()
         setupStatusBar()
         setupPopover()
         viewModel.initialize()
+        checkAndShowOnboarding()
+    }
+
+    private func checkAndShowOnboarding() {
+        let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        if !hasCompletedOnboarding {
+            showOnboarding()
+        }
+    }
+
+    private func showOnboarding() {
+        let onboardingView = OnboardingView(viewModel: viewModel)
+        let hostingController = NSHostingController(rootView: onboardingView)
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
+        window.title = "歡迎使用 Network Peak Monitor"
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.level = .floating
+        window.makeKeyAndOrderFront(nil)
+
+        onboardingWindow = window
     }
 
     private func setupStatusBar() {
