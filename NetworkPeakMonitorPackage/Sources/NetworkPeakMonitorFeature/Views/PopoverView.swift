@@ -71,7 +71,7 @@ public struct PopoverView: View {
             }
             .padding()
             .padding(.top, 8)
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Color.Adaptive.background)
 
             // Scrollable content area
             ScrollView(.vertical, showsIndicators: true) {
@@ -108,7 +108,7 @@ public struct PopoverView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     Image(systemName: "arrow.down.circle.fill")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(Color.Adaptive.downloadPrimary)
                                     Text("下載 (Download)")
                                         .font(.subheadline)
                                         .fontWeight(.medium)
@@ -155,7 +155,7 @@ public struct PopoverView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     Image(systemName: "arrow.up.circle.fill")
-                                        .foregroundColor(.green)
+                                        .foregroundColor(Color.Adaptive.uploadPrimary)
                                     Text("上傳 (Upload)")
                                         .font(.subheadline)
                                         .fontWeight(.medium)
@@ -302,7 +302,7 @@ public struct PopoverView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
+                                .foregroundColor(Color.Adaptive.warning)
                             Text("今日接近峰值")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
@@ -377,7 +377,7 @@ public struct PopoverView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 16)
             }
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Color.Adaptive.background)
         }
         .frame(width: showingChart ? 450 : 350, height: 600)
         .animation(.easeInOut(duration: 0.3), value: showingChart)
@@ -428,7 +428,7 @@ struct SpeedRow: View {
                 .frame(maxWidth: 80, alignment: .leading)
             Text(viewModel.formatSpeed(speed, unit: unit) + " " + unit.displayName)
                 .foregroundColor(
-                    viewModel.isPeakConcerning(speed: speed, planSpeed: planSpeed) ? .orange : .primary
+                    viewModel.isPeakConcerning(speed: speed, planSpeed: planSpeed) ? Color.Adaptive.warning : Color.Adaptive.text
                 )
                 .fontWeight(
                     viewModel.isPeakConcerning(speed: speed, planSpeed: planSpeed) ? .bold : .regular
@@ -437,7 +437,7 @@ struct SpeedRow: View {
                 let relativeTime = viewModel.formatRelativeTime(timestamp)
                 if !relativeTime.isEmpty {
                     Text("(\(relativeTime))")
-                        .foregroundColor(.red)
+                        .foregroundColor(Color.Adaptive.error)
                         .font(.caption)
                         .fontWeight(.bold)
                 }
