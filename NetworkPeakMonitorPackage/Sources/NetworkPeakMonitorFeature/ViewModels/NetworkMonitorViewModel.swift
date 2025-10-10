@@ -8,6 +8,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     @Published public var peakRecorder = PeakRecorder()
     @Published public var peakApproachTracker = PeakApproachTracker()
     @Published public var historyRecorder = NetworkHistoryRecorder()
+    @Published public var notificationService = NotificationService()
 
     private let networkMonitor = NetworkMonitor()
     private var cancellables = Set<AnyCancellable>()
@@ -32,6 +33,13 @@ public class NetworkMonitorViewModel: ObservableObject {
                 self.historyRecorder.recordSpeed(speed)
                 self.peakApproachTracker.checkForApproach(
                     speed,
+                    downloadPlanSpeed: self.preferences.downloadPlanSpeed,
+                    uploadPlanSpeed: self.preferences.uploadPlanSpeed
+                )
+                // Check and send notification if speed approaches limit
+                self.notificationService.checkAndNotify(
+                    downloadSpeed: speed.downloadMbps,
+                    uploadSpeed: speed.uploadMbps,
                     downloadPlanSpeed: self.preferences.downloadPlanSpeed,
                     uploadPlanSpeed: self.preferences.uploadPlanSpeed
                 )

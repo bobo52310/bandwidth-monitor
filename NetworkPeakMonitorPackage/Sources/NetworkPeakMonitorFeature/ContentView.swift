@@ -77,6 +77,30 @@ public struct SettingsView: View {
                     }
                 }
 
+                Section("通知設定") {
+                    Toggle("啟用峰值通知", isOn: $viewModel.notificationService.isEnabled)
+                        .help("當網路速度接近方案上限時發送通知")
+
+                    if viewModel.notificationService.isEnabled {
+                        HStack {
+                            Text("通知閾值:")
+                            Picker("閾值", selection: $viewModel.notificationService.threshold) {
+                                ForEach(NotificationService.thresholdOptions, id: \.value) { option in
+                                    Text(option.label).tag(option.value)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .help("當速度超過此百分比時觸發通知")
+                        }
+
+                        Button("發送測試通知") {
+                            viewModel.notificationService.sendTestNotification()
+                        }
+                        .buttonStyle(.bordered)
+                        .help("測試通知功能是否正常")
+                    }
+                }
+
                 Section("系統設定") {
                     Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
                 }
@@ -98,6 +122,6 @@ public struct SettingsView: View {
             }
         }
         .padding()
-        .frame(width: 400, height: 500)
+        .frame(width: 400, height: 600)
     }
 }
