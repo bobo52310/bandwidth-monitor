@@ -148,6 +148,83 @@ public struct SettingsView: View {
                     }
                 }
 
+                Section("錯誤日誌") {
+                    Toggle("啟用錯誤記錄", isOn: $viewModel.errorHandler.isLoggingEnabled)
+                        .help("記錄錯誤和應用程式活動以協助診斷問題")
+
+                    if viewModel.errorHandler.isLoggingEnabled {
+                        VStack(alignment: .leading, spacing: 8) {
+                            // Error summary
+                            let errorSummary = viewModel.errorHandler.getErrorSummary()
+                            if errorSummary.hasErrors {
+                                HStack {
+                                    Text("錯誤統計:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    HStack(spacing: 12) {
+                                        if errorSummary.warnings > 0 {
+                                            Label("\(errorSummary.warnings)", systemImage: "exclamationmark.triangle.fill")
+                                                .font(.caption)
+                                                .foregroundColor(.yellow)
+                                        }
+                                        if errorSummary.errors > 0 {
+                                            Label("\(errorSummary.errors)", systemImage: "exclamationmark.circle.fill")
+                                                .font(.caption)
+                                                .foregroundColor(.orange)
+                                        }
+                                        if errorSummary.critical > 0 {
+                                            Label("\(errorSummary.critical)", systemImage: "xmark.octagon.fill")
+                                                .font(.caption)
+                                                .foregroundColor(.red)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Log file info
+                            if let logSize = viewModel.errorHandler.getLogFileSize() {
+                                HStack {
+                                    Text("日誌大小:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(logSize)
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                }
+                            }
+
+                            // Action buttons
+                            HStack {
+                                Button("清除錯誤") {
+                                    viewModel.errorHandler.clearErrors()
+                                }
+                                .buttonStyle(.bordered)
+                                .font(.caption)
+                                .disabled(!errorSummary.hasErrors)
+
+                                Button("清除日誌") {
+                                    viewModel.errorHandler.clearLogFile()
+                                }
+                                .buttonStyle(.bordered)
+                                .font(.caption)
+
+                                if viewModel.errorHandler.exportLogFile() != nil {
+                                    Button("導出日誌") {
+                                        if let logURL = viewModel.errorHandler.exportLogFile() {
+                                            DataExportService.revealInFinder(url: logURL)
+                                        }
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .font(.caption)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+
                 Section("系統設定") {
                     Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
 

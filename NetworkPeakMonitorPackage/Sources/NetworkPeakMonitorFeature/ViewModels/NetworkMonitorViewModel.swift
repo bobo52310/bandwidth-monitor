@@ -11,6 +11,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     @Published public var notificationService = NotificationService()
     @Published public var anomalyDetector = NetworkAnomalyDetector()
     @Published public var keyboardShortcuts = KeyboardShortcutsService()
+    @Published public var errorHandler = ErrorHandler()
 
     private let networkMonitor = NetworkMonitor()
     private var cancellables = Set<AnyCancellable>()
@@ -20,6 +21,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     }
 
     public func initialize() {
+        errorHandler.log("應用程式初始化", level: .info, context: "Lifecycle")
         Task {
             await startMonitoring()
         }
@@ -52,14 +54,17 @@ public class NetworkMonitorViewModel: ObservableObject {
     }
 
     public func startMonitoring() async {
+        errorHandler.log("開始網路監控", level: .info, context: "Network")
         await networkMonitor.startMonitoring()
     }
 
     public func stopMonitoring() async {
+        errorHandler.log("停止網路監控", level: .info, context: "Network")
         await networkMonitor.stopMonitoring()
     }
 
     public func resetPeaks() {
+        errorHandler.log("重置所有峰值記錄", level: .info, context: "Data")
         peakRecorder.resetPeaks()
         peakApproachTracker.resetApproachData()
         historyRecorder.clearHistory()
@@ -67,6 +72,7 @@ public class NetworkMonitorViewModel: ObservableObject {
 
     /// Optimize memory by pruning old data
     public func optimizeMemory() {
+        errorHandler.log("優化記憶體", level: .info, context: "Memory")
         historyRecorder.pruneOldData()
         anomalyDetector.pruneOldAnomalies()
         // Peak approach tracker pruning handled by optimizer
@@ -98,9 +104,12 @@ public class NetworkMonitorViewModel: ObservableObject {
 
     /// Show save panel and export data
     public func exportDataWithSavePanel(format: DataExportService.ExportFormat, completion: @escaping @Sendable (Bool) -> Void) {
+        errorHandler.log("開始數據導出", level: .info, context: "Export")
+
         DataExportService.showSavePanel(suggestedFilename: format.filename) { [weak self] url in
             Task { @MainActor in
                 guard let self = self, let url = url else {
+                    self?.errorHandler.log("用戶取消導出或無法取得URL", level: .warning, context: "Export")
                     completion(false)
                     return
                 }
@@ -109,8 +118,14 @@ public class NetworkMonitorViewModel: ObservableObject {
                 do {
                     try csvContent.write(to: url, atomically: true, encoding: .utf8)
                     DataExportService.revealInFinder(url: url)
+                    self.errorHandler.log("數據導出成功: \(url.lastPathComponent)", level: .info, context: "Export")
                     completion(true)
                 } catch {
+                    self.errorHandler.logError(
+                        NetworkMonitorError.dataExportFailed(error.localizedDescription),
+                        context: "Export",
+                        severity: .error
+                    )
                     completion(false)
                 }
             }
