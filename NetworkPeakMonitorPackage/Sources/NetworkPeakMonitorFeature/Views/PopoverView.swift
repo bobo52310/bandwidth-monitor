@@ -4,7 +4,6 @@ import AppKit
 public struct PopoverView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     @State private var showingSettings = false
-    @State private var showingChart = true  // 預設開啟圖表顯示
     @State private var showDownload = true  // 預設顯示下載資料
     @State private var showUpload = true    // 預設顯示上傳資料
     @State private var showingExportMenu = false
@@ -27,24 +26,24 @@ public struct PopoverView: View {
 
                     // Control buttons
                     HStack(spacing: 8) {
-                        // Chart toggle button
-                        Button(action: { showingChart.toggle() }) {
+                        // Pin button
+                        Button(action: { viewModel.preferences.isPinned.toggle() }) {
                             HStack(spacing: 4) {
-                                Image(systemName: showingChart ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
-                                    .foregroundColor(showingChart ? .white : .blue)
+                                Image(systemName: viewModel.preferences.isPinned ? "pin.fill" : "pin")
+                                    .foregroundColor(viewModel.preferences.isPinned ? .white : .purple)
                                     .font(.caption)
-                                Text("Chart")
+                                Text("Pin")
                                     .font(.caption)
                                     .fontWeight(.medium)
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(showingChart ? .blue : Color.blue.opacity(0.1))
-                            .foregroundColor(showingChart ? .white : .blue)
+                            .background(viewModel.preferences.isPinned ? .purple : Color.purple.opacity(0.1))
+                            .foregroundColor(viewModel.preferences.isPinned ? .white : .purple)
                             .cornerRadius(6)
                         }
                         .buttonStyle(.plain)
-                        .help("Toggle Chart View")
+                        .help("固定視窗")
 
                         // Settings button
                         Button(action: { showingSettings = true }) {
@@ -76,29 +75,27 @@ public struct PopoverView: View {
             // Scrollable content area
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 16) {
-                    // Chart Section (when enabled)
-                    if showingChart {
-                        if #available(macOS 13.0, *) {
-                            NetworkChartView(
-                                historyRecorder: viewModel.historyRecorder,
-                                preferences: viewModel.preferences,
-                                showUpload: $showUpload,
-                                showDownload: $showDownload
-                            )
-                        } else {
-                            VStack {
-                                Text("圖表功能需要 macOS 13.0 或更新版本")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .padding()
-                            }
-                            .frame(height: 100)
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(8)
+                    // Chart Section (always visible)
+                    if #available(macOS 13.0, *) {
+                        NetworkChartView(
+                            historyRecorder: viewModel.historyRecorder,
+                            preferences: viewModel.preferences,
+                            showUpload: $showUpload,
+                            showDownload: $showDownload
+                        )
+                    } else {
+                        VStack {
+                            Text("圖表功能需要 macOS 13.0 或更新版本")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding()
                         }
-
-                        Divider()
+                        .frame(height: 100)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
                     }
+
+                    Divider()
 
                     // Upload and Download Sections
                     if showDownload && showUpload {
@@ -439,8 +436,7 @@ public struct PopoverView: View {
             }
             .background(Color.Adaptive.background)
         }
-        .frame(width: showingChart ? 450 : 350, height: 600)
-        .animation(.easeInOut(duration: 0.3), value: showingChart)
+        .frame(width: 450, height: 600)
         .animation(.easeInOut(duration: 0.3), value: showDownload)
         .animation(.easeInOut(duration: 0.3), value: showUpload)
         .sheet(isPresented: $showingSettings) {

@@ -34,6 +34,12 @@ public class UserPreferences: ObservableObject {
         }
     }
 
+    @Published public var isPinned: Bool {
+        didSet {
+            userDefaults.set(isPinned, forKey: "isPinned")
+        }
+    }
+
     public enum SpeedUnit: String, CaseIterable {
         case mbps = "Mbps"
         case mbps_lower = "MB/s"
@@ -82,6 +88,7 @@ public class UserPreferences: ObservableObject {
         self.displayUnit = SpeedUnit(rawValue: userDefaults.string(forKey: "displayUnit") ?? "Mbps") ?? .mbps
         self.launchAtLogin = userDefaults.bool(forKey: "launchAtLogin")
         self.menuBarDisplayMode = MenuBarDisplayMode(rawValue: userDefaults.string(forKey: "menuBarDisplayMode") ?? "both") ?? .both
+        self.isPinned = userDefaults.bool(forKey: "isPinned")
 
         // Set default values if not set
         if downloadPlanSpeed == 0 {

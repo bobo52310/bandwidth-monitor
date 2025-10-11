@@ -4,9 +4,11 @@ import Combine
 import UserNotifications
 
 @MainActor
-public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate {
+public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate, NSWindowDelegate {
     private var statusBarItem: NSStatusItem?
     private var popover: NSPopover?
+    private var floatingPanel: NSPanel?
+    private var panelHostingController: NSHostingController<PopoverView>?
     private let viewModel = NetworkMonitorViewModel()
     private var cancellables = Set<AnyCancellable>()
     private var eventMonitor: Any?
@@ -17,6 +19,7 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
         setupStatusBar()
         setupPopover()
         setupKeyboardShortcuts()
+        setupPinStateObserver()
         viewModel.initialize()
         checkAndShowOnboarding()
     }
@@ -95,6 +98,23 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
         }
     }
 
+    private func setupPinStateObserver() {
+        // Observe pin state changes
+        viewModel.preferences.$isPinned
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isPinned in
+                guard let self = self else { return }
+                if isPinned {
+                    // Convert popover to floating panel
+                    self.showFloatingPanel()
+                } else {
+                    // Convert floating panel back to popover
+                    self.closeFloatingPanel()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
     private func openSettings() {
         // Show popover first if not shown
         if let popover = popover, !popover.isShown {
@@ -148,6 +168,17 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
     }
 
     @objc private func togglePopover() {
+        // If pinned, toggle the floating panel instead
+        if viewModel.preferences.isPinned {
+            if floatingPanel?.isVisible == true {
+                closeFloatingPanel()
+            } else {
+                showFloatingPanel()
+            }
+            return
+        }
+
+        // Normal popover behavior
         guard let popover = popover else { return }
 
         if popover.isShown {
@@ -155,6 +186,102 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
         } else {
             showPopover()
         }
+    }
+
+    private func showFloatingPanel() {
+        // Close popover if it's showing
+        if popover?.isShown == true {
+            closePopover()
+        }
+
+        // If panel already exists and is visible, just bring to front
+        if let panel = floatingPanel, panel.isVisible {
+            panel.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        // Create panel if it doesn't exist
+        if floatingPanel == nil {
+            let panel = NSPanel(
+                contentRect: NSRect(x: 0, y: 0, width: 450, height: 600),
+                styleMask: [.titled, .closable, .resizable, .utilityWindow],
+                backing: .buffered,
+                defer: false
+            )
+
+            panel.title = "Network Peak Monitor"
+            panel.level = .statusBar
+            panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            panel.isFloatingPanel = true
+            panel.hidesOnDeactivate = false
+
+            // Create hosting controller with same view model
+            let hostingController = NSHostingController(rootView: PopoverView(viewModel: viewModel))
+            panel.contentViewController = hostingController
+
+            // Handle panel close button
+            panel.delegate = self
+
+            floatingPanel = panel
+            panelHostingController = hostingController
+        }
+
+        // Restore saved position or position near status bar item
+        if let savedFrame = getSavedPanelFrame() {
+            floatingPanel?.setFrame(savedFrame, display: false)
+        } else if let button = statusBarItem?.button, let screen = button.window?.screen {
+            let buttonFrame = button.window?.convertToScreen(button.frame) ?? .zero
+            let panelSize = floatingPanel!.frame.size
+            let panelOrigin = NSPoint(
+                x: buttonFrame.midX - panelSize.width / 2,
+                y: buttonFrame.minY - panelSize.height - 8
+            )
+
+            // Keep panel on screen
+            var adjustedOrigin = panelOrigin
+            let screenFrame = screen.visibleFrame
+            if adjustedOrigin.x < screenFrame.minX {
+                adjustedOrigin.x = screenFrame.minX + 20
+            }
+            if adjustedOrigin.x + panelSize.width > screenFrame.maxX {
+                adjustedOrigin.x = screenFrame.maxX - panelSize.width - 20
+            }
+            if adjustedOrigin.y < screenFrame.minY {
+                adjustedOrigin.y = screenFrame.minY + 20
+            }
+
+            floatingPanel?.setFrame(NSRect(origin: adjustedOrigin, size: panelSize), display: false)
+        }
+
+        floatingPanel?.makeKeyAndOrderFront(nil)
+    }
+
+    private func getSavedPanelFrame() -> NSRect? {
+        guard let dict = UserDefaults.standard.dictionary(forKey: "floatingPanelFrame"),
+              let x = dict["x"] as? CGFloat,
+              let y = dict["y"] as? CGFloat,
+              let width = dict["width"] as? CGFloat,
+              let height = dict["height"] as? CGFloat else {
+            return nil
+        }
+        return NSRect(x: x, y: y, width: width, height: height)
+    }
+
+    private func savePanelFrame(_ frame: NSRect) {
+        let dict: [String: CGFloat] = [
+            "x": frame.origin.x,
+            "y": frame.origin.y,
+            "width": frame.size.width,
+            "height": frame.size.height
+        ]
+        UserDefaults.standard.set(dict, forKey: "floatingPanelFrame")
+    }
+
+    private func closeFloatingPanel() {
+        floatingPanel?.orderOut(nil)
+        floatingPanel?.close()
+        floatingPanel = nil
+        panelHostingController = nil
     }
 
     private func showPopover() {
@@ -224,5 +351,30 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
 
     public func popoverShouldDetach(_ popover: NSPopover) -> Bool {
         return false // Prevent detaching the popover
+    }
+
+    // MARK: - NSWindowDelegate
+
+    public func windowWillClose(_ notification: Notification) {
+        // When user closes the panel via close button, unpin it
+        if let window = notification.object as? NSWindow, window === floatingPanel {
+            // Save position before closing
+            savePanelFrame(window.frame)
+            viewModel.preferences.isPinned = false
+        }
+    }
+
+    public func windowDidMove(_ notification: Notification) {
+        // Save position when panel is moved
+        if let window = notification.object as? NSWindow, window === floatingPanel {
+            savePanelFrame(window.frame)
+        }
+    }
+
+    public func windowDidResize(_ notification: Notification) {
+        // Save size when panel is resized
+        if let window = notification.object as? NSWindow, window === floatingPanel {
+            savePanelFrame(window.frame)
+        }
     }
 }
