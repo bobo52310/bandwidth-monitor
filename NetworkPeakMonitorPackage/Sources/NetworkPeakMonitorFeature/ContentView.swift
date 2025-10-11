@@ -119,6 +119,35 @@ public struct SettingsView: View {
                     }
                 }
 
+                Section("快捷鍵") {
+                    Toggle("啟用全域快捷鍵", isOn: $viewModel.keyboardShortcuts.isEnabled)
+                        .help("啟用快捷鍵以快速存取常用功能")
+
+                    if viewModel.keyboardShortcuts.isEnabled {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("可用快捷鍵:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            ForEach(KeyboardShortcutsService.getAllShortcuts(), id: \.name) { shortcut in
+                                HStack {
+                                    Text(shortcut.name)
+                                        .font(.caption)
+                                    Spacer()
+                                    Text(shortcut.shortcut)
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 2)
+                                        .background(Color.secondary.opacity(0.1))
+                                        .cornerRadius(4)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+
                 Section("系統設定") {
                     Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
 

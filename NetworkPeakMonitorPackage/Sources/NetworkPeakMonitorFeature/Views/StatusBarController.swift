@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import UserNotifications
 
 @MainActor
 public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate {
@@ -15,6 +16,7 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
         super.init()
         setupStatusBar()
         setupPopover()
+        setupKeyboardShortcuts()
         viewModel.initialize()
         checkAndShowOnboarding()
     }
@@ -68,6 +70,81 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate 
         popover?.contentViewController = NSHostingController(
             rootView: PopoverView(viewModel: viewModel)
         )
+    }
+
+    private func setupKeyboardShortcuts() {
+        // Bind keyboard shortcut callbacks
+        viewModel.keyboardShortcuts.onTogglePopover = { [weak self] in
+            self?.togglePopover()
+        }
+
+        viewModel.keyboardShortcuts.onOpenSettings = { [weak self] in
+            self?.openSettings()
+        }
+
+        viewModel.keyboardShortcuts.onResetPeaks = { [weak self] in
+            self?.handleResetPeaks()
+        }
+
+        viewModel.keyboardShortcuts.onExportData = { [weak self] in
+            self?.handleExportData()
+        }
+
+        viewModel.keyboardShortcuts.onOptimizeMemory = { [weak self] in
+            self?.handleOptimizeMemory()
+        }
+    }
+
+    private func openSettings() {
+        // Show popover first if not shown
+        if let popover = popover, !popover.isShown {
+            showPopover()
+        }
+
+        // Open settings view
+        let settingsView = SettingsView(viewModel: viewModel)
+        let hostingController = NSHostingController(rootView: settingsView)
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.styleMask = [.titled, .closable, .resizable]
+        window.title = "設定"
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    private func handleResetPeaks() {
+        viewModel.resetPeaks()
+        sendNotification(title: "峰值已重置", body: "所有峰值記錄已清除")
+    }
+
+    private func handleExportData() {
+        viewModel.exportDataWithSavePanel(format: .fullHistory) { success in
+            if success {
+                Task { @MainActor in
+                    self.sendNotification(title: "導出成功", body: "數據已成功導出")
+                }
+            }
+        }
+    }
+
+    private func handleOptimizeMemory() {
+        viewModel.optimizeMemory()
+        sendNotification(title: "記憶體已優化", body: "過期數據已清除")
+    }
+
+    private func sendNotification(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: nil
+        )
+
+        UNUserNotificationCenter.current().add(request)
     }
 
     @objc private func togglePopover() {
