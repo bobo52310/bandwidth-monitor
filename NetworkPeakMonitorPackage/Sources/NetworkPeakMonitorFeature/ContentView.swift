@@ -102,6 +102,23 @@ public struct SettingsView: View {
                     }
                 }
 
+                Section("網路監控") {
+                    Toggle("啟用異常偵測", isOn: $viewModel.anomalyDetector.isDetectionEnabled)
+                        .help("自動偵測網路中斷、速度驟降等異常狀況")
+
+                    if viewModel.anomalyDetector.isDetectionEnabled && !viewModel.anomalyDetector.recentAnomalies.isEmpty {
+                        HStack {
+                            Text("異常記錄:")
+                            Spacer()
+                            Button("清除歷史") {
+                                viewModel.anomalyDetector.clearHistory()
+                            }
+                            .buttonStyle(.bordered)
+                            .font(.caption)
+                        }
+                    }
+                }
+
                 Section("系統設定") {
                     Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
 

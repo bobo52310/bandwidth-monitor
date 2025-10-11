@@ -298,6 +298,66 @@ public struct PopoverView: View {
                         Divider()
                     }
 
+                    // Network Anomaly Section
+                    if viewModel.anomalyDetector.isDetectionEnabled {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: viewModel.anomalyDetector.isConnectionStable ? "wifi" : "wifi.exclamationmark")
+                                    .foregroundColor(viewModel.anomalyDetector.isConnectionStable ? .green : Color.Adaptive.error)
+                                Text("網路狀態")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                Spacer()
+                                Text(viewModel.anomalyDetector.isConnectionStable ? "穩定" : "異常")
+                                    .font(.caption)
+                                    .foregroundColor(viewModel.anomalyDetector.isConnectionStable ? .green : Color.Adaptive.error)
+                                    .fontWeight(.bold)
+                            }
+
+                            let summary = viewModel.anomalyDetector.getAnomalySummary()
+                            if summary.hasAnomalies {
+                                HStack(spacing: 12) {
+                                    if summary.connectionDrops > 0 {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "wifi.exclamationmark")
+                                                .font(.caption2)
+                                            Text("\(summary.connectionDrops) 次中斷")
+                                                .font(.caption2)
+                                        }
+                                        .foregroundColor(Color.Adaptive.error)
+                                    }
+                                    if summary.speedDrops > 0 {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "arrow.down.circle.fill")
+                                                .font(.caption2)
+                                            Text("\(summary.speedDrops) 次驟降")
+                                                .font(.caption2)
+                                        }
+                                        .foregroundColor(Color.Adaptive.warning)
+                                    }
+                                }
+
+                                // Show recent anomalies
+                                if !viewModel.anomalyDetector.recentAnomalies.isEmpty {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 4) {
+                                            ForEach(viewModel.anomalyDetector.recentAnomalies.prefix(5)) { anomaly in
+                                                AnomalyBadge(anomaly: anomaly)
+                                            }
+                                        }
+                                        .padding(.horizontal, 1)
+                                    }
+                                }
+                            } else {
+                                Text("近1小時無異常記錄")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Divider()
+                    }
+
                     // Peak Approach Counter Section
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -468,6 +528,56 @@ struct HourlyPeakRow: View {
                 }
             }
             Spacer()
+        }
+    }
+}
+
+struct AnomalyBadge: View {
+    let anomaly: NetworkAnomaly
+
+    private var timeAgo: String {
+        let now = Date()
+        let interval = now.timeIntervalSince(anomaly.timestamp)
+
+        if interval < 60 {
+            return "剛剛"
+        } else if interval < 3600 {
+            let minutes = Int(interval / 60)
+            return "\(minutes)分鐘前"
+        } else {
+            let hours = Int(interval / 3600)
+            return "\(hours)小時前"
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Image(systemName: anomaly.type.icon)
+                    .font(.caption2)
+                Text(anomaly.type.displayText)
+                    .font(.caption2)
+                    .lineLimit(2)
+            }
+            Text(timeAgo)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background(backgroundColor)
+        .cornerRadius(4)
+        .frame(maxWidth: 200)
+    }
+
+    private var backgroundColor: Color {
+        switch anomaly.type.severity {
+        case .low:
+            return Color.yellow.opacity(0.2)
+        case .medium:
+            return Color.orange.opacity(0.2)
+        case .high:
+            return Color.red.opacity(0.2)
         }
     }
 }

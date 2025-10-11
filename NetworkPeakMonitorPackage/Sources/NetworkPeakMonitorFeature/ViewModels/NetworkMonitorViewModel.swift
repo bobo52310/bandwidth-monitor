@@ -9,6 +9,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     @Published public var peakApproachTracker = PeakApproachTracker()
     @Published public var historyRecorder = NetworkHistoryRecorder()
     @Published public var notificationService = NotificationService()
+    @Published public var anomalyDetector = NetworkAnomalyDetector()
 
     private let networkMonitor = NetworkMonitor()
     private var cancellables = Set<AnyCancellable>()
@@ -43,6 +44,8 @@ public class NetworkMonitorViewModel: ObservableObject {
                     downloadPlanSpeed: self.preferences.downloadPlanSpeed,
                     uploadPlanSpeed: self.preferences.uploadPlanSpeed
                 )
+                // Analyze for network anomalies
+                self.anomalyDetector.analyzeSpeed(speed)
             }
             .store(in: &cancellables)
     }
