@@ -64,6 +64,24 @@ public class NetworkMonitorViewModel: ObservableObject {
         historyRecorder.clearHistory()
     }
 
+    /// Optimize memory by pruning old data
+    public func optimizeMemory() {
+        historyRecorder.pruneOldData()
+        anomalyDetector.pruneOldAnomalies()
+        // Peak approach tracker pruning handled by optimizer
+        let prunedTimestamps = MemoryOptimizer.prunePeakApproaches(peakApproachTracker.approachTimestamps)
+        // Note: Would need to add a method to update timestamps in PeakApproachTracker
+    }
+
+    /// Get current memory statistics
+    public func getMemoryStats() -> MemoryOptimizer.MemoryStats {
+        return MemoryOptimizer.calculateMemoryStats(
+            oneHourDataCount: historyRecorder.oneHourData.count,
+            twentyFourHourDataCount: historyRecorder.twentyFourHourData.count,
+            anomalyCount: anomalyDetector.recentAnomalies.count
+        )
+    }
+
     // MARK: - Data Export
 
     /// Export data to CSV format

@@ -305,6 +305,39 @@ public class NetworkHistoryRecorder: ObservableObject {
         userDefaults.removeObject(forKey: "networkHistory_lastRecordTime")
     }
 
+    /// Manually prune old data to optimize memory
+    public func pruneOldData() {
+        let now = Date()
+
+        // Prune one-hour data
+        let oneHourAgo = now.addingTimeInterval(-3600)
+        let beforeCount = oneHourData.count
+        oneHourData = oneHourData.filter { $0.timestamp > oneHourAgo }
+
+        // Limit to max points
+        if oneHourData.count > maxOneHourPoints {
+            oneHourData.removeFirst(oneHourData.count - maxOneHourPoints)
+        }
+
+        // Prune twenty-four hour data
+        let twentyFourHoursAgo = now.addingTimeInterval(-24 * 3600)
+        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
+
+        // Limit to max points
+        if twentyFourHourData.count > maxTwentyFourHourPoints {
+            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
+        }
+
+        // Prune current hour data
+        currentHourData = currentHourData.filter { $0.timestamp > oneHourAgo }
+
+        // Save if data was pruned
+        if beforeCount != oneHourData.count {
+            saveOneHourData()
+            saveTwentyFourHourData()
+        }
+    }
+
     // MARK: - Persistence
 
     private func saveOneHourData() {

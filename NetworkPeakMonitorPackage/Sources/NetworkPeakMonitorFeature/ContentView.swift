@@ -130,19 +130,47 @@ public struct SettingsView: View {
                 }
             }
 
-            HStack {
-                Button("重置所有峰值記錄") {
-                    viewModel.resetPeaks()
+            VStack(spacing: 12) {
+                // Memory stats
+                let memStats = viewModel.getMemoryStats()
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("記憶體使用")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text(memStats.formattedTotal)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                    }
+                    Spacer()
+                    Button("優化記憶體") {
+                        viewModel.optimizeMemory()
+                    }
+                    .buttonStyle(.bordered)
+                    .font(.caption)
+                    .help("清理過期數據以減少記憶體使用")
                 }
-                .buttonStyle(.bordered)
-                .foregroundColor(.red)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.secondary.opacity(0.05))
+                .cornerRadius(8)
 
-                Spacer()
+                Divider()
 
-                Button("關閉") {
-                    dismiss()
+                HStack {
+                    Button("重置所有峰值記錄") {
+                        viewModel.resetPeaks()
+                    }
+                    .buttonStyle(.bordered)
+                    .foregroundColor(.red)
+
+                    Spacer()
+
+                    Button("關閉") {
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
-                .buttonStyle(.borderedProminent)
             }
         }
         .padding()

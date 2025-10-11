@@ -119,6 +119,26 @@ public class NetworkAnomalyDetector: ObservableObject {
         recentAnomalies.removeAll()
     }
 
+    /// Prune old anomalies to optimize memory
+    public func pruneOldAnomalies() {
+        let now = Date()
+        let maxAge: TimeInterval = 7 * 24 * 3600 // 7 days
+
+        let beforeCount = recentAnomalies.count
+
+        // Remove anomalies older than max age
+        recentAnomalies = recentAnomalies.filter { now.timeIntervalSince($0.timestamp) < maxAge }
+
+        // Ensure we don't exceed max count
+        if recentAnomalies.count > maxAnomalyHistory {
+            recentAnomalies = Array(recentAnomalies.prefix(maxAnomalyHistory))
+        }
+
+        if beforeCount != recentAnomalies.count {
+            print("Pruned \(beforeCount - recentAnomalies.count) old anomalies")
+        }
+    }
+
     /// Get formatted anomaly summary
     public func getAnomalySummary(for period: TimeInterval = 3600) -> AnomalySummary {
         let cutoffTime = Date().addingTimeInterval(-period)
