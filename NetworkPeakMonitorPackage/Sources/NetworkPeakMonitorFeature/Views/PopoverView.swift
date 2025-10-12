@@ -101,24 +101,15 @@ public struct PopoverView: View {
                     if showDownload && showUpload {
                         // Side-by-side layout when both are visible
                         HStack(alignment: .top, spacing: 16) {
-                            // Download Section
+                            // Download Section - Statistics
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     Image(systemName: "arrow.down.circle.fill")
                                         .foregroundColor(Color.Adaptive.downloadPrimary)
-                                    Text("下載 (Download)")
+                                    Text("下載統計 (Download Stats)")
                                         .font(.subheadline)
                                         .fontWeight(.medium)
                                 }
-
-                                SpeedRow(
-                                    label: "即時",
-                                    speed: viewModel.currentSpeed.downloadMbps,
-                                    unit: viewModel.preferences.displayUnit,
-                                    planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                    viewModel: viewModel,
-                                    timestamp: nil
-                                )
 
                                 SpeedRow(
                                     label: "今日峰值",
@@ -148,24 +139,15 @@ public struct PopoverView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
 
-                            // Upload Section
+                            // Upload Section - Statistics
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     Image(systemName: "arrow.up.circle.fill")
                                         .foregroundColor(Color.Adaptive.uploadPrimary)
-                                    Text("上傳 (Upload)")
+                                    Text("上傳統計 (Upload Stats)")
                                         .font(.subheadline)
                                         .fontWeight(.medium)
                                 }
-
-                                SpeedRow(
-                                    label: "即時",
-                                    speed: viewModel.currentSpeed.uploadMbps,
-                                    unit: viewModel.preferences.displayUnit,
-                                    planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                    viewModel: viewModel,
-                                    timestamp: nil
-                                )
 
                                 SpeedRow(
                                     label: "今日峰值",
@@ -198,24 +180,15 @@ public struct PopoverView: View {
 
                         Divider()
                     } else if showUpload {
-                        // Upload Section only
+                        // Upload Section only - Statistics
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Image(systemName: "arrow.up.circle.fill")
                                     .foregroundColor(.green)
-                                Text("上傳 (Upload)")
+                                Text("上傳統計 (Upload Stats)")
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                             }
-
-                            SpeedRow(
-                                label: "即時",
-                                speed: viewModel.currentSpeed.uploadMbps,
-                                unit: viewModel.preferences.displayUnit,
-                                planSpeed: viewModel.preferences.uploadPlanSpeed,
-                                viewModel: viewModel,
-                                timestamp: nil
-                            )
 
                             SpeedRow(
                                 label: "今日峰值",
@@ -246,24 +219,15 @@ public struct PopoverView: View {
 
                         Divider()
                     } else if showDownload {
-                        // Download Section only
+                        // Download Section only - Statistics
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Image(systemName: "arrow.down.circle.fill")
                                     .foregroundColor(.blue)
-                                Text("下載 (Download)")
+                                Text("下載統計 (Download Stats)")
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                             }
-
-                            SpeedRow(
-                                label: "即時",
-                                speed: viewModel.currentSpeed.downloadMbps,
-                                unit: viewModel.preferences.displayUnit,
-                                planSpeed: viewModel.preferences.downloadPlanSpeed,
-                                viewModel: viewModel,
-                                timestamp: nil
-                            )
 
                             SpeedRow(
                                 label: "今日峰值",
