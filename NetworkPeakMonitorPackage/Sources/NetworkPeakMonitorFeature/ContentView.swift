@@ -1,10 +1,71 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Collapsible Section Component
+struct CollapsibleSection<Content: View>: View {
+    let title: String
+    let icon: String
+    @Binding var isExpanded: Bool
+    @ViewBuilder let content: () -> Content
+
+    init(title: String, icon: String, isExpanded: Binding<Bool>, @ViewBuilder content: @escaping () -> Content) {
+        self.title = title
+        self.icon = icon
+        self._isExpanded = isExpanded
+        self.content = content
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Section Header
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    isExpanded.toggle()
+                }
+            }) {
+                HStack {
+                    Image(systemName: icon)
+                        .foregroundColor(.accentColor)
+                        .frame(width: 20)
+                    Text(title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
+                .contentShape(Rectangle())
+                .padding(.vertical, 10)
+                .padding(.horizontal, 12)
+                .background(Color.secondary.opacity(0.05))
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+
+            // Section Content
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 12) {
+                    content()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 12)
+            }
+        }
+        .clipped() // Prevent content overflow during animation
+    }
+}
+
 public struct SettingsView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingOnboarding = false
+
+    // Section expansion states
+    @State private var networkSettingsExpanded = false
+    @State private var displayNotificationExpanded = true
+    @State private var systemMaintenanceExpanded = true
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
@@ -61,223 +122,285 @@ public struct SettingsView: View {
             Divider()
 
             ScrollView {
-                VStack(spacing: 0) {
-                    Form {
-                        Section("網路方案設定") {
-                    HStack {
-                        Text("下載速度上限:")
-                        TextField("300", value: $viewModel.preferences.downloadPlanSpeed, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                        Text("Mbps")
-                    }
-
-                    HStack {
-                        Text("上傳速度上限:")
-                        TextField("300", value: $viewModel.preferences.uploadPlanSpeed, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                        Text("Mbps")
-                    }
-                }
-
-                Section("顯示設定") {
-                    HStack {
-                        Text("顯示單位:")
-                        Picker("單位", selection: $viewModel.preferences.displayUnit) {
-                            ForEach(UserPreferences.SpeedUnit.allCases, id: \.self) { unit in
-                                Text(unit.displayName).tag(unit)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("選單列顯示模式:")
-                        Picker("顯示模式", selection: $viewModel.preferences.menuBarDisplayMode) {
-                            ForEach(UserPreferences.MenuBarDisplayMode.allCases, id: \.self) { mode in
-                                VStack(alignment: .leading) {
-                                    Text(mode.displayName)
-                                    Text(mode.description)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .tag(mode)
-                            }
-                        }
-                        .pickerStyle(.menu)
-
-                        // Preview
-                        HStack {
-                            Text("預覽:")
-                                .font(.caption)
+                VStack(spacing: 12) {
+                    // MARK: - Network Settings Section
+                    CollapsibleSection(
+                        title: "網路設定",
+                        icon: "network",
+                        isExpanded: $networkSettingsExpanded
+                    ) {
+                        // Network Plan Settings
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("網路方案設定")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
                                 .foregroundColor(.secondary)
-                            Text(viewModel.menuBarText)
-                                .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 2)
-                                .background(Color.secondary.opacity(0.1))
-                                .cornerRadius(4)
-                        }
-                    }
-                }
 
-                Section("通知設定") {
-                    Toggle("啟用峰值通知", isOn: $viewModel.notificationService.isEnabled)
-                        .help("當網路速度接近方案上限時發送通知")
-
-                    if viewModel.notificationService.isEnabled {
-                        HStack {
-                            Text("通知閾值:")
-                            Picker("閾值", selection: $viewModel.notificationService.threshold) {
-                                ForEach(NotificationService.thresholdOptions, id: \.value) { option in
-                                    Text(option.label).tag(option.value)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-                            .help("當速度超過此百分比時觸發通知")
-                        }
-
-                        Button("發送測試通知") {
-                            viewModel.notificationService.sendTestNotification()
-                        }
-                        .buttonStyle(.bordered)
-                        .help("測試通知功能是否正常")
-                    }
-                }
-
-                Section("網路監控") {
-                    Toggle("啟用異常偵測", isOn: $viewModel.anomalyDetector.isDetectionEnabled)
-                        .help("自動偵測網路中斷、速度驟降等異常狀況")
-
-                    if viewModel.anomalyDetector.isDetectionEnabled && !viewModel.anomalyDetector.recentAnomalies.isEmpty {
-                        HStack {
-                            Text("異常記錄:")
-                            Spacer()
-                            Button("清除歷史") {
-                                viewModel.anomalyDetector.clearHistory()
-                            }
-                            .buttonStyle(.bordered)
-                            .font(.caption)
-                        }
-                    }
-                }
-
-                Section("錯誤日誌") {
-                    Toggle("啟用錯誤記錄", isOn: $viewModel.errorHandler.isLoggingEnabled)
-                        .help("記錄錯誤和應用程式活動以協助診斷問題")
-
-                    if viewModel.errorHandler.isLoggingEnabled {
-                        VStack(alignment: .leading, spacing: 8) {
-                            // Error summary
-                            let errorSummary = viewModel.errorHandler.getErrorSummary()
-                            if errorSummary.hasErrors {
-                                HStack {
-                                    Text("錯誤統計:")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    HStack(spacing: 12) {
-                                        if errorSummary.warnings > 0 {
-                                            Label("\(errorSummary.warnings)", systemImage: "exclamationmark.triangle.fill")
-                                                .font(.caption)
-                                                .foregroundColor(.yellow)
-                                        }
-                                        if errorSummary.errors > 0 {
-                                            Label("\(errorSummary.errors)", systemImage: "exclamationmark.circle.fill")
-                                                .font(.caption)
-                                                .foregroundColor(.orange)
-                                        }
-                                        if errorSummary.critical > 0 {
-                                            Label("\(errorSummary.critical)", systemImage: "xmark.octagon.fill")
-                                                .font(.caption)
-                                                .foregroundColor(.red)
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Log file info
-                            if let logSize = viewModel.errorHandler.getLogFileSize() {
-                                HStack {
-                                    Text("日誌大小:")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(logSize)
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                }
-                            }
-
-                            // Action buttons
                             HStack {
-                                Button("清除錯誤") {
-                                    viewModel.errorHandler.clearErrors()
-                                }
-                                .buttonStyle(.bordered)
-                                .font(.caption)
-                                .disabled(!errorSummary.hasErrors)
+                                Text("下載速度上限:")
+                                    .frame(width: 100, alignment: .leading)
+                                TextField("300", value: $viewModel.preferences.downloadPlanSpeed, format: .number)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 80)
+                                Text("Mbps")
+                            }
 
-                                Button("清除日誌") {
-                                    viewModel.errorHandler.clearLogFile()
-                                }
-                                .buttonStyle(.bordered)
-                                .font(.caption)
+                            HStack {
+                                Text("上傳速度上限:")
+                                    .frame(width: 100, alignment: .leading)
+                                TextField("300", value: $viewModel.preferences.uploadPlanSpeed, format: .number)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 80)
+                                Text("Mbps")
+                            }
+                        }
 
-                                if viewModel.errorHandler.exportLogFile() != nil {
-                                    Button("導出日誌") {
-                                        if let logURL = viewModel.errorHandler.exportLogFile() {
-                                            DataExportService.revealInFinder(url: logURL)
-                                        }
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        // Network Monitoring
+                        VStack(alignment: .leading, spacing: 10) {
+                            Toggle("啟用異常偵測", isOn: $viewModel.anomalyDetector.isDetectionEnabled)
+                                .help("自動偵測網路中斷、速度驟降等異常狀況")
+
+                            if viewModel.anomalyDetector.isDetectionEnabled && !viewModel.anomalyDetector.recentAnomalies.isEmpty {
+                                HStack {
+                                    Text("異常記錄:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Button("清除歷史") {
+                                        viewModel.anomalyDetector.clearHistory()
                                     }
                                     .buttonStyle(.bordered)
                                     .font(.caption)
                                 }
                             }
                         }
-                        .padding(.vertical, 4)
                     }
-                }
 
-                Section("系統設定") {
-                    Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
+                    // MARK: - Display & Notifications Section
+                    CollapsibleSection(
+                        title: "顯示與通知",
+                        icon: "bell.badge",
+                        isExpanded: $displayNotificationExpanded
+                    ) {
+                        // Display Settings
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("顯示設定")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
 
-                    Button("重新顯示新手引導") {
-                        showingOnboarding = true
+                            HStack {
+                                Text("顯示單位:")
+                                Spacer()
+                                Picker("單位", selection: $viewModel.preferences.displayUnit) {
+                                    ForEach(UserPreferences.SpeedUnit.allCases, id: \.self) { unit in
+                                        Text(unit.displayName).tag(unit)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 180)
+                            }
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("選單列顯示模式:")
+                                Picker("顯示模式", selection: $viewModel.preferences.menuBarDisplayMode) {
+                                    ForEach(UserPreferences.MenuBarDisplayMode.allCases, id: \.self) { mode in
+                                        Text(mode.displayName).tag(mode)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+
+                                // Preview
+                                HStack {
+                                    Text("預覽:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text(viewModel.menuBarText)
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 2)
+                                        .background(Color.secondary.opacity(0.1))
+                                        .cornerRadius(4)
+                                }
+                            }
+                        }
+
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        // Notification Settings
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("通知設定")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+
+                            Toggle("啟用峰值通知", isOn: $viewModel.notificationService.isEnabled)
+                                .help("當網路速度接近方案上限時發送通知")
+
+                            if viewModel.notificationService.isEnabled {
+                                HStack {
+                                    Text("通知閾值:")
+                                    Spacer()
+                                    Picker("閾值", selection: $viewModel.notificationService.threshold) {
+                                        ForEach(NotificationService.thresholdOptions, id: \.value) { option in
+                                            Text(option.label).tag(option.value)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                    .frame(width: 200)
+                                    .help("當速度超過此百分比時觸發通知")
+                                }
+
+                                Button("發送測試通知") {
+                                    viewModel.notificationService.sendTestNotification()
+                                }
+                                .buttonStyle(.bordered)
+                                .font(.caption)
+                                .help("測試通知功能是否正常")
+                            }
+                        }
                     }
-                    .buttonStyle(.bordered)
-                    .help("再次查看應用程式功能介紹")
-                }
-                    }
-                    .padding(.top, 8)
 
-                    VStack(spacing: 12) {
-                // Memory stats
-                let memStats = viewModel.getMemoryStats()
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("記憶體使用")
+                    // MARK: - System & Maintenance Section
+                    CollapsibleSection(
+                        title: "系統與維護",
+                        icon: "gearshape.2",
+                        isExpanded: $systemMaintenanceExpanded
+                    ) {
+                        // System Settings
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("系統設定")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+
+                            Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
+
+                            Button("重新顯示新手引導") {
+                                showingOnboarding = true
+                            }
+                            .buttonStyle(.bordered)
                             .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text(memStats.formattedTotal)
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                    }
-                    Spacer()
-                    Button("優化記憶體") {
-                        viewModel.optimizeMemory()
-                    }
-                    .buttonStyle(.bordered)
-                    .font(.caption)
-                    .help("清理過期數據以減少記憶體使用")
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.secondary.opacity(0.05))
-                .cornerRadius(8)
+                            .help("再次查看應用程式功能介紹")
+                        }
 
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        // Error Logging (Simplified)
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text("錯誤日誌")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+
+                                Spacer()
+
+                                // Error count badges
+                                let errorSummary = viewModel.errorHandler.getErrorSummary()
+                                if errorSummary.hasErrors {
+                                    HStack(spacing: 6) {
+                                        if errorSummary.warnings > 0 {
+                                            Label("\(errorSummary.warnings)", systemImage: "exclamationmark.triangle.fill")
+                                                .font(.caption2)
+                                                .foregroundColor(.yellow)
+                                        }
+                                        if errorSummary.errors > 0 {
+                                            Label("\(errorSummary.errors)", systemImage: "exclamationmark.circle.fill")
+                                                .font(.caption2)
+                                                .foregroundColor(.orange)
+                                        }
+                                        if errorSummary.critical > 0 {
+                                            Label("\(errorSummary.critical)", systemImage: "xmark.octagon.fill")
+                                                .font(.caption2)
+                                                .foregroundColor(.red)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Toggle("啟用錯誤記錄", isOn: $viewModel.errorHandler.isLoggingEnabled)
+                                .help("記錄錯誤和應用程式活動以協助診斷問題")
+
+                            if viewModel.errorHandler.isLoggingEnabled {
+                                HStack {
+                                    if let logSize = viewModel.errorHandler.getLogFileSize() {
+                                        Text("日誌大小: \(logSize)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+
+                                    // Compact action menu
+                                    Menu {
+                                        let errorSummary = viewModel.errorHandler.getErrorSummary()
+                                        Button("清除錯誤") {
+                                            viewModel.errorHandler.clearErrors()
+                                        }
+                                        .disabled(!errorSummary.hasErrors)
+
+                                        Button("清除日誌") {
+                                            viewModel.errorHandler.clearLogFile()
+                                        }
+
+                                        if viewModel.errorHandler.exportLogFile() != nil {
+                                            Button("導出日誌") {
+                                                if let logURL = viewModel.errorHandler.exportLogFile() {
+                                                    DataExportService.revealInFinder(url: logURL)
+                                                }
+                                            }
+                                        }
+                                    } label: {
+                                        Label("管理", systemImage: "ellipsis.circle")
+                                            .font(.caption)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .font(.caption)
+                                }
+                            }
+                        }
+
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        // Memory Management
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("記憶體管理")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+
+                            let memStats = viewModel.getMemoryStats()
+                            HStack {
+                                Text("使用量: \(memStats.formattedTotal)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Button("優化記憶體") {
+                                    viewModel.optimizeMemory()
+                                }
+                                .buttonStyle(.bordered)
+                                .font(.caption)
+                                .help("清理過期數據以減少記憶體使用")
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 70) // Space for fixed bottom bar
+            }
+
+            // MARK: - Fixed Bottom Action Bar
+            VStack(spacing: 0) {
                 Divider()
 
-                HStack {
+                HStack(spacing: 12) {
                     Button("重置所有峰值記錄") {
                         viewModel.resetPeaks()
                     }
@@ -291,11 +414,11 @@ public struct SettingsView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 }
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(NSColor.windowBackgroundColor))
             }
+            .frame(height: 60)
         }
         .frame(width: 400, height: 600)
         .sheet(isPresented: $showingOnboarding) {
