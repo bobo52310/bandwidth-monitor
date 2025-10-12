@@ -57,7 +57,9 @@ public struct NetworkChartView: View {
                 showDownload: showDownload,
                 showUpload: showUpload,
                 unit: preferences.displayUnit,
-                timeRange: selectedTimeRange
+                timeRange: selectedTimeRange,
+                onToggleDownload: { showDownload.toggle() },
+                onToggleUpload: { showUpload.toggle() }
             )
 
             // Chart
@@ -939,76 +941,46 @@ struct StatisticsCardView: View {
     let unit: UserPreferences.SpeedUnit
     let timeRange: NetworkChartView.TimeRange
 
-    @State private var isExpanded: Bool = true
+    // Add bindings for toggling
+    var onToggleDownload: (() -> Void)?
+    var onToggleUpload: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 8) {
-            // Header with toggle
-            HStack {
-                HStack(spacing: 6) {
-                    Image(systemName: "chart.bar.fill")
-                        .foregroundColor(.blue)
-                        .font(.caption)
-                    Text("統計資訊")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                }
+        HStack(spacing: 12) {
+            // Download statistics - always show but toggleable
+            StatColumnView(
+                title: "下載",
+                color: .blue,
+                current: currentDownloadSpeed,
+                peak: peakDownloadSpeed,
+                average: averageDownloadSpeed,
+                unit: unit,
+                isActive: showDownload,
+                onToggle: onToggleDownload
+            )
+            .frame(maxWidth: .infinity)
+            .opacity(showDownload ? 1.0 : 0.5)
 
-                Spacer()
+            Divider()
 
-                Button(action: { isExpanded.toggle() }) {
-                    Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
-                        .foregroundColor(.secondary)
-                        .font(.caption)
-                }
-                .buttonStyle(.plain)
-                .pointerCursor()
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.blue.opacity(0.05))
-            .cornerRadius(6)
-
-            // Statistics content (collapsible)
-            if isExpanded {
-                HStack(spacing: 12) {
-                    // Download statistics
-                    if showDownload {
-                        StatColumnView(
-                            title: "下載",
-                            color: .blue,
-                            current: currentDownloadSpeed,
-                            peak: peakDownloadSpeed,
-                            average: averageDownloadSpeed,
-                            unit: unit
-                        )
-                        .frame(maxWidth: .infinity)
-                    }
-
-                    // Upload statistics
-                    if showUpload {
-                        if showDownload {
-                            Divider()
-                        }
-
-                        StatColumnView(
-                            title: "上傳",
-                            color: .green,
-                            current: currentUploadSpeed,
-                            peak: peakUploadSpeed,
-                            average: averageUploadSpeed,
-                            unit: unit
-                        )
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.secondary.opacity(0.05))
-                .cornerRadius(6)
-            }
+            // Upload statistics - always show but toggleable
+            StatColumnView(
+                title: "上傳",
+                color: .green,
+                current: currentUploadSpeed,
+                peak: peakUploadSpeed,
+                average: averageUploadSpeed,
+                unit: unit,
+                isActive: showUpload,
+                onToggle: onToggleUpload
+            )
+            .frame(maxWidth: .infinity)
+            .opacity(showUpload ? 1.0 : 0.5)
         }
-        .animation(.easeInOut(duration: 0.2), value: isExpanded)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.secondary.opacity(0.05))
+        .cornerRadius(6)
     }
 
     // Calculate current speed (most recent data point)
@@ -1051,18 +1023,20 @@ struct StatColumnView: View {
     let peak: Double
     let average: Double
     let unit: UserPreferences.SpeedUnit
+    let isActive: Bool
+    var onToggle: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            // Title
+            // Title - with visual feedback
             HStack(spacing: 4) {
                 Circle()
-                    .fill(color)
+                    .fill(isActive ? color : color.opacity(0.3))
                     .frame(width: 6, height: 6)
                 Text(title)
                     .font(.caption2)
                     .fontWeight(.medium)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(isActive ? .primary : .secondary)
             }
 
             // Current speed (prominent)
@@ -1072,7 +1046,7 @@ struct StatColumnView: View {
                     .foregroundColor(.secondary)
                 Text(formatSpeed(current))
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundColor(color)
+                    .foregroundColor(isActive ? color : color.opacity(0.5))
             }
 
             Divider()
@@ -1086,6 +1060,7 @@ struct StatColumnView: View {
                     Text(formatSpeed(peak))
                         .font(.caption)
                         .fontWeight(.medium)
+                        .foregroundColor(isActive ? .primary : .secondary)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -1095,9 +1070,26 @@ struct StatColumnView: View {
                     Text(formatSpeed(average))
                         .font(.caption)
                         .fontWeight(.medium)
+                        .foregroundColor(isActive ? .primary : .secondary)
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isActive ? color.opacity(0.05) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(isActive ? color.opacity(0.2) : Color.gray.opacity(0.1), lineWidth: 1)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onToggle?()
+        }
+        .pointerCursor()
+        .help("點擊切換 \(title) 資料顯示")
     }
 
     private func formatSpeed(_ speedMbps: Double) -> String {
