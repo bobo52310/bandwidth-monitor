@@ -80,6 +80,7 @@ public struct PopoverView: View {
                         NetworkChartView(
                             historyRecorder: viewModel.historyRecorder,
                             preferences: viewModel.preferences,
+                            currentSpeed: viewModel.currentSpeed,
                             showUpload: $showUpload,
                             showDownload: $showDownload
                         )

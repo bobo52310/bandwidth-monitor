@@ -8,6 +8,7 @@ import AppKit
 public struct NetworkChartView: View {
     @ObservedObject var historyRecorder: NetworkHistoryRecorder
     @ObservedObject var preferences: UserPreferences
+    let currentSpeed: NetworkSpeed  // Real-time current speed
     @State private var selectedTimeRange: TimeRange = .oneHour
     @Binding var showUpload: Bool
     @Binding var showDownload: Bool
@@ -34,9 +35,10 @@ public struct NetworkChartView: View {
         }
     }
 
-    public init(historyRecorder: NetworkHistoryRecorder, preferences: UserPreferences, showUpload: Binding<Bool>, showDownload: Binding<Bool>) {
+    public init(historyRecorder: NetworkHistoryRecorder, preferences: UserPreferences, currentSpeed: NetworkSpeed, showUpload: Binding<Bool>, showDownload: Binding<Bool>) {
         self.historyRecorder = historyRecorder
         self.preferences = preferences
+        self.currentSpeed = currentSpeed
         self._showUpload = showUpload
         self._showDownload = showDownload
     }
@@ -58,6 +60,8 @@ public struct NetworkChartView: View {
                 showUpload: showUpload,
                 unit: preferences.displayUnit,
                 timeRange: selectedTimeRange,
+                currentDownloadSpeed: currentSpeed.downloadMbps,
+                currentUploadSpeed: currentSpeed.uploadMbps,
                 onToggleDownload: { showDownload.toggle() },
                 onToggleUpload: { showUpload.toggle() }
             )
@@ -940,6 +944,8 @@ struct StatisticsCardView: View {
     let showUpload: Bool
     let unit: UserPreferences.SpeedUnit
     let timeRange: NetworkChartView.TimeRange
+    let currentDownloadSpeed: Double  // Real-time current speed
+    let currentUploadSpeed: Double    // Real-time current speed
 
     // Add bindings for toggling
     var onToggleDownload: (() -> Void)?
@@ -981,15 +987,6 @@ struct StatisticsCardView: View {
         .padding(.vertical, 8)
         .background(Color.secondary.opacity(0.05))
         .cornerRadius(6)
-    }
-
-    // Calculate current speed (most recent data point)
-    private var currentDownloadSpeed: Double {
-        data.last?.downloadMbps ?? 0
-    }
-
-    private var currentUploadSpeed: Double {
-        data.last?.uploadMbps ?? 0
     }
 
     // Calculate peak speed

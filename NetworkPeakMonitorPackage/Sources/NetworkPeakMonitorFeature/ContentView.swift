@@ -287,6 +287,9 @@ public struct SettingsView: View {
 
                             Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
 
+                            Toggle("顯示在 Dock", isOn: $viewModel.preferences.showInDock)
+                                .help("關閉後僅在選單列顯示")
+
                             Button("重新顯示新手引導") {
                                 showingOnboarding = true
                             }

@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 public class UserPreferences: ObservableObject {
     private let userDefaults = UserDefaults.standard
@@ -37,6 +38,20 @@ public class UserPreferences: ObservableObject {
     @Published public var isPinned: Bool {
         didSet {
             userDefaults.set(isPinned, forKey: "isPinned")
+        }
+    }
+
+    @Published public var showInDock: Bool {
+        didSet {
+            userDefaults.set(showInDock, forKey: "showInDock")
+            let shouldShowInDock = showInDock
+            Task { @MainActor in
+                if shouldShowInDock {
+                    NSApp.setActivationPolicy(.regular)
+                } else {
+                    NSApp.setActivationPolicy(.accessory)
+                }
+            }
         }
     }
 
@@ -89,6 +104,14 @@ public class UserPreferences: ObservableObject {
         self.launchAtLogin = userDefaults.bool(forKey: "launchAtLogin")
         self.menuBarDisplayMode = MenuBarDisplayMode(rawValue: userDefaults.string(forKey: "menuBarDisplayMode") ?? "both") ?? .both
         self.isPinned = userDefaults.bool(forKey: "isPinned")
+
+        // Load showInDock preference, default to true
+        if userDefaults.object(forKey: "showInDock") != nil {
+            self.showInDock = userDefaults.bool(forKey: "showInDock")
+        } else {
+            self.showInDock = true
+            userDefaults.set(true, forKey: "showInDock")
+        }
 
         // Set default values if not set
         if downloadPlanSpeed == 0 {
