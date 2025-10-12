@@ -15,13 +15,55 @@ public struct SettingsView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 20) {
-            Text("設定")
-                .font(.title)
-                .fontWeight(.bold)
+        VStack(spacing: 0) {
+            // Header with back button
+            HStack {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                        Text("返回")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
+                .help("返回主頁面")
 
-            Form {
-                Section("網路方案設定") {
+                Spacer()
+
+                Text("設定")
+                    .font(.title)
+                    .fontWeight(.bold)
+
+                Spacer()
+
+                // Invisible spacer to balance the layout
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("返回")
+                        .font(.system(size: 14, weight: .medium))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .opacity(0)
+            }
+            .padding(.horizontal)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
+            .background(Color(NSColor.windowBackgroundColor))
+
+            Divider()
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    Form {
+                        Section("網路方案設定") {
                     HStack {
                         Text("下載速度上限:")
                         TextField("300", value: $viewModel.preferences.downloadPlanSpeed, format: .number)
@@ -119,35 +161,6 @@ public struct SettingsView: View {
                     }
                 }
 
-                Section("快捷鍵") {
-                    Toggle("啟用全域快捷鍵", isOn: $viewModel.keyboardShortcuts.isEnabled)
-                        .help("啟用快捷鍵以快速存取常用功能")
-
-                    if viewModel.keyboardShortcuts.isEnabled {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("可用快捷鍵:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            ForEach(KeyboardShortcutsService.getAllShortcuts(), id: \.name) { shortcut in
-                                HStack {
-                                    Text(shortcut.name)
-                                        .font(.caption)
-                                    Spacer()
-                                    Text(shortcut.shortcut)
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 2)
-                                        .background(Color.secondary.opacity(0.1))
-                                        .cornerRadius(4)
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-
                 Section("錯誤日誌") {
                     Toggle("啟用錯誤記錄", isOn: $viewModel.errorHandler.isLoggingEnabled)
                         .help("記錄錯誤和應用程式活動以協助診斷問題")
@@ -234,9 +247,10 @@ public struct SettingsView: View {
                     .buttonStyle(.bordered)
                     .help("再次查看應用程式功能介紹")
                 }
-            }
+                    }
+                    .padding(.top, 8)
 
-            VStack(spacing: 12) {
+                    VStack(spacing: 12) {
                 // Memory stats
                 let memStats = viewModel.getMemoryStats()
                 HStack {
@@ -277,9 +291,12 @@ public struct SettingsView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                }
             }
         }
-        .padding()
         .frame(width: 400, height: 600)
         .sheet(isPresented: $showingOnboarding) {
             OnboardingView(viewModel: viewModel)

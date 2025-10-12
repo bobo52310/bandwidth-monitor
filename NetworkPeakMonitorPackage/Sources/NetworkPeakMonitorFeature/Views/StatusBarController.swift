@@ -18,7 +18,6 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate,
         super.init()
         setupStatusBar()
         setupPopover()
-        setupKeyboardShortcuts()
         setupPinStateObserver()
         viewModel.initialize()
         checkAndShowOnboarding()
@@ -73,29 +72,6 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate,
         popover?.contentViewController = NSHostingController(
             rootView: PopoverView(viewModel: viewModel)
         )
-    }
-
-    private func setupKeyboardShortcuts() {
-        // Bind keyboard shortcut callbacks
-        viewModel.keyboardShortcuts.onTogglePopover = { [weak self] in
-            self?.togglePopover()
-        }
-
-        viewModel.keyboardShortcuts.onOpenSettings = { [weak self] in
-            self?.openSettings()
-        }
-
-        viewModel.keyboardShortcuts.onResetPeaks = { [weak self] in
-            self?.handleResetPeaks()
-        }
-
-        viewModel.keyboardShortcuts.onExportData = { [weak self] in
-            self?.handleExportData()
-        }
-
-        viewModel.keyboardShortcuts.onOptimizeMemory = { [weak self] in
-            self?.handleOptimizeMemory()
-        }
     }
 
     private func setupPinStateObserver() {

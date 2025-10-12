@@ -10,7 +10,6 @@ public class NetworkMonitorViewModel: ObservableObject {
     @Published public var historyRecorder = NetworkHistoryRecorder()
     @Published public var notificationService = NotificationService()
     @Published public var anomalyDetector = NetworkAnomalyDetector()
-    @Published public var keyboardShortcuts = KeyboardShortcutsService()
     @Published public var errorHandler = ErrorHandler()
 
     private let networkMonitor = NetworkMonitor()
