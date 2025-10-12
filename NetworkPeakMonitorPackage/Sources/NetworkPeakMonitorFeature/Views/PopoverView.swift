@@ -319,38 +319,73 @@ public struct PopoverView: View {
                         Divider()
                     }
 
-                    // Peak Approach Counter Section
-                    VStack(alignment: .leading, spacing: 8) {
+                    // Peak Approach Counter Section - 速率上限警示
+                    VStack(alignment: .leading, spacing: 10) {
                         HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
+                            Image(systemName: "gauge.high")
                                 .foregroundColor(Color.Adaptive.warning)
-                            Text("今日接近峰值")
+                            Text("接近速率上限")
                                 .font(.subheadline)
-                                .fontWeight(.medium)
-                        }
-
-                        HStack {
-                            Text("次數: \(viewModel.peakApproachTracker.todayApproachCount)")
-                                .font(.body)
+                                .fontWeight(.semibold)
                             Spacer()
+                            // 顯示今日警告次數
+                            Text("\(viewModel.peakApproachTracker.todayApproachCount)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(viewModel.peakApproachTracker.todayApproachCount > 0 ? Color.Adaptive.warning : .secondary)
+                                .monospacedDigit()
+                            Text("次")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
 
+                        // 顯示警告時間列表
                         if !viewModel.peakApproachTracker.approachTimestamps.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 4) {
-                                    ForEach(viewModel.peakApproachTracker.getFormattedApproachTimes(), id: \.self) { time in
-                                        Text(time)
-                                            .font(.caption)
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 2)
-                                            .background(Color.orange.opacity(0.2))
-                                            .cornerRadius(4)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("觸發時間")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 6) {
+                                        ForEach(viewModel.peakApproachTracker.getFormattedApproachTimes(), id: \.self) { time in
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "clock.fill")
+                                                    .font(.caption2)
+                                                Text(time)
+                                                    .font(.caption)
+                                            }
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.orange.opacity(0.15))
+                                            .foregroundColor(Color.Adaptive.warning)
+                                            .cornerRadius(6)
+                                        }
                                     }
+                                    .padding(.horizontal, 1)
                                 }
-                                .padding(.horizontal, 1)
                             }
+                        } else {
+                            Text("今日尚未接近速率上限")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .italic()
                         }
                     }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(viewModel.peakApproachTracker.todayApproachCount > 0 ?
+                                  Color.orange.opacity(0.08) :
+                                  Color.secondary.opacity(0.05))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(viewModel.peakApproachTracker.todayApproachCount > 0 ?
+                                   Color.orange.opacity(0.3) :
+                                   Color.clear, lineWidth: 1)
+                    )
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 16)
