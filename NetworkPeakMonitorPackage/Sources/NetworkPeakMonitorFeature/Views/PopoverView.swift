@@ -21,7 +21,7 @@ public struct PopoverView: View {
                 // Title and Control Buttons
                 HStack {
                     Text("Network Peak Monitor")
-                        .font(.headline)
+                        .font(.title3)
                     Spacer()
 
                     // Control buttons
@@ -31,9 +31,9 @@ public struct PopoverView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: viewModel.preferences.isPinned ? "pin.fill" : "pin")
                                     .foregroundColor(viewModel.preferences.isPinned ? .white : .purple)
-                                    .font(.caption)
+                                    .font(.subheadline)
                                 Text("Pin")
-                                    .font(.caption)
+                                    .font(.subheadline)
                                     .fontWeight(.medium)
                             }
                             .padding(.horizontal, 8)
@@ -50,9 +50,9 @@ public struct PopoverView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "gear")
                                     .foregroundColor(.secondary)
-                                    .font(.caption)
+                                    .font(.subheadline)
                                 Text("Settings")
-                                    .font(.caption)
+                                    .font(.subheadline)
                                     .fontWeight(.medium)
                             }
                             .padding(.horizontal, 8)
@@ -103,17 +103,17 @@ public struct PopoverView: View {
                             Image(systemName: "gauge.high")
                                 .foregroundColor(Color.Adaptive.warning)
                             Text("接近速率上限")
-                                .font(.subheadline)
+                                .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
                             // 顯示今日警告次數
                             Text("\(viewModel.peakApproachTracker.todayApproachCount)")
-                                .font(.title2)
+                                .font(.title)
                                 .fontWeight(.bold)
                                 .foregroundColor(viewModel.peakApproachTracker.todayApproachCount > 0 ? Color.Adaptive.warning : .secondary)
                                 .monospacedDigit()
                             Text("次")
-                                .font(.caption)
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
 
@@ -121,7 +121,7 @@ public struct PopoverView: View {
                         if !viewModel.peakApproachTracker.approachTimestamps.isEmpty {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("觸發時間")
-                                    .font(.caption2)
+                                    .font(.caption)
                                     .foregroundColor(.secondary)
                                     .textCase(.uppercase)
 
@@ -130,9 +130,9 @@ public struct PopoverView: View {
                                         ForEach(viewModel.peakApproachTracker.getFormattedApproachTimes(), id: \.self) { time in
                                             HStack(spacing: 4) {
                                                 Image(systemName: "clock.fill")
-                                                    .font(.caption2)
-                                                Text(time)
                                                     .font(.caption)
+                                                Text(time)
+                                                    .font(.subheadline)
                                             }
                                             .padding(.horizontal, 8)
                                             .padding(.vertical, 4)
@@ -146,7 +146,7 @@ public struct PopoverView: View {
                             }
                         } else {
                             Text("今日尚未接近速率上限")
-                                .font(.caption)
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .italic()
                         }
@@ -177,7 +177,7 @@ public struct PopoverView: View {
                                     Image(systemName: "arrow.down.circle.fill")
                                         .foregroundColor(Color.Adaptive.downloadPrimary)
                                     Text("下載統計 (Download Stats)")
-                                        .font(.subheadline)
+                                        .font(.headline)
                                         .fontWeight(.medium)
                                 }
 
@@ -215,7 +215,7 @@ public struct PopoverView: View {
                                     Image(systemName: "arrow.up.circle.fill")
                                         .foregroundColor(Color.Adaptive.uploadPrimary)
                                     Text("上傳統計 (Upload Stats)")
-                                        .font(.subheadline)
+                                        .font(.headline)
                                         .fontWeight(.medium)
                                 }
 
@@ -256,7 +256,7 @@ public struct PopoverView: View {
                                 Image(systemName: "arrow.up.circle.fill")
                                     .foregroundColor(.green)
                                 Text("上傳統計 (Upload Stats)")
-                                    .font(.subheadline)
+                                    .font(.headline)
                                     .fontWeight(.medium)
                             }
 
@@ -295,7 +295,7 @@ public struct PopoverView: View {
                                 Image(systemName: "arrow.down.circle.fill")
                                     .foregroundColor(.blue)
                                 Text("下載統計 (Download Stats)")
-                                    .font(.subheadline)
+                                    .font(.headline)
                                     .fontWeight(.medium)
                             }
 
@@ -336,11 +336,11 @@ public struct PopoverView: View {
                                 Image(systemName: viewModel.anomalyDetector.isConnectionStable ? "wifi" : "wifi.exclamationmark")
                                     .foregroundColor(viewModel.anomalyDetector.isConnectionStable ? .green : Color.Adaptive.error)
                                 Text("網路狀態")
-                                    .font(.subheadline)
+                                    .font(.headline)
                                     .fontWeight(.medium)
                                 Spacer()
                                 Text(viewModel.anomalyDetector.isConnectionStable ? "穩定" : "異常")
-                                    .font(.caption)
+                                    .font(.subheadline)
                                     .foregroundColor(viewModel.anomalyDetector.isConnectionStable ? .green : Color.Adaptive.error)
                                     .fontWeight(.bold)
                             }
@@ -351,18 +351,18 @@ public struct PopoverView: View {
                                     if summary.connectionDrops > 0 {
                                         HStack(spacing: 4) {
                                             Image(systemName: "wifi.exclamationmark")
-                                                .font(.caption2)
+                                                .font(.caption)
                                             Text("\(summary.connectionDrops) 次中斷")
-                                                .font(.caption2)
+                                                .font(.caption)
                                         }
                                         .foregroundColor(Color.Adaptive.error)
                                     }
                                     if summary.speedDrops > 0 {
                                         HStack(spacing: 4) {
                                             Image(systemName: "arrow.down.circle.fill")
-                                                .font(.caption2)
+                                                .font(.caption)
                                             Text("\(summary.speedDrops) 次驟降")
-                                                .font(.caption2)
+                                                .font(.caption)
                                         }
                                         .foregroundColor(Color.Adaptive.warning)
                                     }
@@ -381,7 +381,7 @@ public struct PopoverView: View {
                                 }
                             } else {
                                 Text("近1小時無異常記錄")
-                                    .font(.caption)
+                                    .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -411,7 +411,7 @@ public struct PopoverView: View {
                         }
                     } label: {
                         Label("導出數據", systemImage: "square.and.arrow.up")
-                            .font(.caption)
+                            .font(.subheadline)
                     }
                     .buttonStyle(.bordered)
                     .help("導出網路數據為 CSV 檔案")
@@ -421,7 +421,7 @@ public struct PopoverView: View {
                         viewModel.resetPeaks()
                     }
                     .buttonStyle(.bordered)
-                    .font(.caption)
+                    .font(.subheadline)
 
                     Spacer()
 
@@ -430,7 +430,7 @@ public struct PopoverView: View {
                         NSApplication.shared.terminate(nil)
                     }
                     .buttonStyle(.borderedProminent)
-                    .font(.caption)
+                    .font(.subheadline)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 16)
@@ -482,8 +482,10 @@ struct SpeedRow: View {
     var body: some View {
         HStack {
             Text(label + ":")
+                .font(.body)
                 .frame(maxWidth: 80, alignment: .leading)
             Text(viewModel.formatSpeed(speed, unit: unit) + " " + unit.displayName)
+                .font(.title3)
                 .foregroundColor(
                     viewModel.isPeakConcerning(speed: speed, planSpeed: planSpeed) ? Color.Adaptive.warning : Color.Adaptive.text
                 )
@@ -495,7 +497,7 @@ struct SpeedRow: View {
                 if !relativeTime.isEmpty {
                     Text("(\(relativeTime))")
                         .foregroundColor(Color.Adaptive.error)
-                        .font(.caption)
+                        .font(.subheadline)
                         .fontWeight(.bold)
                 }
             }
@@ -514,13 +516,14 @@ struct HourlyPeakRow: View {
     var body: some View {
         HStack {
             Text(label + ":")
+                .font(.body)
                 .frame(maxWidth: 80, alignment: .leading)
             VStack(alignment: .leading, spacing: 2) {
                 Text(viewModel.formatSpeed(speed, unit: unit) + " " + unit.displayName)
-                    .font(.body)
+                    .font(.title3)
                 if let time = time {
                     Text(viewModel.formatTime(time))
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             }
@@ -551,13 +554,13 @@ struct AnomalyBadge: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) {
                 Image(systemName: anomaly.type.icon)
-                    .font(.caption2)
+                    .font(.caption)
                 Text(anomaly.type.displayText)
-                    .font(.caption2)
+                    .font(.caption)
                     .lineLimit(2)
             }
             Text(timeAgo)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundColor(.secondary)
         }
         .padding(.horizontal, 6)

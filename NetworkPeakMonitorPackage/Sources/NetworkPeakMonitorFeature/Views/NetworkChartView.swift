@@ -192,7 +192,7 @@ public struct NetworkChartView: View {
                 AxisTick()
                 AxisValueLabel {
                     Text("\(formatAxisValue(value.as(Double.self) ?? 0)) \(preferences.displayUnit.displayName)")
-                        .font(.caption2)
+                        .font(.caption)
                 }
             }
         }
@@ -303,7 +303,7 @@ public struct NetworkChartView: View {
                 AxisTick()
                 AxisValueLabel {
                     Text("\(formatAxisValue(value.as(Double.self) ?? 0)) \(preferences.displayUnit.displayName)")
-                        .font(.caption2)
+                        .font(.caption)
                 }
             }
         }
@@ -423,7 +423,7 @@ public struct NetworkChartView: View {
                 AxisTick()
                 AxisValueLabel {
                     Text("\(formatAxisValue(value.as(Double.self) ?? 0)) \(preferences.displayUnit.displayName)")
-                        .font(.caption2)
+                        .font(.caption)
                 }
             }
         }
@@ -540,7 +540,7 @@ public struct NetworkChartView: View {
                 AxisTick()
                 AxisValueLabel {
                     Text("\(formatAxisValue(value.as(Double.self) ?? 0)) \(preferences.displayUnit.displayName)")
-                        .font(.caption2)
+                        .font(.caption)
                 }
             }
         }
@@ -601,7 +601,7 @@ public struct NetworkChartView: View {
                         .fill(showDownload ? .blue : .gray.opacity(0.4))
                         .frame(width: 8, height: 8)
                     Text("下載")
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundColor(showDownload ? .primary : .secondary)
                         .fontWeight(showDownload ? .medium : .regular)
                 }
@@ -621,7 +621,7 @@ public struct NetworkChartView: View {
                         .fill(showUpload ? .green : .gray.opacity(0.4))
                         .frame(width: 8, height: 8)
                     Text("上傳")
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundColor(showUpload ? .primary : .secondary)
                         .fontWeight(showUpload ? .medium : .regular)
                 }
@@ -653,7 +653,7 @@ public struct NetworkChartView: View {
                                 )
                         )
                     Text("方案速度")
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             }
@@ -769,7 +769,7 @@ struct ChartTooltipView: View {
         VStack(alignment: .leading, spacing: 4) {
             // Timestamp
             Text(dateFormatter.string(from: timestamp))
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.secondary)
 
             // Speed information
@@ -780,7 +780,7 @@ struct ChartTooltipView: View {
                             .fill(.blue)
                             .frame(width: 4, height: 4)
                         Text(formatSpeed(downloadSpeed))
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundColor(isPeakConcerning(speed: downloadSpeed, planSpeed: preferences.downloadPlanSpeed) ? .orange : .primary)
                     }
                 }
@@ -791,7 +791,7 @@ struct ChartTooltipView: View {
                             .fill(.green)
                             .frame(width: 4, height: 4)
                         Text(formatSpeed(uploadSpeed))
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundColor(isPeakConcerning(speed: uploadSpeed, planSpeed: preferences.uploadPlanSpeed) ? .orange : .primary)
                     }
                 }
@@ -849,7 +849,7 @@ struct ChartTooltipView24Hour: View {
         VStack(alignment: .leading, spacing: 4) {
             // Timestamp
             Text(dateFormatter.string(from: timestamp))
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.secondary)
 
             // Speed information
@@ -860,7 +860,7 @@ struct ChartTooltipView24Hour: View {
                             .fill(.blue)
                             .frame(width: 4, height: 4)
                         Text("平均 \(formatSpeed(avgDownloadSpeed))")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundColor(isPeakConcerning(speed: avgDownloadSpeed, planSpeed: preferences.downloadPlanSpeed) ? .orange : .primary)
                     }
 
@@ -870,7 +870,7 @@ struct ChartTooltipView24Hour: View {
                                 .fill(.blue.opacity(0.5))
                                 .frame(width: 4, height: 4)
                             Text("峰值 \(formatSpeed(maxDownloadSpeed))")
-                                .font(.system(size: 9))
+                                .font(.system(size: 11))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -882,7 +882,7 @@ struct ChartTooltipView24Hour: View {
                             .fill(.green)
                             .frame(width: 4, height: 4)
                         Text("平均 \(formatSpeed(avgUploadSpeed))")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundColor(isPeakConcerning(speed: avgUploadSpeed, planSpeed: preferences.uploadPlanSpeed) ? .orange : .primary)
                     }
 
@@ -892,7 +892,7 @@ struct ChartTooltipView24Hour: View {
                                 .fill(.green.opacity(0.5))
                                 .frame(width: 4, height: 4)
                             Text("峰值 \(formatSpeed(maxUploadSpeed))")
-                                .font(.system(size: 9))
+                                .font(.system(size: 11))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -1034,7 +1034,7 @@ struct StatColumnView: View {
                     .fill(isActive ? color : color.opacity(0.3))
                     .frame(width: 6, height: 6)
                 Text(title)
-                    .font(.caption2)
+                    .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(isActive ? .primary : .secondary)
             }
@@ -1042,10 +1042,10 @@ struct StatColumnView: View {
             // Current speed (prominent)
             VStack(alignment: .leading, spacing: 2) {
                 Text("即時")
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundColor(.secondary)
                 Text(formatSpeed(current))
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
                     .foregroundColor(isActive ? color : color.opacity(0.5))
             }
 
@@ -1055,20 +1055,20 @@ struct StatColumnView: View {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("峰值")
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundColor(.secondary)
                     Text(formatSpeed(peak))
-                        .font(.caption)
+                        .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(isActive ? .primary : .secondary)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("平均")
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundColor(.secondary)
                     Text(formatSpeed(average))
-                        .font(.caption)
+                        .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(isActive ? .primary : .secondary)
                 }

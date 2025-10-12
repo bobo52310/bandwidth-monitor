@@ -132,26 +132,30 @@ public struct SettingsView: View {
                         // Network Plan Settings
                         VStack(alignment: .leading, spacing: 10) {
                             Text("網路方案設定")
-                                .font(.subheadline)
+                                .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
                             HStack {
                                 Text("下載速度上限:")
+                                    .font(.body)
                                     .frame(width: 100, alignment: .leading)
                                 TextField("300", value: $viewModel.preferences.downloadPlanSpeed, format: .number)
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 80)
                                 Text("Mbps")
+                                    .font(.body)
                             }
 
                             HStack {
                                 Text("上傳速度上限:")
+                                    .font(.body)
                                     .frame(width: 100, alignment: .leading)
                                 TextField("300", value: $viewModel.preferences.uploadPlanSpeed, format: .number)
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 80)
                                 Text("Mbps")
+                                    .font(.body)
                             }
                         }
 
@@ -188,12 +192,13 @@ public struct SettingsView: View {
                         // Display Settings
                         VStack(alignment: .leading, spacing: 10) {
                             Text("顯示設定")
-                                .font(.subheadline)
+                                .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
                             HStack {
                                 Text("顯示單位:")
+                                    .font(.body)
                                 Spacer()
                                 Picker("單位", selection: $viewModel.preferences.displayUnit) {
                                     ForEach(UserPreferences.SpeedUnit.allCases, id: \.self) { unit in
@@ -206,6 +211,7 @@ public struct SettingsView: View {
 
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("選單列顯示模式:")
+                                    .font(.body)
                                 Picker("顯示模式", selection: $viewModel.preferences.menuBarDisplayMode) {
                                     ForEach(UserPreferences.MenuBarDisplayMode.allCases, id: \.self) { mode in
                                         Text(mode.displayName).tag(mode)
@@ -234,7 +240,7 @@ public struct SettingsView: View {
                         // Notification Settings
                         VStack(alignment: .leading, spacing: 10) {
                             Text("通知設定")
-                                .font(.subheadline)
+                                .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
@@ -244,6 +250,7 @@ public struct SettingsView: View {
                             if viewModel.notificationService.isEnabled {
                                 HStack {
                                     Text("通知閾值:")
+                                        .font(.body)
                                     Spacer()
                                     Picker("閾值", selection: $viewModel.notificationService.threshold) {
                                         ForEach(NotificationService.thresholdOptions, id: \.value) { option in
@@ -259,7 +266,7 @@ public struct SettingsView: View {
                                     viewModel.notificationService.sendTestNotification()
                                 }
                                 .buttonStyle(.bordered)
-                                .font(.caption)
+                                .font(.subheadline)
                                 .help("測試通知功能是否正常")
                             }
                         }
@@ -274,7 +281,7 @@ public struct SettingsView: View {
                         // System Settings
                         VStack(alignment: .leading, spacing: 10) {
                             Text("系統設定")
-                                .font(.subheadline)
+                                .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
@@ -295,7 +302,7 @@ public struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 Text("錯誤日誌")
-                                    .font(.subheadline)
+                                    .font(.headline)
                                     .fontWeight(.medium)
                                     .foregroundColor(.secondary)
 
@@ -371,21 +378,21 @@ public struct SettingsView: View {
                         // Memory Management
                         VStack(alignment: .leading, spacing: 10) {
                             Text("記憶體管理")
-                                .font(.subheadline)
+                                .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
                             let memStats = viewModel.getMemoryStats()
                             HStack {
                                 Text("使用量: \(memStats.formattedTotal)")
-                                    .font(.caption)
+                                    .font(.subheadline)
                                     .foregroundColor(.secondary)
                                 Spacer()
                                 Button("優化記憶體") {
                                     viewModel.optimizeMemory()
                                 }
                                 .buttonStyle(.bordered)
-                                .font(.caption)
+                                .font(.subheadline)
                                 .help("清理過期數據以減少記憶體使用")
                             }
                         }
