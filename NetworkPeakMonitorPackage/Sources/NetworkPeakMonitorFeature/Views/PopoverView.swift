@@ -438,7 +438,7 @@ public struct PopoverView: View {
             }
             .background(Color.Adaptive.background)
         }
-        .frame(width: 450, height: 600)
+        .frame(width: 580, height: 700)
         .background(.regularMaterial)
         .animation(.easeInOut(duration: 0.3), value: showDownload)
         .animation(.easeInOut(duration: 0.3), value: showUpload)
