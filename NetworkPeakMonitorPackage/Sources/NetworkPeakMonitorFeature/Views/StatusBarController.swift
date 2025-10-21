@@ -179,7 +179,7 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate,
         // Create panel if it doesn't exist
         if floatingPanel == nil {
             let panel = NSPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 450, height: 600),
+                contentRect: NSRect(x: 0, y: 0, width: 580, height: 700),
                 styleMask: [.titled, .closable, .resizable, .utilityWindow],
                 backing: .buffered,
                 defer: false

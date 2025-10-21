@@ -5,7 +5,8 @@
       "mcp__xcode-build__get_mac_app_path",
       "mcp__xcode-build__launch_mac_app",
       "Bash(cat:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(swift build:*)"
     ],
     "deny": [],
     "ask": []

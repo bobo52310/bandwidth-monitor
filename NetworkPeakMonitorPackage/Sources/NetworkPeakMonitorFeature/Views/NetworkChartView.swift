@@ -23,6 +23,10 @@ public struct NetworkChartView: View {
         case fifteenMinutes = "15 分鐘"
         case thirtyMinutes = "30 分鐘"
         case oneHour = "1 小時"
+        case threeHours = "3 小時"
+        case sixHours = "6 小時"
+        case twelveHours = "12 小時"
+        case twentyFourHours = "24 小時"
 
         var seconds: TimeInterval {
             switch self {
@@ -31,7 +35,29 @@ public struct NetworkChartView: View {
             case .fifteenMinutes: return 15 * 60
             case .thirtyMinutes: return 30 * 60
             case .oneHour: return 60 * 60
+            case .threeHours: return 3 * 60 * 60
+            case .sixHours: return 6 * 60 * 60
+            case .twelveHours: return 12 * 60 * 60
+            case .twentyFourHours: return 24 * 60 * 60
             }
+        }
+
+        // Standard ranges for segmented control (quick access)
+        static var standardRanges: [TimeRange] {
+            [.oneMinute, .fiveMinutes, .fifteenMinutes, .thirtyMinutes, .oneHour]
+        }
+
+        // Extended ranges for dropdown menu
+        static var extendedRanges: [TimeRange] {
+            [.threeHours, .sixHours, .twelveHours, .twentyFourHours]
+        }
+
+        var isStandard: Bool {
+            Self.standardRanges.contains(self)
+        }
+
+        var isExtended: Bool {
+            Self.extendedRanges.contains(self)
         }
     }
 
@@ -43,15 +69,79 @@ public struct NetworkChartView: View {
         self._showDownload = showDownload
     }
 
-    public var body: some View {
-        VStack(spacing: 16) {
-            // Time Range Picker
-            Picker("Time Range", selection: $selectedTimeRange) {
-                ForEach(TimeRange.allCases, id: \.self) { range in
-                    Text(range.rawValue).tag(range)
+    // Computed binding for segmented control to handle extended ranges
+    private var segmentedControlBinding: Binding<TimeRange> {
+        Binding(
+            get: {
+                // If extended range is selected, default to oneHour for segmented control display
+                selectedTimeRange.isStandard ? selectedTimeRange : .oneHour
+            },
+            set: { newValue in
+                // Only update if a standard range is selected
+                if newValue.isStandard {
+                    selectedTimeRange = newValue
                 }
             }
-            .pickerStyle(.segmented)
+        )
+    }
+
+    public var body: some View {
+        VStack(spacing: 16) {
+            // Time Range Picker - Dual Layer Design
+            HStack(spacing: 8) {
+                // Standard ranges (quick access segmented control)
+                Picker("Time Range", selection: segmentedControlBinding) {
+                    ForEach(TimeRange.standardRanges, id: \.self) { range in
+                        Text(range.rawValue).tag(range)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: .infinity)
+
+                // Extended ranges (dropdown menu)
+                Menu {
+                    ForEach(TimeRange.extendedRanges, id: \.self) { range in
+                        Button(action: {
+                            selectedTimeRange = range
+                        }) {
+                            HStack {
+                                Text(range.rawValue)
+                                if selectedTimeRange == range {
+                                    Spacer()
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        if selectedTimeRange.isExtended {
+                            Text(selectedTimeRange.rawValue)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        } else {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.subheadline)
+                        }
+                        Image(systemName: "chevron.down")
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(selectedTimeRange.isExtended ? Color.blue.opacity(0.15) : Color.secondary.opacity(0.1))
+                    .foregroundColor(selectedTimeRange.isExtended ? .blue : .secondary)
+                    .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                .help("更長時間範圍")
+                .fixedSize()
+            }
+
+            // Data collection banner (show when insufficient data)
+            DataCollectionBanner(
+                availability: dataAvailability,
+                coverageInfo: dataCoverageInfo
+            )
 
             // Statistics Card
             StatisticsCardView(
@@ -62,18 +152,37 @@ public struct NetworkChartView: View {
                 timeRange: selectedTimeRange,
                 currentDownloadSpeed: currentSpeed.downloadMbps,
                 currentUploadSpeed: currentSpeed.uploadMbps,
+                dataAvailability: dataAvailability,
                 onToggleDownload: { showDownload.toggle() },
                 onToggleUpload: { showUpload.toggle() }
             )
 
-            // Chart
-            chartView
+            // Partial data indicator (show when 50-99% coverage)
+            if dataAvailability == .partial {
+                PartialDataIndicator(coverageInfo: dataCoverageInfo)
+            }
+
+            // Chart - show different content based on data availability
+            chartContentView
                 .frame(height: 200)
 
-            // Legend
-            legendView
+            // Legend (only show when data is available)
+            if dataAvailability != .empty {
+                legendView
+            }
         }
         .padding()
+    }
+
+    // Chart content view based on data availability
+    @ViewBuilder
+    private var chartContentView: some View {
+        switch dataAvailability {
+        case .empty:
+            EmptyStateView()
+        case .insufficient, .partial, .complete:
+            chartView
+        }
     }
 
     @ViewBuilder
@@ -89,6 +198,65 @@ public struct NetworkChartView: View {
         return historyRecorder.oneHourData.filter { $0.timestamp > cutoffTime }
     }
 
+    // Data availability status
+    enum DataAvailability {
+        case empty              // No data at all
+        case insufficient       // < 50% coverage
+        case partial            // 50-99% coverage
+        case complete           // 100% coverage
+
+        var needsWarning: Bool {
+            switch self {
+            case .empty, .insufficient:
+                return true
+            case .partial, .complete:
+                return false
+            }
+        }
+    }
+
+    // Calculate data availability for current time range
+    private var dataAvailability: DataAvailability {
+        guard !filteredData.isEmpty else {
+            return .empty
+        }
+
+        // For short time ranges (< 5 minutes), consider data complete if we have any data
+        if selectedTimeRange.seconds < 300 {
+            return .complete
+        }
+
+        // Calculate actual data coverage
+        let now = Date()
+        let oldestData = filteredData.min(by: { $0.timestamp < $1.timestamp })?.timestamp ?? now
+        let actualCoverage = now.timeIntervalSince(oldestData)
+        let requiredCoverage = selectedTimeRange.seconds
+        let coverageRatio = actualCoverage / requiredCoverage
+
+        if coverageRatio >= 1.0 {
+            return .complete
+        } else if coverageRatio >= 0.5 {
+            return .partial
+        } else {
+            return .insufficient
+        }
+    }
+
+    // Get formatted data coverage info
+    private var dataCoverageInfo: (actual: TimeInterval, required: TimeInterval, percentage: Double) {
+        guard !filteredData.isEmpty else {
+            return (actual: 0, required: selectedTimeRange.seconds, percentage: 0)
+        }
+
+        let now = Date()
+        let oldestData = filteredData.min(by: { $0.timestamp < $1.timestamp })?.timestamp ?? now
+        let actualCoverage = now.timeIntervalSince(oldestData)
+        let requiredCoverage = selectedTimeRange.seconds
+        let percentage = min(actualCoverage / requiredCoverage * 100, 100)
+
+        return (actual: actualCoverage, required: requiredCoverage, percentage: percentage)
+    }
+
     @ViewBuilder
     private var shortTermChart: some View {
         if #available(macOS 14.0, *) {
@@ -101,65 +269,63 @@ public struct NetworkChartView: View {
     @available(macOS 14.0, *)
     private var shortTermChartWithSelection: some View {
         Chart {
-            // Download speed area (gradient fill)
-            if showDownload {
+            // Upload speed (both area and line)
+            if showUpload {
                 ForEach(filteredData) { dataPoint in
+                    // Upload area (gradient fill)
                     AreaMark(
                         x: .value("Time", dataPoint.timestamp),
                         yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.downloadMbps))
+                        yEnd: .value("Speed", convertSpeed(dataPoint.uploadMbps)),
+                        series: .value("Type", "上傳")
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            gradient: Gradient(colors: [.blue.opacity(0.3), .blue.opacity(0.05)]),
+                            gradient: Gradient(colors: [.green.opacity(0.2), .green.opacity(0.03)]),
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
                     .interpolationMethod(.catmullRom)
-                }
-            }
 
-            // Download speed line (on top of area)
-            if showDownload {
-                ForEach(filteredData) { dataPoint in
+                    // Upload line
                     LineMark(
                         x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.downloadMbps))
+                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps)),
+                        series: .value("Type", "上傳")
                     )
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.green)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
                     .interpolationMethod(.catmullRom)
                 }
             }
 
-            // Upload speed area (gradient fill)
-            if showUpload {
+            // Download speed (both area and line)
+            if showDownload {
                 ForEach(filteredData) { dataPoint in
+                    // Download area (gradient fill)
                     AreaMark(
                         x: .value("Time", dataPoint.timestamp),
                         yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.uploadMbps))
+                        yEnd: .value("Speed", convertSpeed(dataPoint.downloadMbps)),
+                        series: .value("Type", "下載")
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            gradient: Gradient(colors: [.green.opacity(0.3), .green.opacity(0.05)]),
+                            gradient: Gradient(colors: [.blue.opacity(0.2), .blue.opacity(0.03)]),
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
                     .interpolationMethod(.catmullRom)
-                }
-            }
 
-            // Upload speed line (on top of area)
-            if showUpload {
-                ForEach(filteredData) { dataPoint in
+                    // Download line
                     LineMark(
                         x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps))
+                        y: .value("Speed", convertSpeed(dataPoint.downloadMbps)),
+                        series: .value("Type", "下載")
                     )
-                    .foregroundStyle(.green)
+                    .foregroundStyle(.blue)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
                     .interpolationMethod(.catmullRom)
                 }
@@ -203,6 +369,7 @@ public struct NetworkChartView: View {
         .chartPlotStyle { plotArea in
             plotArea.background(.clear)
         }
+        .clipped()
         .overlay(alignment: .topLeading) {
             if let selectedDate = selectedDate,
                let dataPoint = findNearestDataPoint(for: selectedDate, in: filteredData) {
@@ -220,65 +387,63 @@ public struct NetworkChartView: View {
 
     private var shortTermChartBasic: some View {
         Chart {
-            // Download speed area (gradient fill)
-            if showDownload {
+            // Upload speed (both area and line)
+            if showUpload {
                 ForEach(filteredData) { dataPoint in
+                    // Upload area (gradient fill)
                     AreaMark(
                         x: .value("Time", dataPoint.timestamp),
                         yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.downloadMbps))
+                        yEnd: .value("Speed", convertSpeed(dataPoint.uploadMbps)),
+                        series: .value("Type", "上傳")
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            gradient: Gradient(colors: [.blue.opacity(0.3), .blue.opacity(0.05)]),
+                            gradient: Gradient(colors: [.green.opacity(0.2), .green.opacity(0.03)]),
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
                     .interpolationMethod(.catmullRom)
-                }
-            }
 
-            // Download speed line (on top of area)
-            if showDownload {
-                ForEach(filteredData) { dataPoint in
+                    // Upload line
                     LineMark(
                         x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.downloadMbps))
+                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps)),
+                        series: .value("Type", "上傳")
                     )
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.green)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
                     .interpolationMethod(.catmullRom)
                 }
             }
 
-            // Upload speed area (gradient fill)
-            if showUpload {
+            // Download speed (both area and line)
+            if showDownload {
                 ForEach(filteredData) { dataPoint in
+                    // Download area (gradient fill)
                     AreaMark(
                         x: .value("Time", dataPoint.timestamp),
                         yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.uploadMbps))
+                        yEnd: .value("Speed", convertSpeed(dataPoint.downloadMbps)),
+                        series: .value("Type", "下載")
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            gradient: Gradient(colors: [.green.opacity(0.3), .green.opacity(0.05)]),
+                            gradient: Gradient(colors: [.blue.opacity(0.2), .blue.opacity(0.03)]),
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
                     .interpolationMethod(.catmullRom)
-                }
-            }
 
-            // Upload speed line (on top of area)
-            if showUpload {
-                ForEach(filteredData) { dataPoint in
+                    // Download line
                     LineMark(
                         x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps))
+                        y: .value("Speed", convertSpeed(dataPoint.downloadMbps)),
+                        series: .value("Type", "下載")
                     )
-                    .foregroundStyle(.green)
+                    .foregroundStyle(.blue)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
                     .interpolationMethod(.catmullRom)
                 }
@@ -314,6 +479,7 @@ public struct NetworkChartView: View {
         .chartPlotStyle { plotArea in
             plotArea.background(.clear)
         }
+        .clipped()
     }
 
     @ViewBuilder
@@ -589,6 +755,34 @@ public struct NetworkChartView: View {
         case .oneHour:
             // Every 10 minutes for 1-hour view (HH:MM)
             AxisMarks(values: .stride(by: .minute, count: 10)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .threeHours:
+            // Every 30 minutes for 3-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .minute, count: 30)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .sixHours:
+            // Every 1 hour for 6-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .hour, count: 1)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .twelveHours:
+            // Every 2 hours for 12-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .hour, count: 2)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .twentyFourHours:
+            // Every 4 hours for 24-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .hour, count: 4)) { value in
                 AxisGridLine()
                 AxisTick()
                 AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
@@ -946,6 +1140,7 @@ struct StatisticsCardView: View {
     let timeRange: NetworkChartView.TimeRange
     let currentDownloadSpeed: Double  // Real-time current speed
     let currentUploadSpeed: Double    // Real-time current speed
+    let dataAvailability: NetworkChartView.DataAvailability
 
     // Add bindings for toggling
     var onToggleDownload: (() -> Void)?
@@ -962,6 +1157,7 @@ struct StatisticsCardView: View {
                 average: averageDownloadSpeed,
                 unit: unit,
                 isActive: showDownload,
+                dataAvailability: dataAvailability,
                 onToggle: onToggleDownload
             )
             .frame(maxWidth: .infinity)
@@ -978,6 +1174,7 @@ struct StatisticsCardView: View {
                 average: averageUploadSpeed,
                 unit: unit,
                 isActive: showUpload,
+                dataAvailability: dataAvailability,
                 onToggle: onToggleUpload
             )
             .frame(maxWidth: .infinity)
@@ -1021,6 +1218,7 @@ struct StatColumnView: View {
     let average: Double
     let unit: UserPreferences.SpeedUnit
     let isActive: Bool
+    let dataAvailability: NetworkChartView.DataAvailability
     var onToggle: (() -> Void)?
 
     var body: some View {
@@ -1034,6 +1232,19 @@ struct StatColumnView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(isActive ? .primary : .secondary)
+
+                Spacer()
+
+                // Data collection indicator
+                if dataAvailability == .empty {
+                    Text("收集中")
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.blue.opacity(0.15))
+                        .foregroundColor(.blue)
+                        .cornerRadius(4)
+                }
             }
 
             // Current speed (prominent)
@@ -1054,7 +1265,7 @@ struct StatColumnView: View {
                     Text("峰值")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(formatSpeed(peak))
+                    Text(dataAvailability == .empty ? "--" : formatSpeed(peak))
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(isActive ? .primary : .secondary)
@@ -1064,7 +1275,7 @@ struct StatColumnView: View {
                     Text("平均")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(formatSpeed(average))
+                    Text(dataAvailability == .empty ? "--" : formatSpeed(average))
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(isActive ? .primary : .secondary)
@@ -1106,6 +1317,175 @@ struct StatColumnView: View {
             return speedMbps
         case .mbps_lower:
             return speedMbps / 8.0
+        }
+    }
+}
+
+// MARK: - Empty State and Data Collection Views
+
+@available(macOS 13.0, *)
+struct EmptyStateView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            // Animated loading indicator
+            ProgressView()
+                .scaleEffect(1.2)
+                .progressViewStyle(.circular)
+
+            // Icon
+            Image(systemName: "chart.xyaxis.line")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary.opacity(0.5))
+
+            // Text content
+            VStack(spacing: 8) {
+                Text("正在收集網路資料")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text("請稍候，圖表將在幾秒鐘後顯示")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(height: 200)
+        .frame(maxWidth: .infinity)
+        .background(Color.secondary.opacity(0.05))
+        .cornerRadius(8)
+    }
+}
+
+@available(macOS 13.0, *)
+struct DataCollectionBanner: View {
+    let availability: NetworkChartView.DataAvailability
+    let coverageInfo: (actual: TimeInterval, required: TimeInterval, percentage: Double)
+    @State private var isDismissed = false
+
+    var body: some View {
+        if !isDismissed && availability.needsWarning {
+            HStack(spacing: 12) {
+                // Icon
+                Image(systemName: availability == .empty ? "clock" : "exclamationmark.triangle")
+                    .foregroundColor(bannerColor)
+                    .font(.subheadline)
+
+                // Message
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(bannerTitle)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+
+                    if availability == .insufficient {
+                        Text(bannerMessage)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                // Dismiss button
+                Button(action: { isDismissed = true }) {
+                    Image(systemName: "xmark")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("關閉提示")
+            }
+            .padding(12)
+            .background(bannerBackgroundColor)
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(bannerColor.opacity(0.3), lineWidth: 1)
+            )
+        }
+    }
+
+    private var bannerColor: Color {
+        availability == .empty ? .blue : .orange
+    }
+
+    private var bannerBackgroundColor: Color {
+        availability == .empty ? Color.blue.opacity(0.08) : Color.orange.opacity(0.08)
+    }
+
+    private var bannerTitle: String {
+        if availability == .empty {
+            return "資料收集中..."
+        } else {
+            return "資料收集中：\(formatCoverage())"
+        }
+    }
+
+    private var bannerMessage: String {
+        let remaining = coverageInfo.required - coverageInfo.actual
+        return "還需 \(formatTimeInterval(remaining)) 達到完整視圖"
+    }
+
+    private func formatCoverage() -> String {
+        let percentage = Int(coverageInfo.percentage)
+        return "已收集 \(percentage)%"
+    }
+
+    private func formatTimeInterval(_ interval: TimeInterval) -> String {
+        let hours = Int(interval) / 3600
+        let minutes = (Int(interval) % 3600) / 60
+
+        if hours > 0 {
+            if minutes > 0 {
+                return "\(hours) 小時 \(minutes) 分鐘"
+            } else {
+                return "\(hours) 小時"
+            }
+        } else {
+            return "\(minutes) 分鐘"
+        }
+    }
+}
+
+@available(macOS 13.0, *)
+struct PartialDataIndicator: View {
+    let coverageInfo: (actual: TimeInterval, required: TimeInterval, percentage: Double)
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "info.circle.fill")
+                .font(.caption)
+                .foregroundColor(.blue)
+
+            Text(message)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color.blue.opacity(0.08))
+        .cornerRadius(4)
+    }
+
+    private var message: String {
+        let actualFormatted = formatTimeInterval(coverageInfo.actual)
+        let requiredFormatted = formatTimeInterval(coverageInfo.required)
+        return "顯示最近 \(actualFormatted) 資料（完整視圖需 \(requiredFormatted)）"
+    }
+
+    private func formatTimeInterval(_ interval: TimeInterval) -> String {
+        let hours = Int(interval) / 3600
+        let minutes = (Int(interval) % 3600) / 60
+
+        if hours > 0 {
+            if minutes > 0 {
+                return "\(hours) 小時 \(minutes) 分"
+            } else {
+                return "\(hours) 小時"
+            }
+        } else if minutes > 0 {
+            return "\(minutes) 分鐘"
+        } else {
+            return "< 1 分鐘"
         }
     }
 }
