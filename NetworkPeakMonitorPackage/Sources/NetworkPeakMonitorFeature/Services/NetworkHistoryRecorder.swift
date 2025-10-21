@@ -8,9 +8,9 @@ public class NetworkHistoryRecorder: ObservableObject {
     private let userDefaults = UserDefaults.standard
     private var cancellables = Set<AnyCancellable>()
 
-    // Store data points every 10 seconds for 1-hour view (360 points max)
+    // Store data points every 10 seconds for extended view (up to 24 hours)
     private let oneHourInterval: TimeInterval = 10.0
-    private let maxOneHourPoints = 360 // 1 hour = 3600 seconds / 10 seconds
+    private let maxOneHourPoints = 8640 // 24 hours = 86400 seconds / 10 seconds
 
     // Store hourly aggregates for 24-hour view (24 points max)
     private let maxTwentyFourHourPoints = 24
@@ -41,9 +41,9 @@ public class NetworkHistoryRecorder: ObservableObject {
             // Add to one hour data
             oneHourData.append(dataPoint)
 
-            // Keep only last hour of data
-            let oneHourAgo = now.addingTimeInterval(-3600)
-            oneHourData = oneHourData.filter { $0.timestamp > oneHourAgo }
+            // Keep only last 24 hours of data
+            let twentyFourHoursAgo = now.addingTimeInterval(-24 * 3600)
+            oneHourData = oneHourData.filter { $0.timestamp > twentyFourHoursAgo }
 
             // Limit to max points
             if oneHourData.count > maxOneHourPoints {

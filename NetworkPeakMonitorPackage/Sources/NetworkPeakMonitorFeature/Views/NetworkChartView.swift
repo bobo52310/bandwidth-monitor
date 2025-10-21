@@ -23,6 +23,10 @@ public struct NetworkChartView: View {
         case fifteenMinutes = "15 分鐘"
         case thirtyMinutes = "30 分鐘"
         case oneHour = "1 小時"
+        case threeHours = "3 小時"
+        case sixHours = "6 小時"
+        case twelveHours = "12 小時"
+        case twentyFourHours = "24 小時"
 
         var seconds: TimeInterval {
             switch self {
@@ -31,7 +35,29 @@ public struct NetworkChartView: View {
             case .fifteenMinutes: return 15 * 60
             case .thirtyMinutes: return 30 * 60
             case .oneHour: return 60 * 60
+            case .threeHours: return 3 * 60 * 60
+            case .sixHours: return 6 * 60 * 60
+            case .twelveHours: return 12 * 60 * 60
+            case .twentyFourHours: return 24 * 60 * 60
             }
+        }
+
+        // Standard ranges for segmented control (quick access)
+        static var standardRanges: [TimeRange] {
+            [.oneMinute, .fiveMinutes, .fifteenMinutes, .thirtyMinutes, .oneHour]
+        }
+
+        // Extended ranges for dropdown menu
+        static var extendedRanges: [TimeRange] {
+            [.threeHours, .sixHours, .twelveHours, .twentyFourHours]
+        }
+
+        var isStandard: Bool {
+            Self.standardRanges.contains(self)
+        }
+
+        var isExtended: Bool {
+            Self.extendedRanges.contains(self)
         }
     }
 
@@ -43,15 +69,73 @@ public struct NetworkChartView: View {
         self._showDownload = showDownload
     }
 
-    public var body: some View {
-        VStack(spacing: 16) {
-            // Time Range Picker
-            Picker("Time Range", selection: $selectedTimeRange) {
-                ForEach(TimeRange.allCases, id: \.self) { range in
-                    Text(range.rawValue).tag(range)
+    // Computed binding for segmented control to handle extended ranges
+    private var segmentedControlBinding: Binding<TimeRange> {
+        Binding(
+            get: {
+                // If extended range is selected, default to oneHour for segmented control display
+                selectedTimeRange.isStandard ? selectedTimeRange : .oneHour
+            },
+            set: { newValue in
+                // Only update if a standard range is selected
+                if newValue.isStandard {
+                    selectedTimeRange = newValue
                 }
             }
-            .pickerStyle(.segmented)
+        )
+    }
+
+    public var body: some View {
+        VStack(spacing: 16) {
+            // Time Range Picker - Dual Layer Design
+            HStack(spacing: 8) {
+                // Standard ranges (quick access segmented control)
+                Picker("Time Range", selection: segmentedControlBinding) {
+                    ForEach(TimeRange.standardRanges, id: \.self) { range in
+                        Text(range.rawValue).tag(range)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: .infinity)
+
+                // Extended ranges (dropdown menu)
+                Menu {
+                    ForEach(TimeRange.extendedRanges, id: \.self) { range in
+                        Button(action: {
+                            selectedTimeRange = range
+                        }) {
+                            HStack {
+                                Text(range.rawValue)
+                                if selectedTimeRange == range {
+                                    Spacer()
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        if selectedTimeRange.isExtended {
+                            Text(selectedTimeRange.rawValue)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        } else {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.subheadline)
+                        }
+                        Image(systemName: "chevron.down")
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(selectedTimeRange.isExtended ? Color.blue.opacity(0.15) : Color.secondary.opacity(0.1))
+                    .foregroundColor(selectedTimeRange.isExtended ? .blue : .secondary)
+                    .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                .help("更長時間範圍")
+                .fixedSize()
+            }
 
             // Statistics Card
             StatisticsCardView(
@@ -589,6 +673,34 @@ public struct NetworkChartView: View {
         case .oneHour:
             // Every 10 minutes for 1-hour view (HH:MM)
             AxisMarks(values: .stride(by: .minute, count: 10)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .threeHours:
+            // Every 30 minutes for 3-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .minute, count: 30)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .sixHours:
+            // Every 1 hour for 6-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .hour, count: 1)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .twelveHours:
+            // Every 2 hours for 12-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .hour, count: 2)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel(format: .dateTime.hour().minute(), centered: false)
+            }
+        case .twentyFourHours:
+            // Every 4 hours for 24-hour view (HH:MM)
+            AxisMarks(values: .stride(by: .hour, count: 4)) { value in
                 AxisGridLine()
                 AxisTick()
                 AxisValueLabel(format: .dateTime.hour().minute(), centered: false)

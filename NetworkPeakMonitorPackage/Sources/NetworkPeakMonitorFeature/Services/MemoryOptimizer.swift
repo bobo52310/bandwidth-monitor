@@ -29,12 +29,9 @@ public class MemoryOptimizer {
     ) -> (oneHour: [NetworkDataPoint], twentyFourHour: [HourlyDataPoint]) {
         let now = Date()
 
-        // Keep only last hour of detailed data
-        let oneHourAgo = now.addingTimeInterval(-3600)
-        let prunedOneHour = oneHourData.filter { $0.timestamp > oneHourAgo }
-
-        // Keep only last 24 hours of hourly aggregates
+        // Keep only last 24 hours of detailed data and hourly aggregates
         let twentyFourHoursAgo = now.addingTimeInterval(-24 * 3600)
+        let prunedOneHour = oneHourData.filter { $0.timestamp > twentyFourHoursAgo }
         let prunedTwentyFourHour = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
 
         return (prunedOneHour, prunedTwentyFourHour)
