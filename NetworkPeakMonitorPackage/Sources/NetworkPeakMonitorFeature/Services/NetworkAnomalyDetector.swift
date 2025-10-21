@@ -222,6 +222,18 @@ public struct NetworkAnomaly: Identifiable {
                 return .high
             }
         }
+
+        /// Unique key for grouping similar anomaly types
+        public var typeKey: String {
+            switch self {
+            case .connectionDrop:
+                return "connectionDrop"
+            case .speedDrop(let direction, _, _, _):
+                return "speedDrop_\(direction.displayName)"
+            case .zeroSpeed:
+                return "zeroSpeed"
+            }
+        }
     }
 
     public enum Severity {

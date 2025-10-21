@@ -88,7 +88,10 @@ public class NotificationService: ObservableObject {
         }
 
         if shouldNotify {
-            sendNotification(title: "網路速度接近上限", body: message)
+            // Use the higher of download or upload plan speed for the title
+            let maxPlanSpeed = max(downloadPlanSpeed, uploadPlanSpeed)
+            let title = "接近速率上限(\(Int(maxPlanSpeed))Mbps)"
+            sendNotification(title: title, body: message)
             lastNotificationTime = Date()
         }
     }

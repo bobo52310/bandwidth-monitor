@@ -103,7 +103,7 @@ public struct PopoverView: View {
                         HStack {
                             Image(systemName: "gauge.high")
                                 .foregroundColor(Color.Adaptive.warning)
-                            Text("接近速率上限")
+                            Text("接近速率上限(\(Int(max(viewModel.preferences.downloadPlanSpeed, viewModel.preferences.uploadPlanSpeed)))Mbps)")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
@@ -369,11 +369,11 @@ public struct PopoverView: View {
                                     }
                                 }
 
-                                // Show recent anomalies
+                                // Show recent anomalies (deduplicated by type)
                                 if !viewModel.anomalyDetector.recentAnomalies.isEmpty {
                                     ScrollView(.horizontal, showsIndicators: false) {
                                         HStack(spacing: 4) {
-                                            ForEach(viewModel.anomalyDetector.recentAnomalies.prefix(5)) { anomaly in
+                                            ForEach(getUniqueRecentAnomalies()) { anomaly in
                                                 AnomalyBadge(anomaly: anomaly)
                                             }
                                         }
@@ -469,6 +469,29 @@ public struct PopoverView: View {
                 exportError = true
             }
         }
+    }
+
+    /// Get unique recent anomalies, showing only the most recent of each type
+    private func getUniqueRecentAnomalies() -> [NetworkAnomaly] {
+        var seenTypes: Set<String> = []
+        var uniqueAnomalies: [NetworkAnomaly] = []
+
+        // Iterate through recent anomalies and keep only the first (most recent) of each type
+        for anomaly in viewModel.anomalyDetector.recentAnomalies {
+            let typeKey = anomaly.type.typeKey
+
+            if !seenTypes.contains(typeKey) {
+                seenTypes.insert(typeKey)
+                uniqueAnomalies.append(anomaly)
+
+                // Limit to 5 unique types
+                if uniqueAnomalies.count >= 5 {
+                    break
+                }
+            }
+        }
+
+        return uniqueAnomalies
     }
 
 }

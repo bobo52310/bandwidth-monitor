@@ -85,9 +85,29 @@ public struct NetworkChartView: View {
         )
     }
 
+    // Y-Axis mode button label
+    private var yAxisModeButtonLabel: String {
+        if preferences.chartYAxisMode == .auto {
+            let currentMax = getMaxYValueShortTerm()
+            return "0-\(formatAxisValue(currentMax))"
+        } else {
+            let planMax = max(preferences.downloadPlanSpeed, preferences.uploadPlanSpeed)
+            return "固定 \(Int(planMax))"
+        }
+    }
+
+    // Y-Axis mode tooltip
+    private var yAxisModeTooltip: String {
+        if preferences.chartYAxisMode == .auto {
+            return "當前為自動縮放模式，根據實際使用範圍智能調整 Y 軸。點擊切換為固定上限模式。"
+        } else {
+            return "當前為固定上限模式，Y 軸固定顯示方案速度上限。點擊切換為自動縮放模式。"
+        }
+    }
+
     public var body: some View {
         VStack(spacing: 16) {
-            // Time Range Picker - Dual Layer Design
+            // Time Range Picker - Dual Layer Design with Y-Axis Mode Toggle
             HStack(spacing: 8) {
                 // Standard ranges (quick access segmented control)
                 Picker("Time Range", selection: segmentedControlBinding) {
@@ -135,6 +155,29 @@ public struct NetworkChartView: View {
                 .buttonStyle(.plain)
                 .help("更長時間範圍")
                 .fixedSize()
+
+                // Y-Axis Mode Toggle Button
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        preferences.chartYAxisMode = preferences.chartYAxisMode == .auto ? .fixed : .auto
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: preferences.chartYAxisMode.icon)
+                            .font(.subheadline)
+                        Text(yAxisModeButtonLabel)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(preferences.chartYAxisMode == .auto ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
+                    .foregroundColor(preferences.chartYAxisMode == .auto ? .green : .orange)
+                    .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                .help(yAxisModeTooltip)
+                .fixedSize()
             }
 
             // Data collection banner (show when insufficient data)
@@ -172,6 +215,7 @@ public struct NetworkChartView: View {
             }
         }
         .padding()
+        .animation(.easeInOut(duration: 0.3), value: preferences.chartYAxisMode)
     }
 
     // Chart content view based on data availability
@@ -369,7 +413,6 @@ public struct NetworkChartView: View {
         .chartPlotStyle { plotArea in
             plotArea.background(.clear)
         }
-        .clipped()
         .overlay(alignment: .topLeading) {
             if let selectedDate = selectedDate,
                let dataPoint = findNearestDataPoint(for: selectedDate, in: filteredData) {
@@ -479,7 +522,6 @@ public struct NetworkChartView: View {
         .chartPlotStyle { plotArea in
             plotArea.background(.clear)
         }
-        .clipped()
     }
 
     @ViewBuilder
@@ -894,56 +936,134 @@ public struct NetworkChartView: View {
         return data.min(by: { abs($0.timestamp.timeIntervalSince(date)) < abs($1.timestamp.timeIntervalSince(date)) })
     }
 
-    // Calculate maximum Y value for short-term charts (5min, 15min, 30min, 1hr)
-    private func getMaxYValueShortTerm() -> Double {
-        var maxValue: Double = 100.0 // Default minimum scale
+    // Calculate smart Y-axis maximum using intelligent step-based scaling
+    private func calculateSmartYAxisMax(from data: [NetworkDataPoint]) -> Double {
+        // Find the actual maximum speed in the data
+        var maxSpeed: Double = 0
 
         if showDownload {
-            let maxDownload = filteredData.map { convertSpeed($0.downloadMbps) }.max() ?? 0
-            maxValue = max(maxValue, maxDownload)
+            let maxDownload = data.map { $0.downloadMbps }.max() ?? 0
+            maxSpeed = max(maxSpeed, maxDownload)
         }
 
         if showUpload {
-            let maxUpload = filteredData.map { convertSpeed($0.uploadMbps) }.max() ?? 0
-            maxValue = max(maxValue, maxUpload)
+            let maxUpload = data.map { $0.uploadMbps }.max() ?? 0
+            maxSpeed = max(maxSpeed, maxUpload)
         }
 
-        // Consider plan speed for better scale
-        if preferences.downloadPlanSpeed > 0 {
-            maxValue = max(maxValue, convertSpeed(preferences.downloadPlanSpeed))
-        }
-        if preferences.uploadPlanSpeed > 0 {
-            maxValue = max(maxValue, convertSpeed(preferences.uploadPlanSpeed))
+        // Intelligent step-based scaling
+        // Choose appropriate Y-axis range based on actual usage
+        let smartMax: Double
+        switch maxSpeed {
+        case 0..<5:      smartMax = 10      // 1-5 Mbps → 10 Mbps
+        case 5..<20:     smartMax = 30      // 5-20 Mbps → 30 Mbps
+        case 20..<50:    smartMax = 70      // 20-50 Mbps → 70 Mbps
+        case 50..<100:   smartMax = 150     // 50-100 Mbps → 150 Mbps
+        case 100..<200:  smartMax = 300     // 100-200 Mbps → 300 Mbps
+        default:
+            // For higher speeds, use plan speed with buffer
+            let planMax = max(preferences.downloadPlanSpeed, preferences.uploadPlanSpeed)
+            smartMax = max(planMax * 1.1, maxSpeed * 1.2)
         }
 
-        // Add 10% padding for better visualization
-        return maxValue * 1.1
+        return convertSpeed(smartMax)
+    }
+
+    // Calculate maximum Y value for short-term charts (5min, 15min, 30min, 1hr)
+    private func getMaxYValueShortTerm() -> Double {
+        if preferences.chartYAxisMode == .auto {
+            // Auto mode: Use smart step-based scaling
+            let smartMax = calculateSmartYAxisMax(from: filteredData)
+            // Ensure minimum of 10 Mbps for better visualization
+            return max(convertSpeed(10), smartMax)
+        } else {
+            // Fixed mode: Use plan speed as maximum
+            var maxValue: Double = 100.0 // Default minimum scale
+
+            if showDownload {
+                let maxDownload = filteredData.map { convertSpeed($0.downloadMbps) }.max() ?? 0
+                maxValue = max(maxValue, maxDownload)
+            }
+
+            if showUpload {
+                let maxUpload = filteredData.map { convertSpeed($0.uploadMbps) }.max() ?? 0
+                maxValue = max(maxValue, maxUpload)
+            }
+
+            // Consider plan speed for better scale
+            if preferences.downloadPlanSpeed > 0 {
+                maxValue = max(maxValue, convertSpeed(preferences.downloadPlanSpeed))
+            }
+            if preferences.uploadPlanSpeed > 0 {
+                maxValue = max(maxValue, convertSpeed(preferences.uploadPlanSpeed))
+            }
+
+            // Add 10% padding for better visualization
+            return maxValue * 1.1
+        }
+    }
+
+    // Calculate smart Y-axis maximum for hourly data
+    private func calculateSmartYAxisMax24Hour(from data: [HourlyDataPoint]) -> Double {
+        var maxSpeed: Double = 0
+
+        if showDownload {
+            let maxDownload = data.map { $0.avgDownloadMbps }.max() ?? 0
+            maxSpeed = max(maxSpeed, maxDownload)
+        }
+
+        if showUpload {
+            let maxUpload = data.map { $0.avgUploadMbps }.max() ?? 0
+            maxSpeed = max(maxSpeed, maxUpload)
+        }
+
+        // Same intelligent scaling as short-term
+        let smartMax: Double
+        switch maxSpeed {
+        case 0..<5:      smartMax = 10
+        case 5..<20:     smartMax = 30
+        case 20..<50:    smartMax = 70
+        case 50..<100:   smartMax = 150
+        case 100..<200:  smartMax = 300
+        default:
+            let planMax = max(preferences.downloadPlanSpeed, preferences.uploadPlanSpeed)
+            smartMax = max(planMax * 1.1, maxSpeed * 1.2)
+        }
+
+        return convertSpeed(smartMax)
     }
 
     // Calculate maximum Y value for 24-hour chart
     private func getMaxYValue24Hour() -> Double {
-        var maxValue: Double = 100.0 // Default minimum scale
+        if preferences.chartYAxisMode == .auto {
+            // Auto mode: Use smart step-based scaling
+            let smartMax = calculateSmartYAxisMax24Hour(from: historyRecorder.twentyFourHourData)
+            return max(convertSpeed(10), smartMax)
+        } else {
+            // Fixed mode: Use plan speed as maximum
+            var maxValue: Double = 100.0 // Default minimum scale
 
-        if showDownload {
-            let maxDownload = historyRecorder.twentyFourHourData.map { convertSpeed($0.avgDownloadMbps) }.max() ?? 0
-            maxValue = max(maxValue, maxDownload)
-        }
+            if showDownload {
+                let maxDownload = historyRecorder.twentyFourHourData.map { convertSpeed($0.avgDownloadMbps) }.max() ?? 0
+                maxValue = max(maxValue, maxDownload)
+            }
 
-        if showUpload {
-            let maxUpload = historyRecorder.twentyFourHourData.map { convertSpeed($0.avgUploadMbps) }.max() ?? 0
-            maxValue = max(maxValue, maxUpload)
-        }
+            if showUpload {
+                let maxUpload = historyRecorder.twentyFourHourData.map { convertSpeed($0.avgUploadMbps) }.max() ?? 0
+                maxValue = max(maxValue, maxUpload)
+            }
 
-        // Consider plan speed for better scale
-        if preferences.downloadPlanSpeed > 0 {
-            maxValue = max(maxValue, convertSpeed(preferences.downloadPlanSpeed))
-        }
-        if preferences.uploadPlanSpeed > 0 {
-            maxValue = max(maxValue, convertSpeed(preferences.uploadPlanSpeed))
-        }
+            // Consider plan speed for better scale
+            if preferences.downloadPlanSpeed > 0 {
+                maxValue = max(maxValue, convertSpeed(preferences.downloadPlanSpeed))
+            }
+            if preferences.uploadPlanSpeed > 0 {
+                maxValue = max(maxValue, convertSpeed(preferences.uploadPlanSpeed))
+            }
 
-        // Add 10% padding for better visualization
-        return maxValue * 1.1
+            // Add 10% padding for better visualization
+            return maxValue * 1.1
+        }
     }
 }
 

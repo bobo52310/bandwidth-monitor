@@ -55,6 +55,35 @@ public class UserPreferences: ObservableObject {
         }
     }
 
+    @Published public var chartYAxisMode: ChartYAxisMode {
+        didSet {
+            userDefaults.set(chartYAxisMode.rawValue, forKey: "chartYAxisMode")
+        }
+    }
+
+    public enum ChartYAxisMode: String, CaseIterable {
+        case auto = "auto"      // 自動智能縮放
+        case fixed = "fixed"    // 固定使用方案速度上限
+
+        public var displayName: String {
+            switch self {
+            case .auto:
+                return "自動縮放"
+            case .fixed:
+                return "固定上限"
+            }
+        }
+
+        public var icon: String {
+            switch self {
+            case .auto:
+                return "arrow.up.left.and.arrow.down.right"
+            case .fixed:
+                return "lock.fill"
+            }
+        }
+    }
+
     public enum SpeedUnit: String, CaseIterable {
         case mbps = "Mbps"
         case mbps_lower = "MB/s"
@@ -104,6 +133,7 @@ public class UserPreferences: ObservableObject {
         self.launchAtLogin = userDefaults.bool(forKey: "launchAtLogin")
         self.menuBarDisplayMode = MenuBarDisplayMode(rawValue: userDefaults.string(forKey: "menuBarDisplayMode") ?? "both") ?? .both
         self.isPinned = userDefaults.bool(forKey: "isPinned")
+        self.chartYAxisMode = ChartYAxisMode(rawValue: userDefaults.string(forKey: "chartYAxisMode") ?? "auto") ?? .auto
 
         // Load showInDock preference, default to true
         if userDefaults.object(forKey: "showInDock") != nil {
