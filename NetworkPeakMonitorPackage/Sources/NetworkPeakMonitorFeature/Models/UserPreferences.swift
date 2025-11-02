@@ -135,13 +135,10 @@ public class UserPreferences: ObservableObject {
         self.isPinned = userDefaults.bool(forKey: "isPinned")
         self.chartYAxisMode = ChartYAxisMode(rawValue: userDefaults.string(forKey: "chartYAxisMode") ?? "auto") ?? .auto
 
-        // Load showInDock preference, default to true
-        if userDefaults.object(forKey: "showInDock") != nil {
-            self.showInDock = userDefaults.bool(forKey: "showInDock")
-        } else {
-            self.showInDock = true
-            userDefaults.set(true, forKey: "showInDock")
-        }
+        // Default to false (menu bar only, no dock icon)
+        // This will reset all users to the new default behavior
+        self.showInDock = false
+        userDefaults.set(false, forKey: "showInDock")
 
         // Set default values if not set
         if downloadPlanSpeed == 0 {
