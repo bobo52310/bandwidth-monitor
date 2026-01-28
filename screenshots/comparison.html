@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing Page 三版本比較 | Network Peak Monitor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      line-height: 1.5;
+    }
+
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #d2d2d7;
+      padding: 20px 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .header p {
+      color: #86868b;
+      margin-top: 4px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    .section {
+      margin-bottom: 60px;
+    }
+
+    .section h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #d2d2d7;
+    }
+
+    .version-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .version-card {
+      background: #fff;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .version-header {
+      padding: 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .version-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .v1 .version-badge {
+      background: #e8f4ff;
+      color: #0066ff;
+    }
+
+    .v2 .version-badge {
+      background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+      color: #7c3aed;
+    }
+
+    .v3 .version-badge {
+      background: #1e40af;
+      color: #fff;
+    }
+
+    .version-header h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .version-header p {
+      color: #86868b;
+      font-size: 14px;
+    }
+
+    .version-content {
+      padding: 20px;
+    }
+
+    .screenshot-wrapper {
+      position: relative;
+      background: #f5f5f7;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .screenshot-wrapper:hover {
+      transform: scale(1.02);
+    }
+
+    .screenshot-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .screenshot-label {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .features-list {
+      margin-top: 16px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #515154;
+    }
+
+    .feature-item::before {
+      content: "✓";
+      color: #34c759;
+      font-weight: 600;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .comparison-table th {
+      background: #fafafa;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .comparison-table td {
+      font-size: 14px;
+      color: #515154;
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .color-swatch {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 8px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .recommendation {
+      background: linear-gradient(135deg, #fff 0%, #f0f9ff 100%);
+      border: 2px solid #0066ff;
+      border-radius: 18px;
+      padding: 30px;
+      margin-top: 40px;
+    }
+
+    .recommendation h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #0066ff;
+    }
+
+    .recommendation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .recommendation-item {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .recommendation-item h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .recommendation-item p {
+      font-size: 14px;
+      color: #86868b;
+    }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      cursor: zoom-out;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: 95%;
+      max-height: 95%;
+      object-fit: contain;
+    }
+
+    @media (max-width: 1024px) {
+      .version-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .recommendation-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Network Peak Monitor - Landing Page 比較</h1>
+    <p>三種風格版本的並排比較，點擊截圖可放大查看</p>
+  </div>
+
+  <div class="container">
+    <!-- Desktop Screenshots -->
+    <div class="section">
+      <h2>桌面版截圖 (1440px)</h2>
+      <div class="version-grid">
+        <div class="version-card v1">
+          <div class="version-header">
+            <span class="version-badge">V1</span>
+            <h3>極簡科技</h3>
+            <p>Apple 風格、大量留白、細線條</p>
+          </div>
+          <div class="version-content">
+            <div class="screenshot-wrapper" onclick="openLightbox('v1-minimalist-desktop.png')">
+              <img src="v1-minimalist-desktop.png" alt="V1 Desktop" loading="lazy">
+              <span class="screenshot-label">1440 × Full</span>
+            </div>
+            <div class="features-list">
+              <div class="feature-item">Electric Blue (#0066FF) 主色</div>
+              <div class="feature-item">Inter + Noto Sans TC 字體</div>
+              <div class="feature-item">120px 區塊間距</div>
+              <div class="feature-item">0.6s ease 淡入動畫</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="version-card v2">
+          <div class="version-header">
+            <span class="version-badge">V2</span>
+            <h3>活潑插畫</h3>
+            <p>漸層背景、手繪風、微動畫</p>
+          </div>
+          <div class="version-content">
+            <div class="screenshot-wrapper" onclick="openLightbox('v2-playful-desktop.png')">
+              <img src="v2-playful-desktop.png" alt="V2 Desktop" loading="lazy">
+              <span class="screenshot-label">1440 × Full</span>
+            </div>
+            <div class="features-list">
+              <div class="feature-item">藍紫漸層 + 多彩點綴</div>
+              <div class="feature-item">Nunito + Noto Sans TC 字體</div>
+              <div class="feature-item">虛線邊框、圓角設計</div>
+              <div class="feature-item">Emoji 與彈跳動畫</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="version-card v3">
+          <div class="version-header">
+            <span class="version-badge">V3</span>
+            <h3>專業商務</h3>
+            <p>企業信任感、數據視覺化</p>
+          </div>
+          <div class="version-content">
+            <div class="screenshot-wrapper" onclick="openLightbox('v3-professional-desktop.png')">
+              <img src="v3-professional-desktop.png" alt="V3 Desktop" loading="lazy">
+              <span class="screenshot-label">1440 × Full</span>
+            </div>
+            <div class="features-list">
+              <div class="feature-item">Deep Blue (#1E40AF) + Gold</div>
+              <div class="feature-item">DM Sans + Noto Sans TC 字體</div>
+              <div class="feature-item">徽章標籤、統計數據</div>
+              <div class="feature-item">深色頁尾、企業風格</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="section">
+      <h2>詳細比較</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>特性</th>
+            <th>V1 極簡科技</th>
+            <th>V2 活潑插畫</th>
+            <th>V3 專業商務</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>主色</td>
+            <td><span class="color-swatch" style="background: #0066FF"></span>#0066FF</td>
+            <td><span class="color-swatch" style="background: linear-gradient(135deg, #3B82F6, #8B5CF6)"></span>藍紫漸層</td>
+            <td><span class="color-swatch" style="background: #1E40AF"></span>#1E40AF</td>
+          </tr>
+          <tr>
+            <td>背景</td>
+            <td>純白 + 淺灰</td>
+            <td>藍紫粉漸層</td>
+            <td>白色 + 深藍頁尾</td>
+          </tr>
+          <tr>
+            <td>字體</td>
+            <td>Inter</td>
+            <td>Nunito</td>
+            <td>DM Sans</td>
+          </tr>
+          <tr>
+            <td>邊框風格</td>
+            <td>細實線</td>
+            <td>虛線</td>
+            <td>微陰影</td>
+          </tr>
+          <tr>
+            <td>動畫</td>
+            <td>淡入</td>
+            <td>彈跳、浮動、搖晃</td>
+            <td>淡入、計數</td>
+          </tr>
+          <tr>
+            <td>圖示</td>
+            <td>SVG 線條</td>
+            <td>Emoji</td>
+            <td>SVG 線條</td>
+          </tr>
+          <tr>
+            <td>整體調性</td>
+            <td>簡潔專業</td>
+            <td>親切有趣</td>
+            <td>可靠穩重</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="recommendation">
+      <h3>適用場景建議</h3>
+      <div class="recommendation-grid">
+        <div class="recommendation-item">
+          <h4>V1 極簡科技</h4>
+          <p>適合：開發者、技術受眾、偏好簡潔設計的用戶。強調產品本身功能，不需過多裝飾。</p>
+        </div>
+        <div class="recommendation-item">
+          <h4>V2 活潑插畫</h4>
+          <p>適合：一般消費者、家庭用戶、首次接觸網路監控工具的新手。降低技術門檻感。</p>
+        </div>
+        <div class="recommendation-item">
+          <h4>V3 專業商務</h4>
+          <p>適合：企業客戶、IT 管理者、需要專業信任感的場景。強調可靠性與數據準確性。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="Full size screenshot">
+  </div>
+
+  <script>
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+  </script>
+</body>
+</html>
