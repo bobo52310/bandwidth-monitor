@@ -1,0 +1,43 @@
+---
+// V3 專業商務風格 - 按鈕元件
+interface Props {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  href?: string
+  class?: string
+}
+
+const {
+  variant = 'primary',
+  size = 'md',
+  href,
+  class: className = ''
+} = Astro.props
+
+const baseStyles = 'inline-flex items-center justify-center font-semibold transition-all duration-200 rounded-lg'
+
+const variants = {
+  primary: 'bg-[#1E40AF] text-white hover:bg-[#1E3A8A] shadow-sm hover:shadow-md active:scale-[0.98]',
+  secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 active:scale-[0.98]',
+  outline: 'bg-transparent text-[#1E40AF] border-2 border-[#1E40AF] hover:bg-[#1E40AF] hover:text-white',
+  ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+}
+
+const sizes = {
+  sm: 'px-4 py-2 text-sm',
+  md: 'px-5 py-2.5 text-sm',
+  lg: 'px-6 py-3 text-base'
+}
+
+const classes = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`
+---
+
+{href ? (
+  <a href={href} class={classes}>
+    <slot />
+  </a>
+) : (
+  <button class={classes}>
+    <slot />
+  </button>
+)}

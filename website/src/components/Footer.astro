@@ -1,0 +1,82 @@
+---
+// V3 專業商務風格 - 企業級頁尾
+const currentYear = new Date().getFullYear()
+---
+
+<footer class="bg-slate-900 text-slate-300">
+  <div class="max-w-7xl mx-auto px-6 py-16">
+    <div class="grid md:grid-cols-4 gap-12">
+      <!-- Brand -->
+      <div class="md:col-span-2">
+        <a href="/" class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 bg-[#1E40AF] rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18M17 8l4 4m0 0l-4 4" />
+            </svg>
+          </div>
+          <div>
+            <span class="font-bold text-white text-lg">Network Peak Monitor</span>
+            <span class="text-slate-500 text-sm block">網路峰值監控器</span>
+          </div>
+        </a>
+        <p class="text-slate-400 leading-relaxed max-w-md">
+          專業級 macOS 網路監控解決方案。透過數據分析協助您做出明智的網路升級決策，優化網路效能。
+        </p>
+
+        <!-- Trust badges -->
+        <div class="flex items-center gap-4 mt-6">
+          <div class="badge badge-success">
+            <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            安全可靠
+          </div>
+          <div class="badge badge-gold">
+            <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            高品質
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Links -->
+      <div>
+        <h4 class="text-white font-semibold mb-4">產品</h4>
+        <ul class="space-y-3">
+          <li><a href="#features" class="text-slate-400 hover:text-white transition-colors">功能介紹</a></li>
+          <li><a href="#how-it-works" class="text-slate-400 hover:text-white transition-colors">運作方式</a></li>
+          <li><a href="#download" class="text-slate-400 hover:text-white transition-colors">下載</a></li>
+          <li><a href="#" class="text-slate-400 hover:text-white transition-colors">更新日誌</a></li>
+        </ul>
+      </div>
+
+      <!-- Support Links -->
+      <div>
+        <h4 class="text-white font-semibold mb-4">支援</h4>
+        <ul class="space-y-3">
+          <li><a href="#faq" class="text-slate-400 hover:text-white transition-colors">常見問題</a></li>
+          <li><a href="https://github.com" class="text-slate-400 hover:text-white transition-colors">GitHub</a></li>
+          <li><a href="#" class="text-slate-400 hover:text-white transition-colors">問題回報</a></li>
+          <li><a href="#" class="text-slate-400 hover:text-white transition-colors">隱私政策</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="mt-12 pt-8 border-t border-slate-800">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-slate-500 text-sm">
+          © {currentYear} Network Peak Monitor. All rights reserved.
+        </p>
+        <div class="flex items-center gap-2 text-slate-500 text-sm">
+          <span>Built for</span>
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          <span>macOS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

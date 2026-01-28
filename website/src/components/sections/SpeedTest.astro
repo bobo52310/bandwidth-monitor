@@ -1,0 +1,153 @@
+---
+// V3 專業商務風格 - Speed Test Section
+---
+
+<section class="bg-slate-50">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <!-- Speed Test Demo -->
+      <div class="order-2 lg:order-1">
+        <div class="card-pro p-6">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="font-semibold text-slate-900">速度測試結果</h3>
+              <p class="text-sm text-slate-500">Speedtest by Ookla</p>
+            </div>
+            <span class="badge badge-success">測試完成</span>
+          </div>
+
+          <!-- Speed Gauge -->
+          <div class="text-center mb-8">
+            <div class="relative w-56 h-28 mx-auto mb-4">
+              <svg class="w-full h-full" viewBox="0 0 200 100">
+                <defs>
+                  <linearGradient id="v3GaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#1E40AF" />
+                    <stop offset="100%" stop-color="#3B82F6" />
+                  </linearGradient>
+                </defs>
+                <!-- Background arc -->
+                <path
+                  d="M20,100 A80,80 0 0,1 180,100"
+                  fill="none"
+                  stroke="#E2E8F0"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                />
+                <!-- Progress arc -->
+                <path
+                  d="M20,100 A80,80 0 0,1 165,40"
+                  fill="none"
+                  stroke="url(#v3GaugeGradient)"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <div class="absolute inset-0 flex items-end justify-center pb-2">
+                <span class="text-4xl font-bold text-slate-900">312.5</span>
+                <span class="text-sm text-slate-500 ml-1 mb-1">Mbps</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Stats -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="text-center p-4 bg-slate-50 rounded-xl">
+              <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">下載</div>
+              <div class="text-xl font-bold text-slate-900">312.5</div>
+              <div class="text-xs text-slate-500">Mbps</div>
+            </div>
+            <div class="text-center p-4 bg-slate-50 rounded-xl">
+              <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">上傳</div>
+              <div class="text-xl font-bold text-slate-900">45.2</div>
+              <div class="text-xs text-slate-500">Mbps</div>
+            </div>
+            <div class="text-center p-4 bg-slate-50 rounded-xl">
+              <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">延遲</div>
+              <div class="text-xl font-bold text-slate-900">12</div>
+              <div class="text-xs text-slate-500">ms</div>
+            </div>
+          </div>
+
+          <!-- Leaderboard -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+              <span class="font-semibold text-slate-900">社群排行榜</span>
+              <span class="text-sm text-[#1E40AF] font-medium cursor-pointer hover:underline">全部排名 →</span>
+            </div>
+            <div class="divide-y divide-slate-100">
+              {[
+                { rank: 1, name: '新加坡', speed: '892.3 Mbps', isp: 'StarHub', medal: '🥇' },
+                { rank: 2, name: '韓國', speed: '845.1 Mbps', isp: 'KT Corporation', medal: '🥈' },
+                { rank: 3, name: '台灣（你）', speed: '312.5 Mbps', isp: 'Chunghwa Telecom', medal: '🥉', isYou: true }
+              ].map((user) => (
+                <div class={`flex items-center gap-4 px-4 py-3 ${user.isYou ? 'bg-[#1E40AF]/5' : ''}`}>
+                  <span class="text-xl">{user.medal}</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-slate-900">{user.name}</div>
+                    <div class="text-xs text-slate-500">{user.isp}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-semibold text-slate-900">{user.speed}</div>
+                    {user.isYou && <span class="text-[10px] text-[#1E40AF] font-medium">你的成績</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Content -->
+      <div class="order-1 lg:order-2">
+        <span class="badge badge-primary mb-4">專業測速</span>
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+          精準的速度測試
+        </h2>
+        <p class="text-lg text-slate-600 leading-relaxed mb-8">
+          整合 Speedtest by Ookla CLI，提供企業級的網路速度測試功能。測試結果可選擇性上傳至社群排行榜，與全球用戶進行比較。
+        </p>
+
+        <!-- Feature list -->
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 p-4 bg-white rounded-xl border border-slate-200">
+            <div class="w-10 h-10 flex items-center justify-center bg-[#1E40AF]/5 text-[#1E40AF] rounded-lg flex-shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-semibold text-slate-900 mb-1">專業測速引擎</h4>
+              <p class="text-slate-600 text-sm">採用 Ookla 官方 CLI，確保測試結果準確可靠</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white rounded-xl border border-slate-200">
+            <div class="w-10 h-10 flex items-center justify-center bg-[#1E40AF]/5 text-[#1E40AF] rounded-lg flex-shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-semibold text-slate-900 mb-1">多維度排行榜</h4>
+              <p class="text-slate-600 text-sm">支援全球、國家、ISP 三種排行榜維度比較</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white rounded-xl border border-slate-200">
+            <div class="w-10 h-10 flex items-center justify-center bg-[#1E40AF]/5 text-[#1E40AF] rounded-lg flex-shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-semibold text-slate-900 mb-1">隱私優先設計</h4>
+              <p class="text-slate-600 text-sm">上傳測試結果為可選功能，完全尊重用戶隱私</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

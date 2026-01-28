@@ -1,0 +1,76 @@
+---
+// V3 專業商務風格 - How It Works Section
+const steps = [
+  {
+    number: '01',
+    title: '下載安裝',
+    description: '從官網下載 DMG 檔案，按照標準 macOS 安裝流程即可完成安裝。',
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>`
+  },
+  {
+    number: '02',
+    title: '授權監控',
+    description: '首次啟動時授予必要的系統權限，即可開始進行網路監控。',
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>`
+  },
+  {
+    number: '03',
+    title: '數據分析',
+    description: '透過即時監控和歷史數據分析，評估網路方案是否符合實際需求。',
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>`
+  }
+]
+---
+
+<section id="how-it-works" class="bg-slate-50">
+  <div class="max-w-7xl mx-auto px-6">
+    <!-- Section Header -->
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="badge badge-primary mb-4">使用流程</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+        快速開始使用
+      </h2>
+      <p class="text-lg text-slate-600">
+        簡潔的設定流程，讓您在最短時間內開始監控網路狀態
+      </p>
+    </div>
+
+    <!-- Steps -->
+    <div class="grid md:grid-cols-3 gap-8">
+      {steps.map((step, index) => (
+        <div class="relative">
+          <!-- Connector line -->
+          {index < steps.length - 1 && (
+            <div class="hidden md:block absolute top-16 left-[60%] w-[80%] h-0.5 bg-slate-200"></div>
+          )}
+
+          <div class="card-pro p-8 text-center relative">
+            <!-- Step number -->
+            <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#1E40AF] text-white text-sm font-bold rounded-full flex items-center justify-center shadow-lg">
+              {step.number}
+            </div>
+
+            <!-- Icon -->
+            <div class="w-16 h-16 mx-auto mb-6 bg-[#1E40AF]/5 text-[#1E40AF] rounded-2xl flex items-center justify-center">
+              <Fragment set:html={step.icon} />
+            </div>
+
+            <!-- Content -->
+            <h3 class="text-xl font-semibold text-slate-900 mb-3">
+              {step.title}
+            </h3>
+            <p class="text-slate-600 leading-relaxed">
+              {step.description}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
