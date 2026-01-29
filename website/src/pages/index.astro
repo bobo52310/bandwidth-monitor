@@ -9,18 +9,22 @@ import ChartDemo from '../components/sections/ChartDemo.astro'
 import SpeedTest from '../components/sections/SpeedTest.astro'
 import FAQ from '../components/sections/FAQ.astro'
 import DownloadCTA from '../components/sections/DownloadCTA.astro'
+import { defaultLang, useTranslations } from '../i18n'
+
+const lang = defaultLang
+const t = useTranslations(lang)
 ---
 
-<Layout title="Network Peak Monitor - 網路峰值監控器 | 企業級網路監控解決方案">
-  <Header />
+<Layout title={t('meta.title')} description={t('meta.description')} lang={lang}>
+  <Header lang={lang} />
   <main>
-    <Hero />
-    <Features />
-    <HowItWorks />
+    <Hero lang={lang} />
+    <Features lang={lang} />
+    <HowItWorks lang={lang} />
     <ChartDemo />
     <SpeedTest />
-    <FAQ />
-    <DownloadCTA />
+    <FAQ lang={lang} />
+    <DownloadCTA lang={lang} />
   </main>
-  <Footer />
+  <Footer lang={lang} />
 </Layout>

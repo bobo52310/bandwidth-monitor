@@ -20,7 +20,7 @@ public struct PopoverView: View {
             VStack(spacing: 16) {
                 // Title and Control Buttons
                 HStack {
-                    Text("Network Peak Monitor")
+                    Text(L10n.appTitle)
                         .font(.title3)
                     Spacer()
 
@@ -32,7 +32,7 @@ public struct PopoverView: View {
                                 Image(systemName: viewModel.preferences.isPinned ? "pin.fill" : "pin")
                                     .foregroundColor(viewModel.preferences.isPinned ? .white : .purple)
                                     .font(.subheadline)
-                                Text("Pin")
+                                Text(L10n.buttonPin)
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                             }
@@ -43,7 +43,7 @@ public struct PopoverView: View {
                             .cornerRadius(6)
                         }
                         .buttonStyle(.plain)
-                        .help("固定視窗")
+                        .help(L10n.tooltipPinWindow)
 
                         // Settings button
                         Button(action: { showingSettings = true }) {
@@ -51,7 +51,7 @@ public struct PopoverView: View {
                                 Image(systemName: "gear")
                                     .foregroundColor(.secondary)
                                     .font(.subheadline)
-                                Text("Settings")
+                                Text(L10n.buttonSettings)
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                             }
@@ -62,7 +62,7 @@ public struct PopoverView: View {
                             .cornerRadius(6)
                         }
                         .buttonStyle(.plain)
-                        .help("Settings")
+                        .help(L10n.buttonSettings)
                     }
                 }
 
@@ -86,7 +86,7 @@ public struct PopoverView: View {
                         )
                     } else {
                         VStack {
-                            Text("圖表功能需要 macOS 13.0 或更新版本")
+                            Text(L10n.chartRequiresMacOS13)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .padding()
@@ -98,30 +98,28 @@ public struct PopoverView: View {
 
                     Divider()
 
-                    // Peak Approach Counter Section - 速率上限警示
+                    // Peak Approach Counter Section
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Image(systemName: "gauge.high")
                                 .foregroundColor(Color.Adaptive.warning)
-                            Text("接近速率上限(\(Int(max(viewModel.preferences.downloadPlanSpeed, viewModel.preferences.uploadPlanSpeed)))Mbps)")
+                            Text(L10n.approachingSpeedLimit(Int(max(viewModel.preferences.downloadPlanSpeed, viewModel.preferences.uploadPlanSpeed))))
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
-                            // 顯示今日警告次數
                             Text("\(viewModel.peakApproachTracker.todayApproachCount)")
                                 .font(.title)
                                 .fontWeight(.bold)
                                 .foregroundColor(viewModel.peakApproachTracker.todayApproachCount > 0 ? Color.Adaptive.warning : .secondary)
                                 .monospacedDigit()
-                            Text("次")
+                            Text(L10n.peakTimesUnit)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
 
-                        // 顯示警告時間列表
                         if !viewModel.peakApproachTracker.approachTimestamps.isEmpty {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("觸發時間")
+                                Text(L10n.peakTriggerTime)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .textCase(.uppercase)
@@ -146,7 +144,7 @@ public struct PopoverView: View {
                                 }
                             }
                         } else {
-                            Text("今日尚未接近速率上限")
+                            Text(L10n.peakNoApproachToday)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .italic()
@@ -177,13 +175,13 @@ public struct PopoverView: View {
                                 HStack {
                                     Image(systemName: "arrow.down.circle.fill")
                                         .foregroundColor(Color.Adaptive.downloadPrimary)
-                                    Text("下載統計 (Download Stats)")
+                                    Text(L10n.statsDownload)
                                         .font(.headline)
                                         .fontWeight(.medium)
                                 }
 
                                 SpeedRow(
-                                    label: "今日峰值",
+                                    label: L10n.statsTodayPeak,
                                     speed: viewModel.peakRecorder.todayPeakDownload,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.downloadPlanSpeed,
@@ -192,7 +190,7 @@ public struct PopoverView: View {
                                 )
 
                                 SpeedRow(
-                                    label: "歷史總峰值",
+                                    label: L10n.statsAllTimePeak,
                                     speed: viewModel.peakRecorder.allTimePeakDownload,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.downloadPlanSpeed,
@@ -201,7 +199,7 @@ public struct PopoverView: View {
                                 )
 
                                 HourlyPeakRow(
-                                    label: "1小時峰值",
+                                    label: L10n.statsHourlyPeak,
                                     speed: viewModel.peakRecorder.hourlyPeakDownload,
                                     time: viewModel.peakRecorder.hourlyPeakDownloadTime,
                                     unit: viewModel.preferences.displayUnit,
@@ -215,13 +213,13 @@ public struct PopoverView: View {
                                 HStack {
                                     Image(systemName: "arrow.up.circle.fill")
                                         .foregroundColor(Color.Adaptive.uploadPrimary)
-                                    Text("上傳統計 (Upload Stats)")
+                                    Text(L10n.statsUpload)
                                         .font(.headline)
                                         .fontWeight(.medium)
                                 }
 
                                 SpeedRow(
-                                    label: "今日峰值",
+                                    label: L10n.statsTodayPeak,
                                     speed: viewModel.peakRecorder.todayPeakUpload,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.uploadPlanSpeed,
@@ -230,7 +228,7 @@ public struct PopoverView: View {
                                 )
 
                                 SpeedRow(
-                                    label: "歷史總峰值",
+                                    label: L10n.statsAllTimePeak,
                                     speed: viewModel.peakRecorder.allTimePeakUpload,
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.uploadPlanSpeed,
@@ -239,7 +237,7 @@ public struct PopoverView: View {
                                 )
 
                                 HourlyPeakRow(
-                                    label: "1小時峰值",
+                                    label: L10n.statsHourlyPeak,
                                     speed: viewModel.peakRecorder.hourlyPeakUpload,
                                     time: viewModel.peakRecorder.hourlyPeakUploadTime,
                                     unit: viewModel.preferences.displayUnit,
@@ -256,13 +254,13 @@ public struct PopoverView: View {
                             HStack {
                                 Image(systemName: "arrow.up.circle.fill")
                                     .foregroundColor(.green)
-                                Text("上傳統計 (Upload Stats)")
+                                Text(L10n.statsUpload)
                                     .font(.headline)
                                     .fontWeight(.medium)
                             }
 
                             SpeedRow(
-                                label: "今日峰值",
+                                label: L10n.statsTodayPeak,
                                 speed: viewModel.peakRecorder.todayPeakUpload,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.uploadPlanSpeed,
@@ -271,7 +269,7 @@ public struct PopoverView: View {
                             )
 
                             SpeedRow(
-                                label: "歷史總峰值",
+                                label: L10n.statsAllTimePeak,
                                 speed: viewModel.peakRecorder.allTimePeakUpload,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.uploadPlanSpeed,
@@ -280,7 +278,7 @@ public struct PopoverView: View {
                             )
 
                             HourlyPeakRow(
-                                label: "1小時峰值",
+                                label: L10n.statsHourlyPeak,
                                 speed: viewModel.peakRecorder.hourlyPeakUpload,
                                 time: viewModel.peakRecorder.hourlyPeakUploadTime,
                                 unit: viewModel.preferences.displayUnit,
@@ -295,13 +293,13 @@ public struct PopoverView: View {
                             HStack {
                                 Image(systemName: "arrow.down.circle.fill")
                                     .foregroundColor(.blue)
-                                Text("下載統計 (Download Stats)")
+                                Text(L10n.statsDownload)
                                     .font(.headline)
                                     .fontWeight(.medium)
                             }
 
                             SpeedRow(
-                                label: "今日峰值",
+                                label: L10n.statsTodayPeak,
                                 speed: viewModel.peakRecorder.todayPeakDownload,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.downloadPlanSpeed,
@@ -310,7 +308,7 @@ public struct PopoverView: View {
                             )
 
                             SpeedRow(
-                                label: "歷史總峰值",
+                                label: L10n.statsAllTimePeak,
                                 speed: viewModel.peakRecorder.allTimePeakDownload,
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.downloadPlanSpeed,
@@ -319,7 +317,7 @@ public struct PopoverView: View {
                             )
 
                             HourlyPeakRow(
-                                label: "1小時峰值",
+                                label: L10n.statsHourlyPeak,
                                 speed: viewModel.peakRecorder.hourlyPeakDownload,
                                 time: viewModel.peakRecorder.hourlyPeakDownloadTime,
                                 unit: viewModel.preferences.displayUnit,
@@ -336,11 +334,11 @@ public struct PopoverView: View {
                             HStack {
                                 Image(systemName: viewModel.anomalyDetector.isConnectionStable ? "wifi" : "wifi.exclamationmark")
                                     .foregroundColor(viewModel.anomalyDetector.isConnectionStable ? .green : Color.Adaptive.error)
-                                Text("網路狀態")
+                                Text(L10n.networkStatus)
                                     .font(.headline)
                                     .fontWeight(.medium)
                                 Spacer()
-                                Text(viewModel.anomalyDetector.isConnectionStable ? "穩定" : "異常")
+                                Text(viewModel.anomalyDetector.isConnectionStable ? L10n.networkStable : L10n.networkAbnormal)
                                     .font(.subheadline)
                                     .foregroundColor(viewModel.anomalyDetector.isConnectionStable ? .green : Color.Adaptive.error)
                                     .fontWeight(.bold)
@@ -353,7 +351,7 @@ public struct PopoverView: View {
                                         HStack(spacing: 4) {
                                             Image(systemName: "wifi.exclamationmark")
                                                 .font(.caption)
-                                            Text("\(summary.connectionDrops) 次中斷")
+                                            Text(L10n.networkInterruptions(summary.connectionDrops))
                                                 .font(.caption)
                                         }
                                         .foregroundColor(Color.Adaptive.error)
@@ -362,7 +360,7 @@ public struct PopoverView: View {
                                         HStack(spacing: 4) {
                                             Image(systemName: "arrow.down.circle.fill")
                                                 .font(.caption)
-                                            Text("\(summary.speedDrops) 次驟降")
+                                            Text(L10n.networkSpeedDrops(summary.speedDrops))
                                                 .font(.caption)
                                         }
                                         .foregroundColor(Color.Adaptive.warning)
@@ -381,7 +379,7 @@ public struct PopoverView: View {
                                     }
                                 }
                             } else {
-                                Text("近1小時無異常記錄")
+                                Text(L10n.networkNoAnomaliesRecently)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
@@ -401,24 +399,24 @@ public struct PopoverView: View {
                 HStack(spacing: 8) {
                     // Export Data Menu
                     Menu {
-                        Button("導出今日數據") {
+                        Button(L10n.exportTodayData) {
                             exportData(format: .todayData)
                         }
-                        Button("導出峰值記錄") {
+                        Button(L10n.exportPeakHistory) {
                             exportData(format: .peakHistory)
                         }
-                        Button("導出完整歷史") {
+                        Button(L10n.exportFullHistory) {
                             exportData(format: .fullHistory)
                         }
                     } label: {
-                        Label("導出數據", systemImage: "square.and.arrow.up")
+                        Label(L10n.exportData, systemImage: "square.and.arrow.up")
                             .font(.subheadline)
                     }
                     .buttonStyle(.bordered)
-                    .help("導出網路數據為 CSV 檔案")
+                    .help(L10n.exportDataHelp)
 
                     // Reset Button
-                    Button("重置峰值記錄") {
+                    Button(L10n.actionResetPeaks) {
                         viewModel.resetPeaks()
                     }
                     .buttonStyle(.bordered)
@@ -427,7 +425,7 @@ public struct PopoverView: View {
                     Spacer()
 
                     // Quit Button
-                    Button("退出應用程式") {
+                    Button(L10n.actionQuitApp) {
                         NSApplication.shared.terminate(nil)
                     }
                     .buttonStyle(.borderedProminent)
@@ -445,15 +443,15 @@ public struct PopoverView: View {
         .sheet(isPresented: $showingSettings) {
             SettingsView(viewModel: viewModel)
         }
-        .alert("導出成功", isPresented: $exportSuccess) {
-            Button("OK", role: .cancel) { }
+        .alert(L10n.exportSuccess, isPresented: $exportSuccess) {
+            Button(L10n.buttonOK, role: .cancel) { }
         } message: {
-            Text("數據已成功導出至下載資料夾")
+            Text(L10n.exportSuccessMessage)
         }
-        .alert("導出失敗", isPresented: $exportError) {
-            Button("OK", role: .cancel) { }
+        .alert(L10n.exportFailure, isPresented: $exportError) {
+            Button(L10n.buttonOK, role: .cancel) { }
         } message: {
-            Text("無法導出數據，請稍後再試")
+            Text(L10n.exportFailureMessage)
         }
     }
 
@@ -565,13 +563,13 @@ struct AnomalyBadge: View {
         let interval = now.timeIntervalSince(anomaly.timestamp)
 
         if interval < 60 {
-            return "剛剛"
+            return L10n.timeJustNow
         } else if interval < 3600 {
             let minutes = Int(interval / 60)
-            return "\(minutes)分鐘前"
+            return L10n.timeMinutesAgo(minutes)
         } else {
             let hours = Int(interval / 3600)
-            return "\(hours)小時前"
+            return L10n.timeHoursAgo(hours)
         }
     }
 

@@ -171,8 +171,8 @@ public struct NetworkAnomaly: Identifiable {
 
             var displayName: String {
                 switch self {
-                case .download: return "下載"
-                case .upload: return "上傳"
+                case .download: return L10n.anomalyDownload
+                case .upload: return L10n.anomalyUpload
                 }
             }
         }
@@ -193,11 +193,16 @@ public struct NetworkAnomaly: Identifiable {
         public var displayText: String {
             switch self {
             case .connectionDrop(let duration):
-                return "連線中斷 \(String(format: "%.1f", duration)) 秒"
+                return L10n.anomalyConnectionDrop(String(format: "%.1f", duration))
             case .speedDrop(let direction, let from, let to, let percentage):
-                return "\(direction.displayName)速度驟降 \(String(format: "%.0f", percentage))% (從 \(String(format: "%.1f", from)) 降至 \(String(format: "%.1f", to)) Mbps)"
+                return L10n.anomalySpeedDrop(
+                    direction.displayName,
+                    String(format: "%.0f", percentage),
+                    String(format: "%.1f", from),
+                    String(format: "%.1f", to)
+                )
             case .zeroSpeed:
-                return "網路速度為零"
+                return L10n.anomalyZeroSpeed
             }
         }
 

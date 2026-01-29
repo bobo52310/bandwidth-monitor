@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "title": "Network Peak Monitor - ネットワークピークモニター | エンタープライズ級ネットワーク監視ソリューション",
+    "description": "エンタープライズ級ネットワーク監視ソリューション。リアルタイム速度監視、スマートピーク追跡、データ駆動のネットワークアップグレード判断。"
+  },
+  "header": {
+    "subtitle": "ネットワークピークモニター",
+    "features": "機能",
+    "howItWorks": "使い方",
+    "faq": "よくある質問",
+    "download": "今すぐダウンロード",
+    "openMenu": "メニューを開く"
+  },
+  "hero": {
+    "badge1": "macOS 専用",
+    "badge2": "エンタープライズ性能",
+    "title1": "データで判断、",
+    "title2": "プランのアップグレードが必要か",
+    "subtitle": "リアルタイムで速度を監視、ピークを追跡、賢明な判断を。プロフェッショナル級 macOS ネットワーク監視ソリューション。",
+    "downloadBtn": "無料ダウンロード",
+    "learnMore": "詳しく見る",
+    "statCpu": "CPU 使用率",
+    "statMemory": "メモリ使用量",
+    "statHistory": "履歴追跡",
+    "download": "ダウンロード",
+    "upload": "アップロード",
+    "monitoring": "監視中",
+    "todayPeak": "今日のピーク",
+    "allTimePeak": "過去最高",
+    "planUsage": "プラン使用率",
+    "freeToUse": "無料で使用"
+  },
+  "features": {
+    "sectionBadge": "機能紹介",
+    "sectionTitle": "プロフェッショナル級ネットワーク監視機能",
+    "sectionSubtitle": "macOS パワーユーザーのための包括的なネットワーク監視ソリューション",
+    "items": [
+      {
+        "title": "リアルタイム速度監視",
+        "description": "メニューバーにアップロード/ダウンロード速度をリアルタイム表示。ウィンドウを開かずにネットワーク状態を把握。",
+        "badge": "コア機能"
+      },
+      {
+        "title": "スマートピーク追跡",
+        "description": "毎日および過去最高のピーク速度を自動記録。データ分析でプランが十分かを評価。",
+        "badge": "データ分析"
+      },
+      {
+        "title": "インタラクティブチャート",
+        "description": "1分から24時間まで複数の時間範囲をサポート。ネットワーク使用トレンドを視覚化。",
+        "badge": "視覚化"
+      },
+      {
+        "title": "ワンクリック速度テスト",
+        "description": "Speedtest by Ookla CLI を統合。プロフェッショナル級の速度テストとレイテンシ分析。",
+        "badge": "速度テスト"
+      },
+      {
+        "title": "コミュニティランキング",
+        "description": "グローバル、国、ISP の3つの次元で速度ランキング。あなたのネットワーク性能を確認。",
+        "badge": "コミュニティ"
+      },
+      {
+        "title": "異常検出",
+        "description": "スマート接続監視。切断や異常な速度低下を即座にアラート。",
+        "badge": "スマートアラート"
+      },
+      {
+        "title": "軽量高効率",
+        "description": "CPU使用率1%未満、メモリ50MB未満。システム性能に影響なし。",
+        "badge": "最適化"
+      }
+    ]
+  },
+  "howItWorks": {
+    "sectionBadge": "使い方",
+    "sectionTitle": "3ステップで開始",
+    "sectionSubtitle": "簡単セットアップ、すぐにネットワーク性能の監視を開始",
+    "steps": [
+      {
+        "title": "ダウンロード＆インストール",
+        "description": "ウェブサイトからDMGファイルをダウンロード。アプリケーションフォルダにドラッグしてインストール完了。"
+      },
+      {
+        "title": "プランを設定",
+        "description": "ネットワークプランの速度上限を入力。システムが自動的に使用率を計算しアラートを送信。"
+      },
+      {
+        "title": "監視開始",
+        "description": "アプリがメニューバーにリアルタイム速度を表示。クリックで詳細なチャートと統計を確認。"
+      }
+    ]
+  },
+  "speedTest": {
+    "sectionBadge": "速度テスト",
+    "sectionTitle": "プロフェッショナル級速度テスト",
+    "sectionSubtitle": "Speedtest by Ookla CLI を統合し、正確なネットワーク速度測定を提供",
+    "downloadSpeed": "ダウンロード速度",
+    "uploadSpeed": "アップロード速度",
+    "ping": "レイテンシ",
+    "server": "テストサーバー",
+    "startTest": "テスト開始",
+    "testing": "テスト中..."
+  },
+  "faq": {
+    "sectionBadge": "よくある質問",
+    "sectionTitle": "よくある質問",
+    "sectionSubtitle": "Network Peak Monitor に関するよくある質問への回答",
+    "items": [
+      {
+        "question": "Network Peak Monitor は無料ですか？",
+        "answer": "はい、Network Peak Monitor は完全無料で使用でき、隠れた料金や機能制限はありません。"
+      },
+      {
+        "question": "対応している macOS バージョンは？",
+        "answer": "Network Peak Monitor は macOS 13.0 (Ventura) 以降をサポートしています。"
+      },
+      {
+        "question": "システム性能に影響しますか？",
+        "answer": "いいえ。アプリは最適化されており、CPU使用率1%未満、メモリ50MB未満です。"
+      },
+      {
+        "question": "データはサーバーにアップロードされますか？",
+        "answer": "いいえ。すべての監視データはローカルに保存されます。ユーザーデータの収集やアップロードは行いません。"
+      },
+      {
+        "question": "アンインストール方法は？",
+        "answer": "アプリケーションフォルダからアプリをゴミ箱に移動するだけです。すべてのデータを削除するには、~/Library/Application Support/NetworkPeakMonitor フォルダも削除してください。"
+      }
+    ]
+  },
+  "download": {
+    "sectionBadge": "今すぐダウンロード",
+    "sectionTitle": "ネットワーク監視を始めよう",
+    "sectionSubtitle": "無料ダウンロード、登録不要、すぐに使用開始",
+    "downloadBtn": "macOS 版をダウンロード",
+    "version": "バージョン",
+    "requirements": "macOS 13.0 以降が必要",
+    "features": [
+      "無料で使用、広告なし",
+      "プライバシー優先、データはローカルに保存",
+      "軽量、システム性能に影響なし"
+    ]
+  },
+  "footer": {
+    "copyright": "Network Peak Monitor. All rights reserved.",
+    "madeWith": "",
+    "madeIn": "台湾で製作"
+  }
+}

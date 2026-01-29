@@ -9,49 +9,51 @@ public struct OnboardingView: View {
         self.viewModel = viewModel
     }
 
-    private let pages: [OnboardingPage] = [
-        OnboardingPage(
-            icon: "chart.line.uptrend.xyaxis",
-            iconColor: .blue,
-            title: "歡迎使用 Network Peak Monitor",
-            description: "即時監控您的網路速度，追蹤峰值記錄，確保您的網路效能符合預期。",
-            features: [
-                "即時顯示上傳/下載速度",
-                "自動記錄今日、1小時和歷史峰值",
-                "互動式圖表視覺化網路流量"
-            ]
-        ),
-        OnboardingPage(
-            icon: "bell.badge.fill",
-            iconColor: .orange,
-            title: "智慧通知提醒",
-            description: "當網路速度接近您的方案上限時，我們會及時通知您。",
-            features: [
-                "可自訂通知閾值 (90%, 95%, 98%)",
-                "避免過度使用頻寬",
-                "1小時冷卻時間，避免通知干擾"
-            ]
-        ),
-        OnboardingPage(
-            icon: "square.and.arrow.down",
-            iconColor: .green,
-            title: "數據導出與分析",
-            description: "輕鬆導出您的網路數據，進行深度分析。",
-            features: [
-                "導出今日數據 (過去24小時)",
-                "導出峰值記錄",
-                "導出完整歷史記錄",
-                "CSV 格式，方便使用 Excel 分析"
-            ]
-        ),
-        OnboardingPage(
-            icon: "gear",
-            iconColor: .secondary,
-            title: "開始設定",
-            description: "請設定您的網路方案速度上限，以便我們提供更準確的監控。",
-            features: []
-        )
-    ]
+    private var pages: [OnboardingPage] {
+        [
+            OnboardingPage(
+                icon: "chart.line.uptrend.xyaxis",
+                iconColor: .blue,
+                title: L10n.onboardingWelcomeTitle,
+                description: L10n.onboardingWelcomeDescription,
+                features: [
+                    L10n.onboardingFeature1,
+                    L10n.onboardingFeature2,
+                    L10n.onboardingFeature3
+                ]
+            ),
+            OnboardingPage(
+                icon: "bell.badge.fill",
+                iconColor: .orange,
+                title: L10n.onboardingNotificationTitle,
+                description: L10n.onboardingNotificationDescription,
+                features: [
+                    L10n.onboardingNotificationFeature1,
+                    L10n.onboardingNotificationFeature2,
+                    L10n.onboardingNotificationFeature3
+                ]
+            ),
+            OnboardingPage(
+                icon: "square.and.arrow.down",
+                iconColor: .green,
+                title: L10n.onboardingExportTitle,
+                description: L10n.onboardingExportDescription,
+                features: [
+                    L10n.onboardingExportFeature1,
+                    L10n.onboardingExportFeature2,
+                    L10n.onboardingExportFeature3,
+                    L10n.onboardingExportFeature4
+                ]
+            ),
+            OnboardingPage(
+                icon: "gear",
+                iconColor: .secondary,
+                title: L10n.onboardingSetupTitle,
+                description: L10n.onboardingSetupDescription,
+                features: []
+            )
+        ]
+    }
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -82,7 +84,7 @@ public struct OnboardingView: View {
             // Navigation Buttons
             HStack {
                 if currentPage > 0 {
-                    Button("上一步") {
+                    Button(L10n.buttonPrevious) {
                         withAnimation {
                             currentPage -= 1
                         }
@@ -93,14 +95,14 @@ public struct OnboardingView: View {
                 Spacer()
 
                 if currentPage < pages.count - 1 {
-                    Button("下一步") {
+                    Button(L10n.buttonNext) {
                         withAnimation {
                             currentPage += 1
                         }
                     }
                     .buttonStyle(.borderedProminent)
                 } else {
-                    Button("開始使用") {
+                    Button(L10n.buttonGetStarted) {
                         completeOnboarding()
                     }
                     .buttonStyle(.borderedProminent)
@@ -171,7 +173,7 @@ struct OnboardingPageView: View {
                 // Settings form for last page
                 VStack(spacing: 16) {
                     HStack {
-                        Text("下載速度上限:")
+                        Text(L10n.settingsDownloadLimit)
                             .frame(width: 120, alignment: .leading)
                         TextField("300", value: $viewModel.preferences.downloadPlanSpeed, format: .number)
                             .textFieldStyle(.roundedBorder)
@@ -180,7 +182,7 @@ struct OnboardingPageView: View {
                     }
 
                     HStack {
-                        Text("上傳速度上限:")
+                        Text(L10n.settingsUploadLimit)
                             .frame(width: 120, alignment: .leading)
                         TextField("300", value: $viewModel.preferences.uploadPlanSpeed, format: .number)
                             .textFieldStyle(.roundedBorder)
@@ -188,7 +190,7 @@ struct OnboardingPageView: View {
                         Text("Mbps")
                     }
 
-                    Toggle("啟用峰值通知", isOn: $viewModel.notificationService.isEnabled)
+                    Toggle(L10n.settingsEnablePeakNotification, isOn: $viewModel.notificationService.isEnabled)
                         .padding(.top, 10)
                 }
                 .padding(.horizontal, 40)

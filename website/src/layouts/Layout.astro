@@ -1,19 +1,38 @@
 ---
 import '../styles/global.css'
+import { type Lang, defaultLang, getAlternateLinks } from '../i18n'
 
 interface Props {
   title: string
   description?: string
+  lang?: Lang
 }
 
 const {
   title,
-  description = '企業級網路監控解決方案。即時監控網速、智能峰值追蹤、數據驅動的網路升級決策。'
+  description = '企業級網路監控解決方案。即時監控網速、智能峰值追蹤、數據驅動的網路升級決策。',
+  lang = defaultLang
 } = Astro.props
+
+const alternateLinks = getAlternateLinks(Astro.url.pathname)
+
+const localeMap: Record<Lang, string> = {
+  'zh-Hant': 'zh_TW',
+  'en': 'en_US',
+  'ja': 'ja_JP',
+  'ko': 'ko_KR'
+}
+
+const htmlLangMap: Record<Lang, string> = {
+  'zh-Hant': 'zh-Hant',
+  'en': 'en',
+  'ja': 'ja',
+  'ko': 'ko'
+}
 ---
 
 <!doctype html>
-<html lang="zh-TW">
+<html lang={htmlLangMap[lang]}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,11 +41,17 @@ const {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
 
+    <!-- Alternate language links -->
+    {alternateLinks.map(({ lang: altLang, href }) => (
+      <link rel="alternate" hreflang={htmlLangMap[altLang]} href={href} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href="/" />
+
     <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:locale" content={localeMap[lang]} />
   </head>
   <body class="antialiased">
     <slot />

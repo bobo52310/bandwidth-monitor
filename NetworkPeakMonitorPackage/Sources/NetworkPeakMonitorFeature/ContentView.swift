@@ -83,7 +83,7 @@ public struct SettingsView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                        Text("返回")
+                        Text(L10n.buttonBack)
                             .font(.system(size: 14, weight: .medium))
                     }
                     .foregroundColor(.blue)
@@ -93,11 +93,11 @@ public struct SettingsView: View {
                     .cornerRadius(8)
                 }
                 .buttonStyle(.plain)
-                .help("返回主頁面")
+                .help(L10n.tooltipBackToMain)
 
                 Spacer()
 
-                Text("設定")
+                Text(L10n.settingsTitle)
                     .font(.title)
                     .fontWeight(.bold)
 
@@ -107,7 +107,7 @@ public struct SettingsView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 16, weight: .semibold))
-                    Text("返回")
+                    Text(L10n.buttonBack)
                         .font(.system(size: 14, weight: .medium))
                 }
                 .padding(.horizontal, 12)
@@ -125,19 +125,19 @@ public struct SettingsView: View {
                 VStack(spacing: 12) {
                     // MARK: - Network Settings Section
                     CollapsibleSection(
-                        title: "網路設定",
+                        title: L10n.settingsNetworkSection,
                         icon: "network",
                         isExpanded: $networkSettingsExpanded
                     ) {
                         // Network Plan Settings
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("網路方案設定")
+                            Text(L10n.settingsNetworkPlan)
                                 .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
                             HStack {
-                                Text("下載速度上限:")
+                                Text(L10n.settingsDownloadLimit)
                                     .font(.body)
                                     .frame(width: 100, alignment: .leading)
                                 TextField("300", value: $viewModel.preferences.downloadPlanSpeed, format: .number)
@@ -148,7 +148,7 @@ public struct SettingsView: View {
                             }
 
                             HStack {
-                                Text("上傳速度上限:")
+                                Text(L10n.settingsUploadLimit)
                                     .font(.body)
                                     .frame(width: 100, alignment: .leading)
                                 TextField("300", value: $viewModel.preferences.uploadPlanSpeed, format: .number)
@@ -164,16 +164,16 @@ public struct SettingsView: View {
 
                         // Network Monitoring
                         VStack(alignment: .leading, spacing: 10) {
-                            Toggle("啟用異常偵測", isOn: $viewModel.anomalyDetector.isDetectionEnabled)
-                                .help("自動偵測網路中斷、速度驟降等異常狀況")
+                            Toggle(L10n.settingsEnableAnomalyDetection, isOn: $viewModel.anomalyDetector.isDetectionEnabled)
+                                .help(L10n.settingsAnomalyDetectionHelp)
 
                             if viewModel.anomalyDetector.isDetectionEnabled && !viewModel.anomalyDetector.recentAnomalies.isEmpty {
                                 HStack {
-                                    Text("異常記錄:")
+                                    Text(L10n.settingsAnomalyHistory)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                     Spacer()
-                                    Button("清除歷史") {
+                                    Button(L10n.settingsClearHistory) {
                                         viewModel.anomalyDetector.clearHistory()
                                     }
                                     .buttonStyle(.bordered)
@@ -185,22 +185,22 @@ public struct SettingsView: View {
 
                     // MARK: - Display & Notifications Section
                     CollapsibleSection(
-                        title: "顯示與通知",
+                        title: L10n.settingsDisplayNotificationSection,
                         icon: "bell.badge",
                         isExpanded: $displayNotificationExpanded
                     ) {
                         // Display Settings
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("顯示設定")
+                            Text(L10n.settingsDisplaySettings)
                                 .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
                             HStack {
-                                Text("顯示單位:")
+                                Text(L10n.settingsDisplayUnit)
                                     .font(.body)
                                 Spacer()
-                                Picker("單位", selection: $viewModel.preferences.displayUnit) {
+                                Picker(L10n.settingsUnitLabel, selection: $viewModel.preferences.displayUnit) {
                                     ForEach(UserPreferences.SpeedUnit.allCases, id: \.self) { unit in
                                         Text(unit.displayName).tag(unit)
                                     }
@@ -210,9 +210,9 @@ public struct SettingsView: View {
                             }
 
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("選單列顯示模式:")
+                                Text(L10n.settingsMenuBarMode)
                                     .font(.body)
-                                Picker("顯示模式", selection: $viewModel.preferences.menuBarDisplayMode) {
+                                Picker(L10n.settingsDisplayMode, selection: $viewModel.preferences.menuBarDisplayMode) {
                                     ForEach(UserPreferences.MenuBarDisplayMode.allCases, id: \.self) { mode in
                                         Text(mode.displayName).tag(mode)
                                     }
@@ -221,7 +221,7 @@ public struct SettingsView: View {
 
                                 // Preview
                                 HStack {
-                                    Text("預覽:")
+                                    Text(L10n.settingsPreview)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                     Text(viewModel.menuBarText)
@@ -239,63 +239,77 @@ public struct SettingsView: View {
 
                         // Notification Settings
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("通知設定")
+                            Text(L10n.settingsNotificationSettings)
                                 .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
-                            Toggle("啟用峰值通知", isOn: $viewModel.notificationService.isEnabled)
-                                .help("當網路速度接近方案上限時發送通知")
+                            Toggle(L10n.settingsEnablePeakNotification, isOn: $viewModel.notificationService.isEnabled)
+                                .help(L10n.settingsPeakNotificationHelp)
 
                             if viewModel.notificationService.isEnabled {
                                 HStack {
-                                    Text("通知閾值:")
+                                    Text(L10n.settingsNotificationThreshold)
                                         .font(.body)
                                     Spacer()
-                                    Picker("閾值", selection: $viewModel.notificationService.threshold) {
+                                    Picker(L10n.settingsThreshold, selection: $viewModel.notificationService.threshold) {
                                         ForEach(NotificationService.thresholdOptions, id: \.value) { option in
                                             Text(option.label).tag(option.value)
                                         }
                                     }
                                     .pickerStyle(.segmented)
                                     .frame(width: 200)
-                                    .help("當速度超過此百分比時觸發通知")
+                                    .help(L10n.settingsThresholdHelp)
                                 }
 
-                                Button("發送測試通知") {
+                                Button(L10n.settingsSendTestNotification) {
                                     viewModel.notificationService.sendTestNotification()
                                 }
                                 .buttonStyle(.bordered)
                                 .font(.subheadline)
-                                .help("測試通知功能是否正常")
+                                .help(L10n.settingsTestNotificationHelp)
                             }
                         }
                     }
 
                     // MARK: - System & Maintenance Section
                     CollapsibleSection(
-                        title: "系統與維護",
+                        title: L10n.settingsSystemMaintenanceSection,
                         icon: "gearshape.2",
                         isExpanded: $systemMaintenanceExpanded
                     ) {
                         // System Settings
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("系統設定")
+                            Text(L10n.settingsSystemSettings)
                                 .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
-                            Toggle("登入時開啟", isOn: $viewModel.preferences.launchAtLogin)
+                            Toggle(L10n.settingsLaunchAtLogin, isOn: $viewModel.preferences.launchAtLogin)
 
-                            Toggle("顯示在 Dock", isOn: $viewModel.preferences.showInDock)
-                                .help("關閉後僅在選單列顯示")
+                            Toggle(L10n.settingsShowInDock, isOn: $viewModel.preferences.showInDock)
+                                .help(L10n.settingsShowInDockHelp)
 
-                            Button("重新顯示新手引導") {
+                            // Language Selection
+                            HStack {
+                                Text(L10n.settingsLanguage)
+                                    .font(.body)
+                                Spacer()
+                                Picker(L10n.settingsLanguage, selection: $viewModel.preferences.appLanguage) {
+                                    ForEach(UserPreferences.AppLanguage.allCases, id: \.self) { lang in
+                                        Text(lang.displayName).tag(lang)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                .frame(width: 150)
+                            }
+
+                            Button(L10n.settingsShowOnboarding) {
                                 showingOnboarding = true
                             }
                             .buttonStyle(.bordered)
                             .font(.caption)
-                            .help("再次查看應用程式功能介紹")
+                            .help(L10n.settingsShowOnboardingHelp)
                         }
 
                         Divider()
@@ -304,7 +318,7 @@ public struct SettingsView: View {
                         // Error Logging (Simplified)
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text("錯誤日誌")
+                                Text(L10n.settingsErrorLog)
                                     .font(.headline)
                                     .fontWeight(.medium)
                                     .foregroundColor(.secondary)
@@ -334,13 +348,13 @@ public struct SettingsView: View {
                                 }
                             }
 
-                            Toggle("啟用錯誤記錄", isOn: $viewModel.errorHandler.isLoggingEnabled)
-                                .help("記錄錯誤和應用程式活動以協助診斷問題")
+                            Toggle(L10n.settingsEnableLogging, isOn: $viewModel.errorHandler.isLoggingEnabled)
+                                .help(L10n.settingsLoggingHelp)
 
                             if viewModel.errorHandler.isLoggingEnabled {
                                 HStack {
                                     if let logSize = viewModel.errorHandler.getLogFileSize() {
-                                        Text("日誌大小: \(logSize)")
+                                        Text("\(L10n.settingsLogSize) \(logSize)")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
@@ -349,24 +363,24 @@ public struct SettingsView: View {
                                     // Compact action menu
                                     Menu {
                                         let errorSummary = viewModel.errorHandler.getErrorSummary()
-                                        Button("清除錯誤") {
+                                        Button(L10n.settingsClearErrors) {
                                             viewModel.errorHandler.clearErrors()
                                         }
                                         .disabled(!errorSummary.hasErrors)
 
-                                        Button("清除日誌") {
+                                        Button(L10n.settingsClearLogs) {
                                             viewModel.errorHandler.clearLogFile()
                                         }
 
                                         if viewModel.errorHandler.exportLogFile() != nil {
-                                            Button("導出日誌") {
+                                            Button(L10n.settingsExportLogs) {
                                                 if let logURL = viewModel.errorHandler.exportLogFile() {
                                                     DataExportService.revealInFinder(url: logURL)
                                                 }
                                             }
                                         }
                                     } label: {
-                                        Label("管理", systemImage: "ellipsis.circle")
+                                        Label(L10n.settingsManage, systemImage: "ellipsis.circle")
                                             .font(.caption)
                                     }
                                     .buttonStyle(.bordered)
@@ -380,23 +394,23 @@ public struct SettingsView: View {
 
                         // Memory Management
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("記憶體管理")
+                            Text(L10n.settingsMemoryManagement)
                                 .font(.headline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
                             let memStats = viewModel.getMemoryStats()
                             HStack {
-                                Text("使用量: \(memStats.formattedTotal)")
+                                Text("\(L10n.settingsMemoryUsage) \(memStats.formattedTotal)")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Button("優化記憶體") {
+                                Button(L10n.settingsOptimizeMemory) {
                                     viewModel.optimizeMemory()
                                 }
                                 .buttonStyle(.bordered)
                                 .font(.subheadline)
-                                .help("清理過期數據以減少記憶體使用")
+                                .help(L10n.settingsOptimizeMemoryHelp)
                             }
                         }
                     }
@@ -411,7 +425,7 @@ public struct SettingsView: View {
                 Divider()
 
                 HStack(spacing: 12) {
-                    Button("重置所有峰值記錄") {
+                    Button(L10n.settingsResetAllPeaks) {
                         viewModel.resetPeaks()
                     }
                     .buttonStyle(.bordered)
@@ -419,7 +433,7 @@ public struct SettingsView: View {
 
                     Spacer()
 
-                    Button("關閉") {
+                    Button(L10n.buttonClose) {
                         dismiss()
                     }
                     .buttonStyle(.borderedProminent)

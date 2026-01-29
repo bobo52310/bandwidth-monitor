@@ -61,16 +61,71 @@ public class UserPreferences: ObservableObject {
         }
     }
 
+    @Published public var appLanguage: AppLanguage {
+        didSet {
+            userDefaults.set(appLanguage.rawValue, forKey: "appLanguage")
+            applyLanguage()
+        }
+    }
+
+    public enum AppLanguage: String, CaseIterable {
+        case system = "system"
+        case english = "en"
+        case traditionalChinese = "zh-Hant"
+        case japanese = "ja"
+        case korean = "ko"
+
+        public var displayName: String {
+            switch self {
+            case .system:
+                return L10n.languageSystem
+            case .english:
+                return L10n.languageEnglish
+            case .traditionalChinese:
+                return L10n.languageTraditionalChinese
+            case .japanese:
+                return L10n.languageJapanese
+            case .korean:
+                return L10n.languageKorean
+            }
+        }
+
+        /// The locale identifier for this language
+        public var localeIdentifier: String? {
+            switch self {
+            case .system:
+                return nil
+            case .english:
+                return "en"
+            case .traditionalChinese:
+                return "zh-Hant"
+            case .japanese:
+                return "ja"
+            case .korean:
+                return "ko"
+            }
+        }
+    }
+
+    private func applyLanguage() {
+        if let localeId = appLanguage.localeIdentifier {
+            UserDefaults.standard.set([localeId], forKey: "AppleLanguages")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+        }
+        UserDefaults.standard.synchronize()
+    }
+
     public enum ChartYAxisMode: String, CaseIterable {
-        case auto = "auto"      // 自動智能縮放
-        case fixed = "fixed"    // 固定使用方案速度上限
+        case auto = "auto"
+        case fixed = "fixed"
 
         public var displayName: String {
             switch self {
             case .auto:
-                return "自動縮放"
+                return L10n.chartYAxisModeAuto
             case .fixed:
-                return "固定上限"
+                return L10n.chartYAxisModeFixed
             }
         }
 
@@ -102,13 +157,13 @@ public class UserPreferences: ObservableObject {
         public var displayName: String {
             switch self {
             case .both:
-                return "顯示兩者"
+                return L10n.menuBarModeBoth
             case .downloadOnly:
-                return "僅顯示下載"
+                return L10n.menuBarModeDownloadOnly
             case .uploadOnly:
-                return "僅顯示上傳"
+                return L10n.menuBarModeUploadOnly
             case .compact:
-                return "簡潔模式"
+                return L10n.menuBarModeCompact
             }
         }
 
@@ -134,6 +189,7 @@ public class UserPreferences: ObservableObject {
         self.menuBarDisplayMode = MenuBarDisplayMode(rawValue: userDefaults.string(forKey: "menuBarDisplayMode") ?? "both") ?? .both
         self.isPinned = userDefaults.bool(forKey: "isPinned")
         self.chartYAxisMode = ChartYAxisMode(rawValue: userDefaults.string(forKey: "chartYAxisMode") ?? "auto") ?? .auto
+        self.appLanguage = AppLanguage(rawValue: userDefaults.string(forKey: "appLanguage") ?? "system") ?? .system
 
         // Default to false (menu bar only, no dock icon)
         // This will reset all users to the new default behavior

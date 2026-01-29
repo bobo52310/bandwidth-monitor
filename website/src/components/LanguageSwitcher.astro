@@ -1,0 +1,75 @@
+---
+import { languages, getLangFromUrl, getLocalizedPath, type Lang } from '../i18n';
+
+const currentLang = getLangFromUrl(Astro.url);
+const currentPath = Astro.url.pathname.replace(/^\/(en|ja|ko)/, '') || '/';
+---
+
+<div class="relative" data-language-switcher>
+  <button
+    type="button"
+    class="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 font-medium transition-colors rounded-lg hover:bg-slate-100"
+    aria-label="切換語言"
+    data-dropdown-toggle
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+    </svg>
+    <span class="hidden sm:inline">{languages[currentLang]}</span>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <div
+    class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-slate-200 py-1 hidden z-50"
+    data-dropdown-menu
+  >
+    {Object.entries(languages).map(([lang, label]) => (
+      <a
+        href={getLocalizedPath(lang as Lang, currentPath)}
+        class:list={[
+          'block px-4 py-2 text-sm transition-colors',
+          lang === currentLang
+            ? 'bg-[#1E40AF]/5 text-[#1E40AF] font-medium'
+            : 'text-slate-700 hover:bg-slate-50'
+        ]}
+      >
+        {label}
+        {lang === currentLang && (
+          <svg class="inline w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        )}
+      </a>
+    ))}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const switchers = document.querySelectorAll('[data-language-switcher]');
+
+    switchers.forEach((switcher) => {
+      const toggle = switcher.querySelector('[data-dropdown-toggle]');
+      const menu = switcher.querySelector('[data-dropdown-menu]');
+
+      if (toggle && menu) {
+        toggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          menu.classList.toggle('hidden');
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', () => {
+          menu.classList.add('hidden');
+        });
+
+        // Prevent closing when clicking inside menu
+        menu.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+    });
+  });
+</script>

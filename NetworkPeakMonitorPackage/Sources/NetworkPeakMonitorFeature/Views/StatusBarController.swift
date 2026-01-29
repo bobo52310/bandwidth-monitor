@@ -36,7 +36,7 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate,
 
         let window = NSWindow(contentViewController: hostingController)
         window.styleMask = [.titled, .closable, .fullSizeContentView]
-        window.title = "歡迎使用 Network Peak Monitor"
+        window.title = L10n.onboardingWindowTitle
         window.center()
         window.isReleasedWhenClosed = false
         window.level = .floating
@@ -103,21 +103,21 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate,
 
         let window = NSWindow(contentViewController: hostingController)
         window.styleMask = [.titled, .closable, .resizable]
-        window.title = "設定"
+        window.title = L10n.settingsTitle
         window.center()
         window.makeKeyAndOrderFront(nil)
     }
 
     private func handleResetPeaks() {
         viewModel.resetPeaks()
-        sendNotification(title: "峰值已重置", body: "所有峰值記錄已清除")
+        sendNotification(title: L10n.notificationPeaksReset, body: L10n.notificationPeaksResetBody)
     }
 
     private func handleExportData() {
         viewModel.exportDataWithSavePanel(format: .fullHistory) { success in
             if success {
                 Task { @MainActor in
-                    self.sendNotification(title: "導出成功", body: "數據已成功導出")
+                    self.sendNotification(title: L10n.exportSuccess, body: L10n.notificationExportSuccessBody)
                 }
             }
         }
@@ -125,7 +125,7 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate,
 
     private func handleOptimizeMemory() {
         viewModel.optimizeMemory()
-        sendNotification(title: "記憶體已優化", body: "過期數據已清除")
+        sendNotification(title: L10n.notificationMemoryOptimized, body: L10n.notificationMemoryOptimizedBody)
     }
 
     private func sendNotification(title: String, body: String) {

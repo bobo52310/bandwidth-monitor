@@ -1,85 +1,61 @@
 ---
 // V3 專業商務風格 - Features Section
-const features = [
-  {
-    icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-    </svg>`,
-    title: '即時網速監控',
-    description: '選單列即時顯示上傳/下載速度，無需開啟任何視窗即可掌握網路狀態。',
-    badge: '核心功能'
-  },
-  {
-    icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-    </svg>`,
-    title: '智能峰值追蹤',
-    description: '自動記錄每日及歷史峰值速度，透過數據分析評估網路方案是否足夠。',
-    badge: '數據分析'
-  },
-  {
-    icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>`,
-    title: '互動式圖表',
-    description: '支援 1 分鐘至 24 小時多種時間區間，視覺化呈現網路使用趨勢。',
-    badge: '視覺化'
-  },
-  {
-    icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>`,
-    title: '一鍵速度測試',
-    description: '整合 Speedtest by Ookla CLI，提供專業級的速度測試與延遲分析。',
-    badge: '測速整合'
-  },
-  {
-    icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>`,
-    title: '社群排行榜',
-    description: '支援全球、國家、ISP 三種維度的速度排名，了解您的網路表現。',
-    badge: '社群功能'
-  },
-  {
-    icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>`,
-    title: '網路異常偵測',
-    description: '智能監控連線狀態，即時警示連線中斷或速度異常下降等問題。',
-    badge: '智能警示'
-  },
-  {
-    icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-    </svg>`,
-    title: '輕量高效',
-    description: 'CPU 使用率低於 1%，記憶體佔用小於 50MB，確保系統效能不受影響。',
-    badge: '效能優化'
-  }
+import { type Lang, defaultLang, useTranslations, translations } from '../../i18n'
+
+interface Props {
+  lang?: Lang
+}
+
+const { lang = defaultLang } = Astro.props
+const t = useTranslations(lang)
+
+const featureIcons = [
+  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+  </svg>`,
+  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+  </svg>`,
+  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>`,
+  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>`,
+  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>`,
+  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+  </svg>`,
+  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+  </svg>`
 ]
+
+const featureItems = translations[lang].features.items as Array<{ title: string; description: string; badge: string }>
 ---
 
 <section id="features" class="bg-white">
   <div class="max-w-7xl mx-auto px-6">
     <!-- Section Header -->
     <div class="text-center max-w-3xl mx-auto mb-16">
-      <span class="badge badge-primary mb-4">功能介紹</span>
+      <span class="badge badge-primary mb-4">{t('features.sectionBadge')}</span>
       <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-        專業級網路監控功能
+        {t('features.sectionTitle')}
       </h2>
       <p class="text-lg text-slate-600">
-        為 macOS 專業用戶打造的全方位網路監控解決方案
+        {t('features.sectionSubtitle')}
       </p>
     </div>
 
     <!-- Features Grid -->
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {features.map((feature) => (
+      {featureItems.map((feature, index) => (
         <div class="card-pro p-6 group">
           <div class="flex items-start justify-between mb-4">
             <div class="w-12 h-12 flex items-center justify-center bg-[#1E40AF]/5 text-[#1E40AF] rounded-xl group-hover:bg-[#1E40AF] group-hover:text-white transition-all duration-200">
-              <Fragment set:html={feature.icon} />
+              <Fragment set:html={featureIcons[index] || featureIcons[0]} />
             </div>
             <span class="badge badge-gold text-[10px]">{feature.badge}</span>
           </div>

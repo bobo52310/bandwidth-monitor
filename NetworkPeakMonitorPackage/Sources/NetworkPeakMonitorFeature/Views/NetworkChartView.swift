@@ -18,15 +18,29 @@ public struct NetworkChartView: View {
     @State private var hoverLocation: CGPoint?
 
     public enum TimeRange: String, CaseIterable {
-        case oneMinute = "1 分鐘"
-        case fiveMinutes = "5 分鐘"
-        case fifteenMinutes = "15 分鐘"
-        case thirtyMinutes = "30 分鐘"
-        case oneHour = "1 小時"
-        case threeHours = "3 小時"
-        case sixHours = "6 小時"
-        case twelveHours = "12 小時"
-        case twentyFourHours = "24 小時"
+        case oneMinute = "1m"
+        case fiveMinutes = "5m"
+        case fifteenMinutes = "15m"
+        case thirtyMinutes = "30m"
+        case oneHour = "1h"
+        case threeHours = "3h"
+        case sixHours = "6h"
+        case twelveHours = "12h"
+        case twentyFourHours = "24h"
+
+        var displayName: String {
+            switch self {
+            case .oneMinute: return L10n.chartTimeRangeOneMinute
+            case .fiveMinutes: return L10n.chartTimeRangeFiveMinutes
+            case .fifteenMinutes: return L10n.chartTimeRangeFifteenMinutes
+            case .thirtyMinutes: return L10n.chartTimeRangeThirtyMinutes
+            case .oneHour: return L10n.chartTimeRangeOneHour
+            case .threeHours: return L10n.chartTimeRangeThreeHours
+            case .sixHours: return L10n.chartTimeRangeSixHours
+            case .twelveHours: return L10n.chartTimeRangeTwelveHours
+            case .twentyFourHours: return L10n.chartTimeRangeTwentyFourHours
+            }
+        }
 
         var seconds: TimeInterval {
             switch self {
@@ -92,16 +106,16 @@ public struct NetworkChartView: View {
             return "0-\(formatAxisValue(currentMax))"
         } else {
             let planMax = max(preferences.downloadPlanSpeed, preferences.uploadPlanSpeed)
-            return "固定 \(Int(planMax))"
+            return L10n.chartYAxisFixedLabel(Int(planMax))
         }
     }
 
     // Y-Axis mode tooltip
     private var yAxisModeTooltip: String {
         if preferences.chartYAxisMode == .auto {
-            return "當前為自動縮放模式，根據實際使用範圍智能調整 Y 軸。點擊切換為固定上限模式。"
+            return L10n.chartYAxisTooltipAuto
         } else {
-            return "當前為固定上限模式，Y 軸固定顯示方案速度上限。點擊切換為自動縮放模式。"
+            return L10n.chartYAxisTooltipFixed
         }
     }
 
@@ -112,7 +126,7 @@ public struct NetworkChartView: View {
                 // Standard ranges (quick access segmented control)
                 Picker("Time Range", selection: segmentedControlBinding) {
                     ForEach(TimeRange.standardRanges, id: \.self) { range in
-                        Text(range.rawValue).tag(range)
+                        Text(range.displayName).tag(range)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -125,7 +139,7 @@ public struct NetworkChartView: View {
                             selectedTimeRange = range
                         }) {
                             HStack {
-                                Text(range.rawValue)
+                                Text(range.displayName)
                                 if selectedTimeRange == range {
                                     Spacer()
                                     Image(systemName: "checkmark")
@@ -136,7 +150,7 @@ public struct NetworkChartView: View {
                 } label: {
                     HStack(spacing: 4) {
                         if selectedTimeRange.isExtended {
-                            Text(selectedTimeRange.rawValue)
+                            Text(selectedTimeRange.displayName)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                         } else {
@@ -153,7 +167,7 @@ public struct NetworkChartView: View {
                     .cornerRadius(6)
                 }
                 .buttonStyle(.plain)
-                .help("更長時間範圍")
+                .help(L10n.chartHelpExtendedRanges)
                 .fixedSize()
 
                 // Y-Axis Mode Toggle Button
@@ -840,7 +854,7 @@ public struct NetworkChartView: View {
                     Circle()
                         .fill(showDownload ? .blue : .gray.opacity(0.4))
                         .frame(width: 8, height: 8)
-                    Text("下載")
+                    Text(L10n.chartLegendDownload)
                         .font(.subheadline)
                         .foregroundColor(showDownload ? .primary : .secondary)
                         .fontWeight(showDownload ? .medium : .regular)
@@ -852,7 +866,7 @@ public struct NetworkChartView: View {
             }
             .buttonStyle(.plain)
             .pointerCursor()
-            .help("Toggle Download Data")
+            .help(L10n.chartHelpToggleData(L10n.chartLegendDownload))
 
             // Interactive Upload legend button
             Button(action: { showUpload.toggle() }) {
@@ -860,7 +874,7 @@ public struct NetworkChartView: View {
                     Rectangle()
                         .fill(showUpload ? .green : .gray.opacity(0.4))
                         .frame(width: 8, height: 8)
-                    Text("上傳")
+                    Text(L10n.chartLegendUpload)
                         .font(.subheadline)
                         .foregroundColor(showUpload ? .primary : .secondary)
                         .fontWeight(showUpload ? .medium : .regular)
@@ -872,7 +886,7 @@ public struct NetworkChartView: View {
             }
             .buttonStyle(.plain)
             .pointerCursor()
-            .help("Toggle Upload Data")
+            .help(L10n.chartHelpToggleData(L10n.chartLegendUpload))
 
             // Plan speed legend (non-interactive)
             if (showDownload && preferences.downloadPlanSpeed > 0) || (showUpload && preferences.uploadPlanSpeed > 0) {
@@ -892,7 +906,7 @@ public struct NetworkChartView: View {
                                     )
                                 )
                         )
-                    Text("方案速度")
+                    Text(L10n.chartLegendPlanSpeed)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -1177,7 +1191,7 @@ struct ChartTooltipView24Hour: View {
                         Circle()
                             .fill(.blue)
                             .frame(width: 4, height: 4)
-                        Text("平均 \(formatSpeed(avgDownloadSpeed))")
+                        Text(L10n.chartTooltipAverage(formatSpeed(avgDownloadSpeed)))
                             .font(.system(size: 12))
                             .foregroundColor(isPeakConcerning(speed: avgDownloadSpeed, planSpeed: preferences.downloadPlanSpeed) ? .orange : .primary)
                     }
@@ -1187,7 +1201,7 @@ struct ChartTooltipView24Hour: View {
                             Circle()
                                 .fill(.blue.opacity(0.5))
                                 .frame(width: 4, height: 4)
-                            Text("峰值 \(formatSpeed(maxDownloadSpeed))")
+                            Text(L10n.chartTooltipPeak(formatSpeed(maxDownloadSpeed)))
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
                         }
@@ -1199,7 +1213,7 @@ struct ChartTooltipView24Hour: View {
                         Rectangle()
                             .fill(.green)
                             .frame(width: 4, height: 4)
-                        Text("平均 \(formatSpeed(avgUploadSpeed))")
+                        Text(L10n.chartTooltipAverage(formatSpeed(avgUploadSpeed)))
                             .font(.system(size: 12))
                             .foregroundColor(isPeakConcerning(speed: avgUploadSpeed, planSpeed: preferences.uploadPlanSpeed) ? .orange : .primary)
                     }
@@ -1209,7 +1223,7 @@ struct ChartTooltipView24Hour: View {
                             Rectangle()
                                 .fill(.green.opacity(0.5))
                                 .frame(width: 4, height: 4)
-                            Text("峰值 \(formatSpeed(maxUploadSpeed))")
+                            Text(L10n.chartTooltipPeak(formatSpeed(maxUploadSpeed)))
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
                         }
@@ -1270,7 +1284,7 @@ struct StatisticsCardView: View {
         HStack(spacing: 12) {
             // Download statistics - always show but toggleable
             StatColumnView(
-                title: "下載",
+                title: L10n.chartLegendDownload,
                 color: .blue,
                 current: currentDownloadSpeed,
                 peak: peakDownloadSpeed,
@@ -1287,7 +1301,7 @@ struct StatisticsCardView: View {
 
             // Upload statistics - always show but toggleable
             StatColumnView(
-                title: "上傳",
+                title: L10n.chartLegendUpload,
                 color: .green,
                 current: currentUploadSpeed,
                 peak: peakUploadSpeed,
@@ -1357,7 +1371,7 @@ struct StatColumnView: View {
 
                 // Data collection indicator
                 if dataAvailability == .empty {
-                    Text("收集中")
+                    Text(L10n.chartStatsCollecting)
                         .font(.caption2)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -1369,7 +1383,7 @@ struct StatColumnView: View {
 
             // Current speed (prominent)
             VStack(alignment: .leading, spacing: 2) {
-                Text("即時")
+                Text(L10n.chartStatsRealtime)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Text(formatSpeed(current))
@@ -1382,7 +1396,7 @@ struct StatColumnView: View {
             // Peak and Average (compact)
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("峰值")
+                    Text(L10n.chartStatsPeak)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Text(dataAvailability == .empty ? "--" : formatSpeed(peak))
@@ -1392,7 +1406,7 @@ struct StatColumnView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("平均")
+                    Text(L10n.chartStatsAverage)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Text(dataAvailability == .empty ? "--" : formatSpeed(average))
@@ -1417,7 +1431,7 @@ struct StatColumnView: View {
             onToggle?()
         }
         .pointerCursor()
-        .help("點擊切換 \(title) 資料顯示")
+        .help(L10n.chartHelpToggleData(title))
     }
 
     private func formatSpeed(_ speedMbps: Double) -> String {
@@ -1459,11 +1473,11 @@ struct EmptyStateView: View {
 
             // Text content
             VStack(spacing: 8) {
-                Text("正在收集網路資料")
+                Text(L10n.chartEmptyCollecting)
                     .font(.headline)
                     .foregroundColor(.primary)
 
-                Text("請稍候，圖表將在幾秒鐘後顯示")
+                Text(L10n.chartEmptyPleaseWait)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -1512,7 +1526,7 @@ struct DataCollectionBanner: View {
                         .foregroundColor(.secondary)
                 }
                 .buttonStyle(.plain)
-                .help("關閉提示")
+                .help(L10n.chartHelpDismissBanner)
             }
             .padding(12)
             .background(bannerBackgroundColor)
@@ -1534,20 +1548,20 @@ struct DataCollectionBanner: View {
 
     private var bannerTitle: String {
         if availability == .empty {
-            return "資料收集中..."
+            return L10n.chartBannerCollecting
         } else {
-            return "資料收集中：\(formatCoverage())"
+            return L10n.chartBannerCollectingWithCoverage(formatCoverage())
         }
     }
 
     private var bannerMessage: String {
         let remaining = coverageInfo.required - coverageInfo.actual
-        return "還需 \(formatTimeInterval(remaining)) 達到完整視圖"
+        return L10n.chartBannerRemainingTime(formatTimeInterval(remaining))
     }
 
     private func formatCoverage() -> String {
         let percentage = Int(coverageInfo.percentage)
-        return "已收集 \(percentage)%"
+        return L10n.chartBannerCollected(percentage)
     }
 
     private func formatTimeInterval(_ interval: TimeInterval) -> String {
@@ -1556,12 +1570,12 @@ struct DataCollectionBanner: View {
 
         if hours > 0 {
             if minutes > 0 {
-                return "\(hours) 小時 \(minutes) 分鐘"
+                return L10n.chartTimeHoursMinutes(hours, minutes)
             } else {
-                return "\(hours) 小時"
+                return L10n.chartTimeHours(hours)
             }
         } else {
-            return "\(minutes) 分鐘"
+            return L10n.chartTimeMinutes(minutes)
         }
     }
 }
@@ -1589,7 +1603,7 @@ struct PartialDataIndicator: View {
     private var message: String {
         let actualFormatted = formatTimeInterval(coverageInfo.actual)
         let requiredFormatted = formatTimeInterval(coverageInfo.required)
-        return "顯示最近 \(actualFormatted) 資料（完整視圖需 \(requiredFormatted)）"
+        return L10n.chartPartialMessage(actualFormatted, requiredFormatted)
     }
 
     private func formatTimeInterval(_ interval: TimeInterval) -> String {
@@ -1598,14 +1612,14 @@ struct PartialDataIndicator: View {
 
         if hours > 0 {
             if minutes > 0 {
-                return "\(hours) 小時 \(minutes) 分"
+                return L10n.chartTimeHoursMinutesShort(hours, minutes)
             } else {
-                return "\(hours) 小時"
+                return L10n.chartTimeHours(hours)
             }
         } else if minutes > 0 {
-            return "\(minutes) 分鐘"
+            return L10n.chartTimeMinutes(minutes)
         } else {
-            return "< 1 分鐘"
+            return L10n.chartTimeLessThanOneMinute
         }
     }
 }

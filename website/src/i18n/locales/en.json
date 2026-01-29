@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "title": "Network Peak Monitor - Enterprise Network Monitoring Solution",
+    "description": "Enterprise-grade network monitoring solution. Real-time speed monitoring, intelligent peak tracking, data-driven network upgrade decisions."
+  },
+  "header": {
+    "subtitle": "Network Peak Monitor",
+    "features": "Features",
+    "howItWorks": "How It Works",
+    "faq": "FAQ",
+    "download": "Download Now",
+    "openMenu": "Open Menu"
+  },
+  "hero": {
+    "badge1": "macOS Exclusive",
+    "badge2": "Enterprise Performance",
+    "title1": "Use Data to Decide",
+    "title2": "Whether to Upgrade Your Plan",
+    "subtitle": "Monitor speeds in real-time, track peaks, and make informed decisions. Professional-grade macOS network monitoring solution.",
+    "downloadBtn": "Free Download",
+    "learnMore": "Learn More",
+    "statCpu": "CPU Usage",
+    "statMemory": "Memory Usage",
+    "statHistory": "History Tracking",
+    "download": "Download",
+    "upload": "Upload",
+    "monitoring": "Monitoring",
+    "todayPeak": "Today's Peak",
+    "allTimePeak": "All-Time Peak",
+    "planUsage": "Plan Usage",
+    "freeToUse": "Free to Use"
+  },
+  "features": {
+    "sectionBadge": "Features",
+    "sectionTitle": "Professional Network Monitoring",
+    "sectionSubtitle": "Comprehensive network monitoring solution for macOS power users",
+    "items": [
+      {
+        "title": "Real-time Speed Monitoring",
+        "description": "Display upload/download speeds in the menu bar. Monitor network status without opening any windows.",
+        "badge": "Core Feature"
+      },
+      {
+        "title": "Smart Peak Tracking",
+        "description": "Automatically record daily and historical peak speeds. Analyze data to evaluate if your plan is sufficient.",
+        "badge": "Analytics"
+      },
+      {
+        "title": "Interactive Charts",
+        "description": "Support time ranges from 1 minute to 24 hours. Visualize network usage trends.",
+        "badge": "Visualization"
+      },
+      {
+        "title": "One-click Speed Test",
+        "description": "Integrated Speedtest by Ookla CLI. Professional-grade speed testing and latency analysis.",
+        "badge": "Speed Test"
+      },
+      {
+        "title": "Community Leaderboard",
+        "description": "Speed rankings across global, country, and ISP dimensions. See how your network performs.",
+        "badge": "Community"
+      },
+      {
+        "title": "Anomaly Detection",
+        "description": "Smart connection monitoring. Instant alerts for disconnections or abnormal speed drops.",
+        "badge": "Smart Alerts"
+      },
+      {
+        "title": "Lightweight & Efficient",
+        "description": "Less than 1% CPU usage, under 50MB memory. Ensures system performance is unaffected.",
+        "badge": "Optimized"
+      }
+    ]
+  },
+  "howItWorks": {
+    "sectionBadge": "How It Works",
+    "sectionTitle": "Get Started in 3 Steps",
+    "sectionSubtitle": "Simple setup, start monitoring your network performance immediately",
+    "steps": [
+      {
+        "title": "Download & Install",
+        "description": "Download the DMG file from our website. Drag to Applications folder to complete installation."
+      },
+      {
+        "title": "Configure Your Plan",
+        "description": "Enter your network plan speed limits. The system will automatically calculate usage and send alerts."
+      },
+      {
+        "title": "Start Monitoring",
+        "description": "The app displays real-time speeds in the menu bar. Click to view detailed charts and statistics."
+      }
+    ]
+  },
+  "speedTest": {
+    "sectionBadge": "Speed Test",
+    "sectionTitle": "Professional Speed Testing",
+    "sectionSubtitle": "Integrated Speedtest by Ookla CLI for accurate network speed measurement",
+    "downloadSpeed": "Download Speed",
+    "uploadSpeed": "Upload Speed",
+    "ping": "Ping",
+    "server": "Test Server",
+    "startTest": "Start Test",
+    "testing": "Testing..."
+  },
+  "faq": {
+    "sectionBadge": "FAQ",
+    "sectionTitle": "Frequently Asked Questions",
+    "sectionSubtitle": "Common questions about Network Peak Monitor",
+    "items": [
+      {
+        "question": "Is Network Peak Monitor free?",
+        "answer": "Yes, Network Peak Monitor is completely free to use with no hidden fees or feature restrictions."
+      },
+      {
+        "question": "Which macOS versions are supported?",
+        "answer": "Network Peak Monitor supports macOS 13.0 (Ventura) and later versions."
+      },
+      {
+        "question": "Will it affect system performance?",
+        "answer": "No. Our app is optimized with less than 1% CPU usage and under 50MB memory footprint."
+      },
+      {
+        "question": "Is my data uploaded to servers?",
+        "answer": "No. All monitoring data is stored locally. We do not collect or upload any user data."
+      },
+      {
+        "question": "How do I uninstall?",
+        "answer": "Simply move the app from Applications folder to Trash. To remove all data, also delete ~/Library/Application Support/NetworkPeakMonitor folder."
+      }
+    ]
+  },
+  "download": {
+    "sectionBadge": "Download Now",
+    "sectionTitle": "Start Monitoring Your Network",
+    "sectionSubtitle": "Free download, no registration required, start using immediately",
+    "downloadBtn": "Download for macOS",
+    "version": "Version",
+    "requirements": "Requires macOS 13.0 or later",
+    "features": [
+      "Free to use, no ads",
+      "Privacy first, data stays local",
+      "Lightweight, won't affect system performance"
+    ]
+  },
+  "footer": {
+    "copyright": "Network Peak Monitor. All rights reserved.",
+    "madeWith": "Made with",
+    "madeIn": "in Taiwan"
+  }
+}

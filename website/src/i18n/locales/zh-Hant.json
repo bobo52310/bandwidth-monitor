@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "title": "Network Peak Monitor - 網路峰值監控器 | 企業級網路監控解決方案",
+    "description": "企業級網路監控解決方案。即時監控網速、智能峰值追蹤、數據驅動的網路升級決策。"
+  },
+  "header": {
+    "subtitle": "網路峰值監控器",
+    "features": "功能",
+    "howItWorks": "運作方式",
+    "faq": "常見問題",
+    "download": "立即下載",
+    "openMenu": "開啟選單"
+  },
+  "hero": {
+    "badge1": "macOS 專屬",
+    "badge2": "企業級效能",
+    "title1": "用數據決定，",
+    "title2": "是否升級網路方案",
+    "subtitle": "即時監控網速、追蹤峰值、做出明智決策。專業級 macOS 網路監控解決方案。",
+    "downloadBtn": "免費下載",
+    "learnMore": "了解更多",
+    "statCpu": "CPU 使用率",
+    "statMemory": "記憶體佔用",
+    "statHistory": "歷史追蹤",
+    "download": "下載",
+    "upload": "上傳",
+    "monitoring": "監控中",
+    "todayPeak": "今日峰值",
+    "allTimePeak": "歷史最高",
+    "planUsage": "方案使用率",
+    "freeToUse": "免費使用"
+  },
+  "features": {
+    "sectionBadge": "功能介紹",
+    "sectionTitle": "專業級網路監控功能",
+    "sectionSubtitle": "為 macOS 專業用戶打造的全方位網路監控解決方案",
+    "items": [
+      {
+        "title": "即時網速監控",
+        "description": "選單列即時顯示上傳/下載速度，無需開啟任何視窗即可掌握網路狀態。",
+        "badge": "核心功能"
+      },
+      {
+        "title": "智能峰值追蹤",
+        "description": "自動記錄每日及歷史峰值速度，透過數據分析評估網路方案是否足夠。",
+        "badge": "數據分析"
+      },
+      {
+        "title": "互動式圖表",
+        "description": "支援 1 分鐘至 24 小時多種時間區間，視覺化呈現網路使用趨勢。",
+        "badge": "視覺化"
+      },
+      {
+        "title": "一鍵速度測試",
+        "description": "整合 Speedtest by Ookla CLI，提供專業級的速度測試與延遲分析。",
+        "badge": "測速整合"
+      },
+      {
+        "title": "社群排行榜",
+        "description": "支援全球、國家、ISP 三種維度的速度排名，了解您的網路表現。",
+        "badge": "社群功能"
+      },
+      {
+        "title": "網路異常偵測",
+        "description": "智能監控連線狀態，即時警示連線中斷或速度異常下降等問題。",
+        "badge": "智能警示"
+      },
+      {
+        "title": "輕量高效",
+        "description": "CPU 使用率低於 1%，記憶體佔用小於 50MB，確保系統效能不受影響。",
+        "badge": "效能優化"
+      }
+    ]
+  },
+  "howItWorks": {
+    "sectionBadge": "使用流程",
+    "sectionTitle": "三步驟開始使用",
+    "sectionSubtitle": "簡單設定，立即開始監控您的網路效能",
+    "steps": [
+      {
+        "title": "下載安裝",
+        "description": "從官網下載 DMG 檔案，拖曳至應用程式資料夾即可完成安裝。"
+      },
+      {
+        "title": "設定方案",
+        "description": "輸入您的網路方案速度上限，系統將自動計算使用率並發送警示。"
+      },
+      {
+        "title": "開始監控",
+        "description": "應用程式將在選單列顯示即時網速，點擊可查看詳細圖表與統計。"
+      }
+    ]
+  },
+  "speedTest": {
+    "sectionBadge": "速度測試",
+    "sectionTitle": "專業級速度測試",
+    "sectionSubtitle": "整合 Speedtest by Ookla CLI，提供準確的網路速度測量",
+    "downloadSpeed": "下載速度",
+    "uploadSpeed": "上傳速度",
+    "ping": "延遲",
+    "server": "測試伺服器",
+    "startTest": "開始測試",
+    "testing": "測試中..."
+  },
+  "faq": {
+    "sectionBadge": "常見問題",
+    "sectionTitle": "您可能想知道的",
+    "sectionSubtitle": "關於 Network Peak Monitor 的常見問題解答",
+    "items": [
+      {
+        "question": "Network Peak Monitor 是免費的嗎？",
+        "answer": "是的，Network Peak Monitor 完全免費使用，沒有任何隱藏費用或功能限制。"
+      },
+      {
+        "question": "支援哪些 macOS 版本？",
+        "answer": "Network Peak Monitor 支援 macOS 13.0 (Ventura) 及更新版本。"
+      },
+      {
+        "question": "應用程式會影響系統效能嗎？",
+        "answer": "不會。我們的應用程式經過優化，CPU 使用率低於 1%，記憶體佔用小於 50MB。"
+      },
+      {
+        "question": "數據會上傳到伺服器嗎？",
+        "answer": "不會。所有監控數據都儲存在本機，我們不會收集或上傳任何用戶數據。"
+      },
+      {
+        "question": "如何解除安裝？",
+        "answer": "只需將應用程式從「應用程式」資料夾移至垃圾桶即可。如需清除所有數據，可同時刪除 ~/Library/Application Support/NetworkPeakMonitor 資料夾。"
+      }
+    ]
+  },
+  "download": {
+    "sectionBadge": "立即下載",
+    "sectionTitle": "開始監控您的網路",
+    "sectionSubtitle": "免費下載，無需註冊，立即開始使用",
+    "downloadBtn": "下載 macOS 版",
+    "version": "版本",
+    "requirements": "需要 macOS 13.0 或更新版本",
+    "features": [
+      "免費使用，無廣告",
+      "隱私優先，數據不上傳",
+      "輕量高效，不影響系統效能"
+    ]
+  },
+  "footer": {
+    "copyright": "Network Peak Monitor. 保留所有權利。",
+    "madeWith": "以",
+    "madeIn": "製作於台灣"
+  }
+}

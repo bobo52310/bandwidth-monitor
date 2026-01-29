@@ -75,7 +75,7 @@ public class NotificationService: ObservableObject {
         if downloadRatio >= threshold {
             shouldNotify = true
             let percentage = Int(downloadRatio * 100)
-            message = "下載速度已達到方案上限的 \(percentage)% (\(String(format: "%.1f", downloadSpeed)) Mbps)"
+            message = L10n.notificationDownloadReached(percentage, String(format: "%.1f", downloadSpeed))
         }
 
         if uploadRatio >= threshold {
@@ -84,13 +84,13 @@ public class NotificationService: ObservableObject {
             if !message.isEmpty {
                 message += "\n"
             }
-            message += "上傳速度已達到方案上限的 \(percentage)% (\(String(format: "%.1f", uploadSpeed)) Mbps)"
+            message += L10n.notificationUploadReached(percentage, String(format: "%.1f", uploadSpeed))
         }
 
         if shouldNotify {
             // Use the higher of download or upload plan speed for the title
             let maxPlanSpeed = max(downloadPlanSpeed, uploadPlanSpeed)
-            let title = "接近速率上限(\(Int(maxPlanSpeed))Mbps)"
+            let title = L10n.notificationApproachingLimit(Int(maxPlanSpeed))
             sendNotification(title: title, body: message)
             lastNotificationTime = Date()
         }
@@ -125,8 +125,8 @@ public class NotificationService: ObservableObject {
     /// Manually send a test notification
     public func sendTestNotification() {
         sendNotification(
-            title: "測試通知",
-            body: "這是一個測試通知，用來確認通知功能正常運作。"
+            title: L10n.notificationTestTitle,
+            body: L10n.notificationTestBody
         )
         lastNotificationTime = Date()
     }
