@@ -287,4 +287,21 @@ public enum L10n {
     public static let latencyLabel = String(localized: "latency.label", defaultValue: "延遲")
     public static let jitterLabel = String(localized: "jitter.label", defaultValue: "抖動")
     public static let latencyUnit = String(localized: "latency.unit", defaultValue: "ms")
+
+    // MARK: - Disconnect Tracking
+    public static let disconnectTitle = String(localized: "disconnect.title", defaultValue: "斷線記錄")
+    public static let disconnectTodayCount = String(localized: "disconnect.today.count", defaultValue: "今日斷線")
+    public static let disconnectTotalDowntime = String(localized: "disconnect.total.downtime", defaultValue: "總中斷時間")
+    public static let disconnectNoDowntime = String(localized: "disconnect.no.downtime", defaultValue: "無中斷")
+    public static let disconnectNoEventsToday = String(localized: "disconnect.no.events.today", defaultValue: "今日無斷線記錄")
+    public static let disconnectSeconds = String(localized: "disconnect.seconds", defaultValue: "秒")
+    public static let disconnectMinutes = String(localized: "disconnect.minutes", defaultValue: "分鐘")
+    public static let disconnectHours = String(localized: "disconnect.hours", defaultValue: "小時")
+    public static let disconnectInterfaceWifi = String(localized: "disconnect.interface.wifi", defaultValue: "Wi-Fi")
+    public static let disconnectInterfaceEthernet = String(localized: "disconnect.interface.ethernet", defaultValue: "乙太網路")
+    public static let disconnectInterfaceCellular = String(localized: "disconnect.interface.cellular", defaultValue: "行動數據")
+    public static let disconnectInterfaceOther = String(localized: "disconnect.interface.other", defaultValue: "其他")
+    public static func disconnectTimesUnit(_ count: Int) -> String {
+        String(format: String(localized: "disconnect.times.unit", defaultValue: "%d 次"), count)
+    }
 }
