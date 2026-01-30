@@ -95,6 +95,20 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
             }
         }
 
+        /// Stable English value for CSV export (non-localized).
+        public var csvValue: String {
+            switch self {
+            case .considerUpgrade:
+                return "Consider Upgrade"
+            case .planFits:
+                return "Plan Fits"
+            case .considerDowngrade:
+                return "Consider Downgrade"
+            case .insufficientData:
+                return "Insufficient Data"
+            }
+        }
+
         /// SF Symbol icon name for the recommendation.
         public var icon: String {
             switch self {
