@@ -387,6 +387,51 @@ public struct PopoverView: View {
 
                         Divider()
                     }
+
+                    // Connection Quality Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: viewModel.latencyMonitor.qualityScore.icon)
+                                .foregroundColor(viewModel.latencyMonitor.qualityScore.color)
+                            Text(L10n.connectionQualityTitle)
+                                .font(.headline)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text(viewModel.latencyMonitor.qualityScore.displayName)
+                                .font(.subheadline)
+                                .foregroundColor(viewModel.latencyMonitor.qualityScore.color)
+                                .fontWeight(.bold)
+                        }
+
+                        HStack(spacing: 24) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.latencyLabel)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+                                Text(String(format: "%.0f %@", viewModel.latencyMonitor.currentLatency, L10n.latencyUnit))
+                                    .font(.title3)
+                                    .monospacedDigit()
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.jitterLabel)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+                                Text(String(format: "%.1f %@", viewModel.latencyMonitor.currentJitter, L10n.latencyUnit))
+                                    .font(.title3)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.secondary.opacity(0.05))
+                    )
+
+                    Divider()
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 16)
