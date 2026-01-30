@@ -432,6 +432,86 @@ public struct PopoverView: View {
                     )
 
                     Divider()
+
+                    // Disconnect History Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: viewModel.disconnectTracker.isConnected ? "wifi" : "wifi.slash")
+                                .foregroundColor(viewModel.disconnectTracker.isConnected ? .green : .red)
+                            Text(L10n.disconnectTitle)
+                                .font(.headline)
+                                .fontWeight(.medium)
+                            Spacer()
+                        }
+
+                        HStack(spacing: 24) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.disconnectTodayCount)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+                                Text(L10n.disconnectTimesUnit(viewModel.disconnectTracker.todayEvents.count))
+                                    .font(.title3)
+                                    .monospacedDigit()
+                                    .foregroundColor(viewModel.disconnectTracker.todayEvents.isEmpty ? .secondary : .red)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.disconnectTotalDowntime)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+                                Text(viewModel.disconnectTracker.formattedDowntimeToday)
+                                    .font(.title3)
+                                    .monospacedDigit()
+                            }
+                        }
+
+                        if !viewModel.disconnectTracker.todayEvents.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 6) {
+                                    ForEach(viewModel.disconnectTracker.todayEvents.prefix(5)) { event in
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "wifi.slash")
+                                                    .font(.caption)
+                                                Text(event.formattedDuration)
+                                                    .font(.caption)
+                                            }
+                                            Text(formatDisconnectTime(event.startTime))
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.red.opacity(0.1))
+                                        .cornerRadius(6)
+                                    }
+                                }
+                                .padding(.horizontal, 1)
+                            }
+                        } else {
+                            Text(L10n.disconnectNoEventsToday)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(viewModel.disconnectTracker.todayEvents.isEmpty ?
+                                  Color.secondary.opacity(0.05) :
+                                  Color.red.opacity(0.08))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(viewModel.disconnectTracker.todayEvents.isEmpty ?
+                                   Color.clear :
+                                   Color.red.opacity(0.3), lineWidth: 1)
+                    )
+
+                    Divider()
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 16)
@@ -501,6 +581,12 @@ public struct PopoverView: View {
     }
 
     // MARK: - Helper Functions
+
+    private func formatDisconnectTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
 
     private func exportData(format: DataExportService.ExportFormat) {
         viewModel.exportData(format: format) { result in
