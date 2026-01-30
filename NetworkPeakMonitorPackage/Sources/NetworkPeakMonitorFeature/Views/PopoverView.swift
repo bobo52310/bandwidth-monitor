@@ -9,6 +9,7 @@ public struct PopoverView: View {
     @State private var showingExportMenu = false
     @State private var exportSuccess = false
     @State private var exportError = false
+    @State private var showingMonthlyReport = false
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
@@ -540,6 +541,14 @@ public struct PopoverView: View {
                     .buttonStyle(.bordered)
                     .help(L10n.exportDataHelp)
 
+                    // Monthly Report Button
+                    Button(action: { showingMonthlyReport = true }) {
+                        Label(L10n.reportViewReport, systemImage: "chart.bar.doc.horizontal")
+                            .font(.subheadline)
+                    }
+                    .buttonStyle(.bordered)
+                    .help(L10n.reportViewReport)
+
                     // Reset Button
                     Button(L10n.actionResetPeaks) {
                         viewModel.resetPeaks()
@@ -567,6 +576,9 @@ public struct PopoverView: View {
         .animation(.easeInOut(duration: 0.3), value: showUpload)
         .sheet(isPresented: $showingSettings) {
             SettingsView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingMonthlyReport) {
+            MonthlyReportView(viewModel: viewModel)
         }
         .alert(L10n.exportSuccess, isPresented: $exportSuccess) {
             Button(L10n.buttonOK, role: .cancel) { }
