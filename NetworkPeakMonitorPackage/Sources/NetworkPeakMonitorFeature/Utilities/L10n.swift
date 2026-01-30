@@ -277,4 +277,14 @@ public enum L10n {
     public static func chartPartialMessage(_ actual: String, _ required: String) -> String {
         String(format: String(localized: "chart.partial.message", defaultValue: "顯示最近 %@ 資料（完整視圖需 %@）"), actual, required)
     }
+
+    // MARK: - Connection Quality
+    public static let connectionQualityTitle = String(localized: "connection.quality.title", defaultValue: "連線品質")
+    public static let connectionQualityGood = String(localized: "connection.quality.good", defaultValue: "良好")
+    public static let connectionQualityFair = String(localized: "connection.quality.fair", defaultValue: "普通")
+    public static let connectionQualityPoor = String(localized: "connection.quality.poor", defaultValue: "差")
+    public static let connectionQualityUnknown = String(localized: "connection.quality.unknown", defaultValue: "未知")
+    public static let latencyLabel = String(localized: "latency.label", defaultValue: "延遲")
+    public static let jitterLabel = String(localized: "jitter.label", defaultValue: "抖動")
+    public static let latencyUnit = String(localized: "latency.unit", defaultValue: "ms")
 }
