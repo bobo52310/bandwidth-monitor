@@ -11,6 +11,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     @Published public var notificationService = NotificationService()
     @Published public var anomalyDetector = NetworkAnomalyDetector()
     @Published public var errorHandler = ErrorHandler()
+    @Published public var latencyMonitor = LatencyMonitor()
 
     private let networkMonitor = NetworkMonitor()
     private var cancellables = Set<AnyCancellable>()
@@ -24,6 +25,7 @@ public class NetworkMonitorViewModel: ObservableObject {
         Task {
             await startMonitoring()
         }
+        latencyMonitor.startMonitoring()
     }
 
     private func setupBindings() {
@@ -60,6 +62,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     public func stopMonitoring() async {
         errorHandler.log("停止網路監控", level: .info, context: "Network")
         await networkMonitor.stopMonitoring()
+        latencyMonitor.stopMonitoring()
     }
 
     public func resetPeaks() {
