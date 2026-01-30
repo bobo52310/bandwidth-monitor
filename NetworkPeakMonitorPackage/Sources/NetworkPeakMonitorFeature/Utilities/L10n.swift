@@ -304,4 +304,29 @@ public enum L10n {
     public static func disconnectTimesUnit(_ count: Int) -> String {
         String(format: String(localized: "disconnect.times.unit", defaultValue: "%d 次"), count)
     }
+
+    // MARK: - Monthly Report
+    public static let reportTitle = String(localized: "report.title", defaultValue: "月度報告")
+    public static let reportViewReport = String(localized: "report.view", defaultValue: "查看月度報告")
+    public static let reportPeakDownload = String(localized: "report.peak.download", defaultValue: "下載峰值")
+    public static let reportPeakUpload = String(localized: "report.peak.upload", defaultValue: "上傳峰值")
+    public static let reportAvgDownload = String(localized: "report.avg.download", defaultValue: "平均下載")
+    public static let reportAvgUpload = String(localized: "report.avg.upload", defaultValue: "平均上傳")
+    public static let reportPlanUtilization = String(localized: "report.plan.utilization", defaultValue: "方案使用率")
+    public static let reportPeakApproaches = String(localized: "report.peak.approaches", defaultValue: "接近上限次數")
+    public static let reportDisconnects = String(localized: "report.disconnects", defaultValue: "斷線次數")
+    public static let reportTotalDowntime = String(localized: "report.total.downtime", defaultValue: "總中斷時間")
+    public static let reportAvgLatency = String(localized: "report.avg.latency", defaultValue: "平均延遲")
+    public static let reportAvgJitter = String(localized: "report.avg.jitter", defaultValue: "平均抖動")
+    public static let reportDaysMonitored = String(localized: "report.days.monitored", defaultValue: "監控天數")
+    public static let reportRecommendation = String(localized: "report.recommendation", defaultValue: "建議")
+    public static let reportRecommendUpgrade = String(localized: "report.recommend.upgrade", defaultValue: "建議升級方案")
+    public static let reportRecommendFits = String(localized: "report.recommend.fits", defaultValue: "目前方案合適")
+    public static let reportRecommendDowngrade = String(localized: "report.recommend.downgrade", defaultValue: "可考慮降級方案")
+    public static let reportRecommendInsufficientData = String(localized: "report.recommend.insufficient", defaultValue: "資料不足")
+    public static let reportNoData = String(localized: "report.no.data", defaultValue: "尚無月度報告資料")
+    public static let reportExport = String(localized: "report.export", defaultValue: "匯出報告")
+    public static func reportMonthLabel(_ month: String) -> String {
+        String(format: String(localized: "report.month.label", defaultValue: "%@ 月度報告"), month)
+    }
 }
