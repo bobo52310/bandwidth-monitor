@@ -13,6 +13,7 @@ public class NetworkMonitorViewModel: ObservableObject {
     @Published public var errorHandler = ErrorHandler()
     @Published public var latencyMonitor = LatencyMonitor()
     @Published public var disconnectTracker = DisconnectTracker()
+    @Published public var monthlyReportService = MonthlyReportService()
 
     private let networkMonitor = NetworkMonitor()
     private var cancellables = Set<AnyCancellable>()
@@ -54,6 +55,13 @@ public class NetworkMonitorViewModel: ObservableObject {
                 self.anomalyDetector.analyzeSpeed(speed)
             }
             .store(in: &cancellables)
+
+        // Daily snapshot for monthly report (check every hour, record once per day)
+        Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkAndRecordDailySnapshot()
+            }
+        }
     }
 
     public func startMonitoring() async {
@@ -225,6 +233,44 @@ public class NetworkMonitorViewModel: ObservableObject {
         }
 
         return components.joined() + "前"
+    }
+
+    // MARK: - Monthly Report
+
+    /// Call once per day to snapshot daily data for monthly report
+    public func recordDailySnapshot() {
+        let avgDownload = historyRecorder.twentyFourHourData.isEmpty ? 0 :
+            historyRecorder.twentyFourHourData.map { $0.avgDownloadSpeed / 125_000 }.reduce(0, +) / Double(historyRecorder.twentyFourHourData.count)
+        let avgUpload = historyRecorder.twentyFourHourData.isEmpty ? 0 :
+            historyRecorder.twentyFourHourData.map { $0.avgUploadSpeed / 125_000 }.reduce(0, +) / Double(historyRecorder.twentyFourHourData.count)
+
+        monthlyReportService.recordDailySnapshot(
+            peakDownload: peakRecorder.todayPeakDownload,
+            peakUpload: peakRecorder.todayPeakUpload,
+            avgDownload: avgDownload,
+            avgUpload: avgUpload,
+            peakApproachCount: peakApproachTracker.todayApproachCount,
+            disconnectCount: disconnectTracker.todayEvents.count,
+            totalDowntime: disconnectTracker.totalDowntimeToday,
+            avgLatency: latencyMonitor.currentLatency,
+            avgJitter: latencyMonitor.currentJitter,
+            planDownload: preferences.downloadPlanSpeed,
+            planUpload: preferences.uploadPlanSpeed
+        )
+    }
+
+    private var lastDailySnapshotDate: Date? {
+        get { UserDefaults.standard.object(forKey: "lastDailySnapshotDate") as? Date }
+        set { UserDefaults.standard.set(newValue, forKey: "lastDailySnapshotDate") }
+    }
+
+    private func checkAndRecordDailySnapshot() {
+        let calendar = Calendar.current
+        if let lastDate = lastDailySnapshotDate, calendar.isDateInToday(lastDate) {
+            return // Already recorded today
+        }
+        recordDailySnapshot()
+        lastDailySnapshotDate = Date()
     }
 
 }
