@@ -90,9 +90,6 @@ public enum L10n {
     public static let chartYAxisModeAuto = String(localized: "chart.yaxis.auto", defaultValue: "自動縮放")
     public static let chartYAxisModeFixed = String(localized: "chart.yaxis.fixed", defaultValue: "固定上限")
 
-    // MARK: - Popover View
-    public static let chartRequiresMacOS13 = String(localized: "chart.requires.macos13", defaultValue: "圖表功能需要 macOS 13.0 或更新版本")
-
     // MARK: - Peak Approach Section
     public static func approachingSpeedLimit(_ speed: Int) -> String {
         String(format: String(localized: "peak.approaching.limit", defaultValue: "接近速率上限(%dMbps)"), speed)
@@ -127,6 +124,12 @@ public enum L10n {
     }
     public static func timeHoursAgo(_ hours: Int) -> String {
         String(format: String(localized: "time.hours.ago", defaultValue: "%d小時前"), hours)
+    }
+    public static func timeDaysAgo(_ days: Int) -> String {
+        String(format: String(localized: "time.days.ago", defaultValue: "%d天前"), days)
+    }
+    public static func timeDaysHoursAgo(_ days: Int, _ hours: Int) -> String {
+        String(format: String(localized: "time.days.hours.ago", defaultValue: "%d天%d小時前"), days, hours)
     }
 
     // MARK: - Export

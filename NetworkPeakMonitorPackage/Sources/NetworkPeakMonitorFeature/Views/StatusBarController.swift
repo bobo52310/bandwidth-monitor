@@ -285,7 +285,6 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
             if let popover = self?.popover, popover.isShown {
                 // Check if the click is outside the popover
                 if let popoverWindow = popover.contentViewController?.view.window {
-                    let clickLocation = event.locationInWindow
                     let windowFrame = popoverWindow.frame
                     let screenClickLocation = NSEvent.mouseLocation
 
@@ -310,9 +309,7 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
     }
 
     private func updateStatusBarTitle() {
-        DispatchQueue.main.async {
-            self.statusBarItem?.button?.title = self.viewModel.menuBarText
-        }
+        statusBarItem?.button?.title = viewModel.menuBarText
     }
 
     public func cleanUp() {

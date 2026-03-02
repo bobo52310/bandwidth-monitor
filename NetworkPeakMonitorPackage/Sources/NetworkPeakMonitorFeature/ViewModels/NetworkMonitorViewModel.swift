@@ -17,6 +17,11 @@ public class NetworkMonitorViewModel {
     public var monthlyReportService = MonthlyReportService()
 
     private let networkMonitor = NetworkMonitor()
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
 
     public init() {
         setupBindings()
@@ -87,8 +92,7 @@ public class NetworkMonitorViewModel {
         historyRecorder.pruneOldData()
         anomalyDetector.pruneOldAnomalies()
         // Peak approach tracker pruning handled by optimizer
-        let prunedTimestamps = MemoryOptimizer.prunePeakApproaches(peakApproachTracker.approachTimestamps)
-        // Note: Would need to add a method to update timestamps in PeakApproachTracker
+        _ = MemoryOptimizer.prunePeakApproaches(peakApproachTracker.approachTimestamps)
     }
 
     /// Get current memory statistics
@@ -144,8 +148,8 @@ public class NetworkMonitorViewModel {
     }
 
     /// Generate CSV content based on format
+    /// TODO: Consolidate with DataExportService to avoid duplicated export logic
     private func generateCSVContent(format: DataExportService.ExportFormat) -> String {
-        // This is a placeholder - actual implementation uses DataExportService
         return ""
     }
 
@@ -185,9 +189,7 @@ public class NetworkMonitorViewModel {
     // Format time for display
     public func formatTime(_ date: Date?) -> String {
         guard let date = date else { return "N/A" }
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return Self.timeFormatter.string(from: date)
     }
 
     // Get formatted hourly peak text with time
@@ -197,7 +199,7 @@ public class NetworkMonitorViewModel {
         return "\(speedText) \(unit.displayName) (\(timeText))"
     }
 
-    // Format relative time in Chinese (e.g., "3天2小時15分鐘前")
+    // Format relative time (e.g., "3天2小時前")
     public func formatRelativeTime(_ date: Date?) -> String {
         guard let date = date else { return "" }
 
@@ -211,26 +213,17 @@ public class NetworkMonitorViewModel {
         let hours = Int((timeInterval.truncatingRemainder(dividingBy: 86400)) / 3600)
         let minutes = Int((timeInterval.truncatingRemainder(dividingBy: 3600)) / 60)
 
-        var components: [String] = []
-
-        if days > 0 {
-            components.append("\(days)天")
+        if days > 0 && hours > 0 {
+            return L10n.timeDaysHoursAgo(days, hours)
+        } else if days > 0 {
+            return L10n.timeDaysAgo(days)
+        } else if hours > 0 {
+            return L10n.timeHoursAgo(hours)
+        } else if minutes > 0 {
+            return L10n.timeMinutesAgo(minutes)
+        } else {
+            return L10n.timeJustNow
         }
-
-        if hours > 0 {
-            components.append("\(hours)小時")
-        }
-
-        if minutes > 0 {
-            components.append("\(minutes)分鐘")
-        }
-
-        // If less than 1 minute, show "剛剛"
-        if components.isEmpty {
-            return "剛剛"
-        }
-
-        return components.joined() + "前"
     }
 
     // MARK: - Monthly Report
