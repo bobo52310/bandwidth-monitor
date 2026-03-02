@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 
+@MainActor
 @Observable
 public class NetworkHistoryRecorder {
     public private(set) var oneHourData: [NetworkDataPoint] = []
@@ -128,7 +129,9 @@ public class NetworkHistoryRecorder {
     private func startHourlyAggregation() {
         // Check every 10 seconds to update current hour aggregate for better 24-hour chart responsiveness
         Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
-            self?.checkForHourlyAggregation()
+            Task { @MainActor in
+                self?.checkForHourlyAggregation()
+            }
         }
     }
 

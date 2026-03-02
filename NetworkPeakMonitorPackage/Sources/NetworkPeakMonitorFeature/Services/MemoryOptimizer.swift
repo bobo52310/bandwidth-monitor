@@ -158,6 +158,7 @@ public class MemoryOptimizer {
 
 // MARK: - Auto Cleanup Timer
 
+@MainActor
 public class MemoryCleanupService {
     private var timer: Timer?
     private weak var viewModel: NetworkMonitorViewModel?
@@ -173,7 +174,9 @@ public class MemoryCleanupService {
             withTimeInterval: MemoryOptimizer.cleanupInterval,
             repeats: true
         ) { [weak self] _ in
-            self?.performCleanup()
+            Task { @MainActor in
+                self?.performCleanup()
+            }
         }
     }
 
@@ -184,7 +187,6 @@ public class MemoryCleanupService {
     }
 
     /// Perform cleanup of old data
-    @MainActor
     private func performCleanup() {
         guard let viewModel = viewModel else { return }
 

@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import SystemConfiguration
 
+@MainActor
 @Observable
 public class NetworkMonitor {
     public var currentSpeed = NetworkSpeed(uploadSpeed: 0, downloadSpeed: 0)
@@ -17,7 +18,6 @@ public class NetworkMonitor {
 
     public init() {}
 
-    @MainActor
     public func startMonitoring() {
         guard !isMonitoring else { return }
 
@@ -31,7 +31,6 @@ public class NetworkMonitor {
         }
     }
 
-    @MainActor
     public func stopMonitoring() {
         isMonitoring = false
         timer?.invalidate()
@@ -45,7 +44,6 @@ public class NetworkMonitor {
         lastUpdateTime = Date()
     }
 
-    @MainActor
     private func updateNetworkSpeed() {
         let currentTime = Date()
         let (currentUpload, currentDownload) = getCurrentNetworkBytes()
@@ -99,6 +97,6 @@ public class NetworkMonitor {
     }
 
     deinit {
-        timer?.invalidate()
+        // Timer is invalidated when stopMonitoring() is called before deallocation
     }
 }

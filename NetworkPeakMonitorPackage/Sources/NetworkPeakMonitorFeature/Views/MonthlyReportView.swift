@@ -198,7 +198,9 @@ public struct MonthlyReportView: View {
         DataExportService.showSavePanel(suggestedFilename: filename) { url in
             guard let url = url else { return }
             try? csv.write(to: url, atomically: true, encoding: .utf8)
-            DataExportService.revealInFinder(url: url)
+            Task { @MainActor in
+                DataExportService.revealInFinder(url: url)
+            }
         }
     }
 }

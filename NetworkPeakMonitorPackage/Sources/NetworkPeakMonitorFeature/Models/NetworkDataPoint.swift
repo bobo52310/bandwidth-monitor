@@ -1,12 +1,13 @@
 import Foundation
 
 public struct NetworkDataPoint: Codable, Identifiable {
-    public let id = UUID()
+    public let id: UUID
     public let timestamp: Date
     public let downloadSpeed: Double // bytes per second
     public let uploadSpeed: Double   // bytes per second
 
     public init(timestamp: Date, downloadSpeed: Double, uploadSpeed: Double) {
+        self.id = UUID()
         self.timestamp = timestamp
         self.downloadSpeed = downloadSpeed
         self.uploadSpeed = uploadSpeed
@@ -23,7 +24,7 @@ public struct NetworkDataPoint: Codable, Identifiable {
 }
 
 public struct HourlyDataPoint: Codable, Identifiable {
-    public let id = UUID()
+    public let id: UUID
     public let timestamp: Date
     public let avgDownloadSpeed: Double  // bytes per second
     public let avgUploadSpeed: Double    // bytes per second
@@ -31,6 +32,7 @@ public struct HourlyDataPoint: Codable, Identifiable {
     public let maxUploadSpeed: Double    // bytes per second
 
     public init(timestamp: Date, avgDownloadSpeed: Double, avgUploadSpeed: Double, maxDownloadSpeed: Double, maxUploadSpeed: Double) {
+        self.id = UUID()
         self.timestamp = timestamp
         self.avgDownloadSpeed = avgDownloadSpeed
         self.avgUploadSpeed = avgUploadSpeed

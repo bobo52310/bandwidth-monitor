@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 
+@MainActor
 public class DataExportService {
 
     public enum ExportFormat: Sendable {

@@ -29,9 +29,7 @@ public class NetworkMonitorViewModel {
 
     public func initialize() {
         errorHandler.log("應用程式初始化", level: .info, context: "Lifecycle")
-        Task {
-            await startMonitoring()
-        }
+        startMonitoring()
         latencyMonitor.startMonitoring()
         disconnectTracker.startMonitoring()
     }
@@ -67,14 +65,14 @@ public class NetworkMonitorViewModel {
         }
     }
 
-    public func startMonitoring() async {
+    public func startMonitoring() {
         errorHandler.log("開始網路監控", level: .info, context: "Network")
-        await networkMonitor.startMonitoring()
+        networkMonitor.startMonitoring()
     }
 
-    public func stopMonitoring() async {
+    public func stopMonitoring() {
         errorHandler.log("停止網路監控", level: .info, context: "Network")
-        await networkMonitor.stopMonitoring()
+        networkMonitor.stopMonitoring()
         latencyMonitor.stopMonitoring()
         disconnectTracker.stopMonitoring()
     }

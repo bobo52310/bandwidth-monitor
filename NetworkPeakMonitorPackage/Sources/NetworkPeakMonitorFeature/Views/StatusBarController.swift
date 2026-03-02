@@ -314,9 +314,7 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
 
     public func cleanUp() {
         removeEventMonitor()
-        Task {
-            await viewModel.stopMonitoring()
-        }
+        viewModel.stopMonitoring()
         statusBarItem = nil
     }
 
