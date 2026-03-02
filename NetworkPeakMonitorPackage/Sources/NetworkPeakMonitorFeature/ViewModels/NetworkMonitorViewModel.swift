@@ -1,22 +1,22 @@
 import Foundation
-import Combine
+import Observation
 
 @MainActor
-public class NetworkMonitorViewModel: ObservableObject {
-    @Published public var currentSpeed = NetworkSpeed(uploadSpeed: 0, downloadSpeed: 0)
-    @Published public var preferences = UserPreferences()
-    @Published public var peakRecorder = PeakRecorder()
-    @Published public var peakApproachTracker = PeakApproachTracker()
-    @Published public var historyRecorder = NetworkHistoryRecorder()
-    @Published public var notificationService = NotificationService()
-    @Published public var anomalyDetector = NetworkAnomalyDetector()
-    @Published public var errorHandler = ErrorHandler()
-    @Published public var latencyMonitor = LatencyMonitor()
-    @Published public var disconnectTracker = DisconnectTracker()
-    @Published public var monthlyReportService = MonthlyReportService()
+@Observable
+public class NetworkMonitorViewModel {
+    public var currentSpeed = NetworkSpeed(uploadSpeed: 0, downloadSpeed: 0)
+    public var preferences = UserPreferences()
+    public var peakRecorder = PeakRecorder()
+    public var peakApproachTracker = PeakApproachTracker()
+    public var historyRecorder = NetworkHistoryRecorder()
+    public var notificationService = NotificationService()
+    public var anomalyDetector = NetworkAnomalyDetector()
+    public var errorHandler = ErrorHandler()
+    public var latencyMonitor = LatencyMonitor()
+    public var disconnectTracker = DisconnectTracker()
+    public var monthlyReportService = MonthlyReportService()
 
     private let networkMonitor = NetworkMonitor()
-    private var cancellables = Set<AnyCancellable>()
 
     public init() {
         setupBindings()
@@ -32,29 +32,27 @@ public class NetworkMonitorViewModel: ObservableObject {
     }
 
     private func setupBindings() {
-        // Bind network monitor to current speed
-        networkMonitor.$currentSpeed
-            .sink { [weak self] speed in
-                guard let self = self else { return }
-                self.currentSpeed = speed
-                self.peakRecorder.recordSpeed(speed)
-                self.historyRecorder.recordSpeed(speed)
-                self.peakApproachTracker.checkForApproach(
-                    speed,
-                    downloadPlanSpeed: self.preferences.downloadPlanSpeed,
-                    uploadPlanSpeed: self.preferences.uploadPlanSpeed
-                )
-                // Check and send notification if speed approaches limit
-                self.notificationService.checkAndNotify(
-                    downloadSpeed: speed.downloadMbps,
-                    uploadSpeed: speed.uploadMbps,
-                    downloadPlanSpeed: self.preferences.downloadPlanSpeed,
-                    uploadPlanSpeed: self.preferences.uploadPlanSpeed
-                )
-                // Analyze for network anomalies
-                self.anomalyDetector.analyzeSpeed(speed)
-            }
-            .store(in: &cancellables)
+        // Use callback pattern instead of Combine's $currentSpeed.sink
+        networkMonitor.onSpeedUpdate = { [weak self] speed in
+            guard let self = self else { return }
+            self.currentSpeed = speed
+            self.peakRecorder.recordSpeed(speed)
+            self.historyRecorder.recordSpeed(speed)
+            self.peakApproachTracker.checkForApproach(
+                speed,
+                downloadPlanSpeed: self.preferences.downloadPlanSpeed,
+                uploadPlanSpeed: self.preferences.uploadPlanSpeed
+            )
+            // Check and send notification if speed approaches limit
+            self.notificationService.checkAndNotify(
+                downloadSpeed: speed.downloadMbps,
+                uploadSpeed: speed.uploadMbps,
+                downloadPlanSpeed: self.preferences.downloadPlanSpeed,
+                uploadPlanSpeed: self.preferences.uploadPlanSpeed
+            )
+            // Analyze for network anomalies
+            self.anomalyDetector.analyzeSpeed(speed)
+        }
 
         // Daily snapshot for monthly report (check every hour, record once per day)
         Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in

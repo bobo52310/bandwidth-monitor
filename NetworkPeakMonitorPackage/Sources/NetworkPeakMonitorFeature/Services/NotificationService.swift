@@ -1,15 +1,17 @@
 import Foundation
 import UserNotifications
+import Observation
 
 @MainActor
-public class NotificationService: ObservableObject {
-    @Published public var isEnabled: Bool {
+@Observable
+public class NotificationService {
+    public var isEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isEnabled, forKey: "notificationsEnabled")
         }
     }
 
-    @Published public var threshold: Double {
+    public var threshold: Double {
         didSet {
             UserDefaults.standard.set(threshold, forKey: "notificationThreshold")
         }

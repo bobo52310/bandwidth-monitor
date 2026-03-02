@@ -1,5 +1,5 @@
 import Foundation
-import Combine
+import Observation
 
 /// Service that accumulates daily network data snapshots and generates monthly summaries.
 ///
@@ -10,12 +10,13 @@ import Combine
 /// Accumulators are persisted to UserDefaults so that in-progress month data survives
 /// app restarts and crashes.
 @MainActor
-public class MonthlyReportService: ObservableObject {
+@Observable
+public class MonthlyReportService {
 
-    // MARK: - Published Properties
+    // MARK: - Properties
 
-    @Published public var currentMonthSummary: MonthlySummary?
-    @Published public var pastSummaries: [MonthlySummary] = []
+    public var currentMonthSummary: MonthlySummary?
+    public var pastSummaries: [MonthlySummary] = []
 
     // MARK: - Configuration
 

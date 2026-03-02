@@ -58,7 +58,7 @@ struct CollapsibleSection<Content: View>: View {
 }
 
 public struct SettingsView: View {
-    @ObservedObject var viewModel: NetworkMonitorViewModel
+    @Bindable var viewModel: NetworkMonitorViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingOnboarding = false
 

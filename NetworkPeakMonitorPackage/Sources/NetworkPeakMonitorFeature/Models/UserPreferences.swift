@@ -1,47 +1,49 @@
 import Foundation
 import AppKit
+import Observation
 
-public class UserPreferences: ObservableObject {
+@Observable
+public class UserPreferences {
     private let userDefaults = UserDefaults.standard
 
-    @Published public var downloadPlanSpeed: Double {
+    public var downloadPlanSpeed: Double {
         didSet {
             userDefaults.set(downloadPlanSpeed, forKey: "downloadPlanSpeed")
         }
     }
 
-    @Published public var uploadPlanSpeed: Double {
+    public var uploadPlanSpeed: Double {
         didSet {
             userDefaults.set(uploadPlanSpeed, forKey: "uploadPlanSpeed")
         }
     }
 
-    @Published public var displayUnit: SpeedUnit {
+    public var displayUnit: SpeedUnit {
         didSet {
             userDefaults.set(displayUnit.rawValue, forKey: "displayUnit")
         }
     }
 
-    @Published public var launchAtLogin: Bool {
+    public var launchAtLogin: Bool {
         didSet {
             userDefaults.set(launchAtLogin, forKey: "launchAtLogin")
             updateLaunchAtLogin()
         }
     }
 
-    @Published public var menuBarDisplayMode: MenuBarDisplayMode {
+    public var menuBarDisplayMode: MenuBarDisplayMode {
         didSet {
             userDefaults.set(menuBarDisplayMode.rawValue, forKey: "menuBarDisplayMode")
         }
     }
 
-    @Published public var isPinned: Bool {
+    public var isPinned: Bool {
         didSet {
             userDefaults.set(isPinned, forKey: "isPinned")
         }
     }
 
-    @Published public var showInDock: Bool {
+    public var showInDock: Bool {
         didSet {
             userDefaults.set(showInDock, forKey: "showInDock")
             let shouldShowInDock = showInDock
@@ -55,13 +57,13 @@ public class UserPreferences: ObservableObject {
         }
     }
 
-    @Published public var chartYAxisMode: ChartYAxisMode {
+    public var chartYAxisMode: ChartYAxisMode {
         didSet {
             userDefaults.set(chartYAxisMode.rawValue, forKey: "chartYAxisMode")
         }
     }
 
-    @Published public var appLanguage: AppLanguage {
+    public var appLanguage: AppLanguage {
         didSet {
             userDefaults.set(appLanguage.rawValue, forKey: "appLanguage")
             applyLanguage()

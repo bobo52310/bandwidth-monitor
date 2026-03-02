@@ -1,10 +1,14 @@
 import Foundation
-import Combine
+import Observation
 import SystemConfiguration
 
-public class NetworkMonitor: ObservableObject {
-    @Published public var currentSpeed = NetworkSpeed(uploadSpeed: 0, downloadSpeed: 0)
-    @Published public var isMonitoring = false
+@Observable
+public class NetworkMonitor {
+    public var currentSpeed = NetworkSpeed(uploadSpeed: 0, downloadSpeed: 0)
+    public var isMonitoring = false
+
+    /// Callback fired on each speed update, allowing the ViewModel to react without Combine.
+    public var onSpeedUpdate: ((NetworkSpeed) -> Void)?
 
     private var timer: Timer?
     private var lastUploadBytes: UInt64 = 0
@@ -55,10 +59,12 @@ public class NetworkMonitor: ObservableObject {
         let uploadSpeed = Double(uploadDiff) / timeInterval
         let downloadSpeed = Double(downloadDiff) / timeInterval
 
-        self.currentSpeed = NetworkSpeed(
+        let newSpeed = NetworkSpeed(
             uploadSpeed: uploadSpeed,
             downloadSpeed: downloadSpeed
         )
+        self.currentSpeed = newSpeed
+        self.onSpeedUpdate?(newSpeed)
 
         lastUploadBytes = currentUpload
         lastDownloadBytes = currentDownload

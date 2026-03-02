@@ -4,10 +4,9 @@ import Charts
 import AppKit
 #endif
 
-@available(macOS 13.0, *)
 public struct NetworkChartView: View {
-    @ObservedObject var historyRecorder: NetworkHistoryRecorder
-    @ObservedObject var preferences: UserPreferences
+    var historyRecorder: NetworkHistoryRecorder
+    var preferences: UserPreferences
     let currentSpeed: NetworkSpeed  // Real-time current speed
     @State private var selectedTimeRange: TimeRange = .oneHour
     @Binding var showUpload: Bool
@@ -315,16 +314,11 @@ public struct NetworkChartView: View {
         return (actual: actualCoverage, required: requiredCoverage, percentage: percentage)
     }
 
-    @ViewBuilder
     private var shortTermChart: some View {
-        if #available(macOS 14.0, *) {
-            shortTermChartWithSelection
-        } else {
-            shortTermChartBasic
-        }
+        shortTermChartWithSelection
     }
 
-    @available(macOS 14.0, *)
+
     private var shortTermChartWithSelection: some View {
         Chart {
             // Upload speed (both area and line)
@@ -538,16 +532,11 @@ public struct NetworkChartView: View {
         }
     }
 
-    @ViewBuilder
     private var twentyFourHourChart: some View {
-        if #available(macOS 14.0, *) {
-            twentyFourHourChartWithSelection
-        } else {
-            twentyFourHourChartBasic
-        }
+        twentyFourHourChartWithSelection
     }
 
-    @available(macOS 14.0, *)
+
     private var twentyFourHourChartWithSelection: some View {
         Chart {
             // Average download speed area (gradient fill)
@@ -776,7 +765,7 @@ public struct NetworkChartView: View {
     }
 
     // Adaptive X-axis marks based on selected time range
-    @available(macOS 13.0, *)
+
     @AxisContentBuilder
     private var xAxisMarks: some AxisContent {
         switch selectedTimeRange {
@@ -1083,7 +1072,7 @@ public struct NetworkChartView: View {
 
 // MARK: - Tooltip Views
 
-@available(macOS 13.0, *)
+
 struct ChartTooltipView: View {
     let timestamp: Date
     let downloadSpeed: Double?
@@ -1161,7 +1150,7 @@ struct ChartTooltipView: View {
     }
 }
 
-@available(macOS 13.0, *)
+
 struct ChartTooltipView24Hour: View {
     let timestamp: Date
     let avgDownloadSpeed: Double?
@@ -1265,7 +1254,7 @@ struct ChartTooltipView24Hour: View {
 
 // MARK: - Statistics Card View
 
-@available(macOS 13.0, *)
+
 struct StatisticsCardView: View {
     let data: [NetworkDataPoint]
     let showDownload: Bool
@@ -1343,7 +1332,7 @@ struct StatisticsCardView: View {
     }
 }
 
-@available(macOS 13.0, *)
+
 struct StatColumnView: View {
     let title: String
     let color: Color
@@ -1457,7 +1446,7 @@ struct StatColumnView: View {
 
 // MARK: - Empty State and Data Collection Views
 
-@available(macOS 13.0, *)
+
 struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 16) {
@@ -1489,7 +1478,7 @@ struct EmptyStateView: View {
     }
 }
 
-@available(macOS 13.0, *)
+
 struct DataCollectionBanner: View {
     let availability: NetworkChartView.DataAvailability
     let coverageInfo: (actual: TimeInterval, required: TimeInterval, percentage: Double)
@@ -1580,7 +1569,7 @@ struct DataCollectionBanner: View {
     }
 }
 
-@available(macOS 13.0, *)
+
 struct PartialDataIndicator: View {
     let coverageInfo: (actual: TimeInterval, required: TimeInterval, percentage: Double)
 

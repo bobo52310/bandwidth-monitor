@@ -1,11 +1,13 @@
 import Foundation
 import OSLog
+import Observation
 
 /// Centralized error handling and logging service
 @MainActor
-public class ErrorHandler: ObservableObject {
-    @Published public var recentErrors: [ErrorRecord] = []
-    @Published public var isLoggingEnabled: Bool {
+@Observable
+public class ErrorHandler {
+    public var recentErrors: [ErrorRecord] = []
+    public var isLoggingEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isLoggingEnabled, forKey: "errorLoggingEnabled")
         }

@@ -1,12 +1,13 @@
 import Foundation
-import Combine
+import Observation
 
 /// Detects network anomalies such as connection drops and unusual speed fluctuations
 @MainActor
-public class NetworkAnomalyDetector: ObservableObject {
-    @Published public var recentAnomalies: [NetworkAnomaly] = []
-    @Published public var isConnectionStable: Bool = true
-    @Published public var isDetectionEnabled: Bool {
+@Observable
+public class NetworkAnomalyDetector {
+    public var recentAnomalies: [NetworkAnomaly] = []
+    public var isConnectionStable: Bool = true
+    public var isDetectionEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isDetectionEnabled, forKey: "anomalyDetectionEnabled")
         }

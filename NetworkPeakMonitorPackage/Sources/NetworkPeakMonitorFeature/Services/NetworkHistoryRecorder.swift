@@ -1,12 +1,12 @@
 import Foundation
-import Combine
+import Observation
 
-public class NetworkHistoryRecorder: ObservableObject {
-    @Published public private(set) var oneHourData: [NetworkDataPoint] = []
-    @Published public private(set) var twentyFourHourData: [HourlyDataPoint] = []
+@Observable
+public class NetworkHistoryRecorder {
+    public private(set) var oneHourData: [NetworkDataPoint] = []
+    public private(set) var twentyFourHourData: [HourlyDataPoint] = []
 
     private let userDefaults = UserDefaults.standard
-    private var cancellables = Set<AnyCancellable>()
 
     // Store data points every 10 seconds for extended view (up to 24 hours)
     private let oneHourInterval: TimeInterval = 10.0

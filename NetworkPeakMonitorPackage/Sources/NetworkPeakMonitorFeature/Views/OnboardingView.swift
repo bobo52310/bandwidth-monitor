@@ -1,7 +1,7 @@
 import SwiftUI
 
 public struct OnboardingView: View {
-    @ObservedObject var viewModel: NetworkMonitorViewModel
+    @Bindable var viewModel: NetworkMonitorViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var currentPage = 0
 
@@ -131,7 +131,7 @@ struct OnboardingPage {
 struct OnboardingPageView: View {
     let page: OnboardingPage
     let isLastPage: Bool
-    @ObservedObject var viewModel: NetworkMonitorViewModel
+    @Bindable var viewModel: NetworkMonitorViewModel
 
     var body: some View {
         VStack(spacing: 25) {

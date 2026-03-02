@@ -1,16 +1,15 @@
 import SwiftUI
 import AppKit
-import Combine
+import Observation
 import UserNotifications
 
 @MainActor
-public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate, NSWindowDelegate {
+public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     private var statusBarItem: NSStatusItem?
     private var popover: NSPopover?
     private var floatingPanel: NSPanel?
     private var panelHostingController: NSHostingController<PopoverView>?
     private let viewModel = NetworkMonitorViewModel()
-    private var cancellables = Set<AnyCancellable>()
     private var eventMonitor: Any?
     private var onboardingWindow: NSWindow?
 
@@ -54,13 +53,19 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate,
             button.target = self
         }
 
-        // Update status bar text when speed changes
-        viewModel.$currentSpeed
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
+        // Update status bar text when speed changes using observation tracking loop
+        observeSpeedChanges()
+    }
+
+    private func observeSpeedChanges() {
+        withObservationTracking {
+            _ = viewModel.currentSpeed
+        } onChange: { [weak self] in
+            Task { @MainActor in
                 self?.updateStatusBarTitle()
+                self?.observeSpeedChanges()
             }
-            .store(in: &cancellables)
+        }
     }
 
     private func setupPopover() {
@@ -75,20 +80,23 @@ public class StatusBarController: NSObject, ObservableObject, NSPopoverDelegate,
     }
 
     private func setupPinStateObserver() {
-        // Observe pin state changes
-        viewModel.preferences.$isPinned
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isPinned in
+        observePinState()
+    }
+
+    private func observePinState() {
+        withObservationTracking {
+            _ = viewModel.preferences.isPinned
+        } onChange: { [weak self] in
+            Task { @MainActor in
                 guard let self = self else { return }
-                if isPinned {
-                    // Convert popover to floating panel
+                if self.viewModel.preferences.isPinned {
                     self.showFloatingPanel()
                 } else {
-                    // Convert floating panel back to popover
                     self.closeFloatingPanel()
                 }
+                self.observePinState()
             }
-            .store(in: &cancellables)
+        }
     }
 
     private func openSettings() {

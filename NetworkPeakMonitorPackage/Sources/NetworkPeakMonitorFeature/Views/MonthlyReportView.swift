@@ -1,7 +1,7 @@
 import SwiftUI
 
 public struct MonthlyReportView: View {
-    @ObservedObject var viewModel: NetworkMonitorViewModel
+    var viewModel: NetworkMonitorViewModel
     @Environment(\.dismiss) private var dismiss
 
     public init(viewModel: NetworkMonitorViewModel) {

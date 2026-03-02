@@ -1,22 +1,22 @@
 import Foundation
-import Combine
+import Observation
 
-public class PeakRecorder: ObservableObject {
-    @Published public var todayPeakDownload: Double = 0
-    @Published public var todayPeakUpload: Double = 0
-    @Published public var allTimePeakDownload: Double = 0
-    @Published public var allTimePeakUpload: Double = 0
-    @Published public var hourlyPeakDownload: Double = 0
-    @Published public var hourlyPeakUpload: Double = 0
-    @Published public var hourlyPeakDownloadTime: Date?
-    @Published public var hourlyPeakUploadTime: Date?
-    @Published public var todayPeakDownloadTime: Date?
-    @Published public var todayPeakUploadTime: Date?
-    @Published public var allTimePeakDownloadTime: Date?
-    @Published public var allTimePeakUploadTime: Date?
+@Observable
+public class PeakRecorder {
+    public var todayPeakDownload: Double = 0
+    public var todayPeakUpload: Double = 0
+    public var allTimePeakDownload: Double = 0
+    public var allTimePeakUpload: Double = 0
+    public var hourlyPeakDownload: Double = 0
+    public var hourlyPeakUpload: Double = 0
+    public var hourlyPeakDownloadTime: Date?
+    public var hourlyPeakUploadTime: Date?
+    public var todayPeakDownloadTime: Date?
+    public var todayPeakUploadTime: Date?
+    public var allTimePeakDownloadTime: Date?
+    public var allTimePeakUploadTime: Date?
 
     private let userDefaults = UserDefaults.standard
-    private var cancellables = Set<AnyCancellable>()
     private var speedHistory: [(speed: NetworkSpeed, timestamp: Date)] = []
 
     public init() {

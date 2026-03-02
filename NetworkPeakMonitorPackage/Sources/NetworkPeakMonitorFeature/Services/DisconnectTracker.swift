@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import Observation
 
 /// Represents a single network disconnection event with start/end times and interface info.
 public struct DisconnectEvent: Codable, Identifiable, Sendable {
@@ -51,10 +52,11 @@ public struct DisconnectEvent: Codable, Identifiable, Sendable {
 /// with their duration and interface type. Events are persisted across app launches
 /// and automatically pruned when they exceed age or count limits.
 @MainActor
-public class DisconnectTracker: ObservableObject {
-    @Published public var events: [DisconnectEvent] = []
-    @Published public var isConnected: Bool = true
-    @Published public var currentInterfaceType: String = "unknown"
+@Observable
+public class DisconnectTracker {
+    public var events: [DisconnectEvent] = []
+    public var isConnected: Bool = true
+    public var currentInterfaceType: String = "unknown"
 
     private var pathMonitor: NWPathMonitor?
     private var monitorQueue: DispatchQueue?

@@ -1,9 +1,10 @@
 import Foundation
-import Combine
+import Observation
 
-public class PeakApproachTracker: ObservableObject {
-    @Published public var todayApproachCount: Int = 0
-    @Published public var approachTimestamps: [Date] = []
+@Observable
+public class PeakApproachTracker {
+    public var todayApproachCount: Int = 0
+    public var approachTimestamps: [Date] = []
 
     private let userDefaults = UserDefaults.standard
     private let approachThreshold: Double = 0.8 // 80% of plan speed

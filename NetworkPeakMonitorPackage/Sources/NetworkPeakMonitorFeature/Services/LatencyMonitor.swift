@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Observation
 
 /// Represents the quality of a network connection based on latency and jitter metrics.
 public enum ConnectionQuality: Equatable, Sendable {
@@ -42,11 +43,12 @@ public enum ConnectionQuality: Equatable, Sendable {
 /// Monitors network latency by periodically sending HEAD requests and calculating
 /// round-trip time, jitter, and connection quality score.
 @MainActor
-public class LatencyMonitor: ObservableObject {
-    @Published public var currentLatency: Double = 0
-    @Published public var currentJitter: Double = 0
-    @Published public var qualityScore: ConnectionQuality = .unknown
-    @Published public var isMonitoring: Bool = false
+@Observable
+public class LatencyMonitor {
+    public var currentLatency: Double = 0
+    public var currentJitter: Double = 0
+    public var qualityScore: ConnectionQuality = .unknown
+    public var isMonitoring: Bool = false
 
     private var timer: Timer?
     private var latencySamples: [Double] = []

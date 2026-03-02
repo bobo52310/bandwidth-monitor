@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 public struct PopoverView: View {
-    @ObservedObject var viewModel: NetworkMonitorViewModel
+    @Bindable var viewModel: NetworkMonitorViewModel
     @State private var showingSettings = false
     @State private var showDownload = true  // 預設顯示下載資料
     @State private var showUpload = true    // 預設顯示上傳資料
@@ -77,25 +77,13 @@ public struct PopoverView: View {
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 16) {
                     // Chart Section (always visible)
-                    if #available(macOS 13.0, *) {
-                        NetworkChartView(
-                            historyRecorder: viewModel.historyRecorder,
-                            preferences: viewModel.preferences,
-                            currentSpeed: viewModel.currentSpeed,
-                            showUpload: $showUpload,
-                            showDownload: $showDownload
-                        )
-                    } else {
-                        VStack {
-                            Text(L10n.chartRequiresMacOS13)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .padding()
-                        }
-                        .frame(height: 100)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                    }
+                    NetworkChartView(
+                        historyRecorder: viewModel.historyRecorder,
+                        preferences: viewModel.preferences,
+                        currentSpeed: viewModel.currentSpeed,
+                        showUpload: $showUpload,
+                        showDownload: $showDownload
+                    )
 
                     Divider()
 
