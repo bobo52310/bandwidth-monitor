@@ -2,33 +2,33 @@
 
 ## Project Structure & Module Organization
 
-- `NetworkPeakMonitor.xcworkspace`: open this workspace in Xcode (preferred).
-- `NetworkPeakMonitor/`: app shell (entry point, assets, test plan).
-- `NetworkPeakMonitorPackage/`: Swift Package containing almost all feature code.
-  - `Sources/NetworkPeakMonitorFeature/Views/`: SwiftUI views (menu bar popover, charts, settings).
-  - `Sources/NetworkPeakMonitorFeature/ViewModels/`: state + coordination (MVVM).
-  - `Sources/NetworkPeakMonitorFeature/Services/`: networking/speed polling, history, anomaly detection, speed test, leaderboard.
-  - `Sources/NetworkPeakMonitorFeature/Models/`: domain models and preferences.
+- `BandwidthECG.xcworkspace`: open this workspace in Xcode (preferred).
+- `BandwidthECG/`: app shell (entry point, assets, test plan).
+- `BandwidthECGPackage/`: Swift Package containing almost all feature code.
+  - `Sources/BandwidthECGFeature/Views/`: SwiftUI views (menu bar popover, charts, settings).
+  - `Sources/BandwidthECGFeature/ViewModels/`: state + coordination (MVVM).
+  - `Sources/BandwidthECGFeature/Services/`: networking/speed polling, history, anomaly detection, speed test, leaderboard.
+  - `Sources/BandwidthECGFeature/Models/`: domain models and preferences.
 - `Config/`: `.xcconfig` build settings + entitlements.
 - Tests:
-  - `NetworkPeakMonitorPackage/Tests/NetworkPeakMonitorFeatureTests/`: unit tests (Swift Testing).
-  - `NetworkPeakMonitorUITests/`: UI tests.
+  - `BandwidthECGPackage/Tests/BandwidthECGFeatureTests/`: unit tests (Swift Testing).
+  - `BandwidthECGUITests/`: UI tests.
 
 ## Build, Test, and Development Commands
 
 ```bash
 # Open in Xcode
-open NetworkPeakMonitor.xcworkspace
+open BandwidthECG.xcworkspace
 
 # Build and launch (Debug / Release)
 ./build.sh
 ./build.sh Release
 
 # Run all tests (CLI)
-xcodebuild test -workspace NetworkPeakMonitor.xcworkspace -scheme NetworkPeakMonitor -destination 'platform=macOS'
+xcodebuild test -workspace BandwidthECG.xcworkspace -scheme BandwidthECG -destination 'platform=macOS'
 
 # Run package tests faster (no app build)
-cd NetworkPeakMonitorPackage && swift test
+cd BandwidthECGPackage && swift test
 ```
 
 ## Coding Style & Naming Conventions

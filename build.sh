@@ -3,11 +3,11 @@
 # 建置類型參數 (debug/release)
 CONFIG=${1:-Debug}
 
-echo "Building NetworkPeakMonitor ($CONFIG)..."
+echo "Building BandwidthECG ($CONFIG)..."
 
 # 建置
-xcodebuild -workspace NetworkPeakMonitor.xcworkspace \
-           -scheme NetworkPeakMonitor \
+xcodebuild -workspace BandwidthECG.xcworkspace \
+           -scheme BandwidthECG \
            -configuration $CONFIG \
            build
 
@@ -16,7 +16,7 @@ if [ $? -eq 0 ]; then
 
     # 找到 app 路徑
     APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData \
-                    -name "NetworkPeakMonitor.app" \
+                    -name "BandwidthECG.app" \
                     -path "*/$CONFIG/*" \
                     -maxdepth 6 \
                     2>/dev/null | head -1)
@@ -28,7 +28,7 @@ if [ $? -eq 0 ]; then
         echo "Could not find built app"
         # 備用路徑
         echo "Trying alternative path..."
-        open ~/Library/Developer/Xcode/DerivedData/NetworkPeakMonitor-*/Build/Products/$CONFIG/NetworkPeakMonitor.app
+        open ~/Library/Developer/Xcode/DerivedData/BandwidthECG-*/Build/Products/$CONFIG/BandwidthECG.app
     fi
 else
     echo "Build failed!"

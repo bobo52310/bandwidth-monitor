@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "Network Peak Monitor - Enterprise Network Monitoring Solution",
+    "title": "Bandwidth ECG - Enterprise Network Monitoring Solution",
     "description": "Enterprise-grade network monitoring solution. Real-time speed monitoring, intelligent peak tracking, data-driven network upgrade decisions."
   },
   "header": {
-    "subtitle": "Network Peak Monitor",
+    "subtitle": "Bandwidth ECG",
     "features": "Features",
     "howItWorks": "How It Works",
     "faq": "FAQ",
@@ -105,15 +105,15 @@
   "faq": {
     "sectionBadge": "FAQ",
     "sectionTitle": "Frequently Asked Questions",
-    "sectionSubtitle": "Common questions about Network Peak Monitor",
+    "sectionSubtitle": "Common questions about Bandwidth ECG",
     "items": [
       {
-        "question": "Is Network Peak Monitor free?",
-        "answer": "Yes, Network Peak Monitor is completely free to use with no hidden fees or feature restrictions."
+        "question": "Is Bandwidth ECG free?",
+        "answer": "Yes, Bandwidth ECG is completely free to use with no hidden fees or feature restrictions."
       },
       {
         "question": "Which macOS versions are supported?",
-        "answer": "Network Peak Monitor supports macOS 13.0 (Ventura) and later versions."
+        "answer": "Bandwidth ECG supports macOS 13.0 (Ventura) and later versions."
       },
       {
         "question": "Will it affect system performance?",
@@ -125,7 +125,7 @@
       },
       {
         "question": "How do I uninstall?",
-        "answer": "Simply move the app from Applications folder to Trash. To remove all data, also delete ~/Library/Application Support/NetworkPeakMonitor folder."
+        "answer": "Simply move the app from Applications folder to Trash. To remove all data, also delete ~/Library/Application Support/BandwidthECG folder."
       }
     ]
   },
@@ -143,7 +143,7 @@
     ]
   },
   "footer": {
-    "copyright": "Network Peak Monitor. All rights reserved.",
+    "copyright": "Bandwidth ECG. All rights reserved.",
     "madeWith": "Made with",
     "madeIn": "in Taiwan"
   }

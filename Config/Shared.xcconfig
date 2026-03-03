@@ -6,9 +6,9 @@
 // ==========================================
 // Project Identity
 // ==========================================
-PRODUCT_NAME = NetworkPeakMonitor
-PRODUCT_DISPLAY_NAME = Network Peak Monitor
-PRODUCT_BUNDLE_IDENTIFIER = com.bobo52310.NetworkPeakMonitor
+PRODUCT_NAME = BandwidthECG
+PRODUCT_DISPLAY_NAME = Bandwidth ECG
+PRODUCT_BUNDLE_IDENTIFIER = com.bobo52310.BandwidthECG
 MARKETING_VERSION = 1.0
 CURRENT_PROJECT_VERSION = 1
 
@@ -25,5 +25,5 @@ GENERATE_INFOPLIST_FILE = YES
 // ==========================================
 // Entitlements
 // ==========================================
-// AI agents can modify Config/NetworkPeakMonitor.entitlements to add capabilities
-CODE_SIGN_ENTITLEMENTS = Config/NetworkPeakMonitor.entitlements
+// AI agents can modify Config/BandwidthECG.entitlements to add capabilities
+CODE_SIGN_ENTITLEMENTS = Config/BandwidthECG.entitlements

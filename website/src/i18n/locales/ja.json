@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Network Peak Monitor - ネットワークピークモニター | エンタープライズ級ネットワーク監視ソリューション",
+    "title": "Bandwidth ECG - ネットワークピークモニター | エンタープライズ級ネットワーク監視ソリューション",
     "description": "エンタープライズ級ネットワーク監視ソリューション。リアルタイム速度監視、スマートピーク追跡、データ駆動のネットワークアップグレード判断。"
   },
   "header": {
@@ -105,15 +105,15 @@
   "faq": {
     "sectionBadge": "よくある質問",
     "sectionTitle": "よくある質問",
-    "sectionSubtitle": "Network Peak Monitor に関するよくある質問への回答",
+    "sectionSubtitle": "Bandwidth ECG に関するよくある質問への回答",
     "items": [
       {
-        "question": "Network Peak Monitor は無料ですか？",
-        "answer": "はい、Network Peak Monitor は完全無料で使用でき、隠れた料金や機能制限はありません。"
+        "question": "Bandwidth ECG は無料ですか？",
+        "answer": "はい、Bandwidth ECG は完全無料で使用でき、隠れた料金や機能制限はありません。"
       },
       {
         "question": "対応している macOS バージョンは？",
-        "answer": "Network Peak Monitor は macOS 13.0 (Ventura) 以降をサポートしています。"
+        "answer": "Bandwidth ECG は macOS 13.0 (Ventura) 以降をサポートしています。"
       },
       {
         "question": "システム性能に影響しますか？",
@@ -125,7 +125,7 @@
       },
       {
         "question": "アンインストール方法は？",
-        "answer": "アプリケーションフォルダからアプリをゴミ箱に移動するだけです。すべてのデータを削除するには、~/Library/Application Support/NetworkPeakMonitor フォルダも削除してください。"
+        "answer": "アプリケーションフォルダからアプリをゴミ箱に移動するだけです。すべてのデータを削除するには、~/Library/Application Support/BandwidthECG フォルダも削除してください。"
       }
     ]
   },
@@ -143,7 +143,7 @@
     ]
   },
   "footer": {
-    "copyright": "Network Peak Monitor. All rights reserved.",
+    "copyright": "Bandwidth ECG. All rights reserved.",
     "madeWith": "",
     "madeIn": "台湾で製作"
   }

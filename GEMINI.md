@@ -1,8 +1,8 @@
-# Network Peak Monitor (網路峰值監控器)
+# Bandwidth ECG (網路峰值監控器)
 
 ## Project Overview
 
-Network Peak Monitor is a modern macOS menu bar application designed to monitor real-time network speeds and track peak usage statistics. Its primary goal is to provide users with data-driven insights to help them decide whether to upgrade their internet plans.
+Bandwidth ECG is a modern macOS menu bar application designed to monitor real-time network speeds and track peak usage statistics. Its primary goal is to provide users with data-driven insights to help them decide whether to upgrade their internet plans.
 
 **Key Technologies:**
 - **Language:** Swift 6.0+
@@ -23,13 +23,13 @@ The project follows a modular structure using an Xcode Workspace and a local Swi
 
 ### Directory Structure
 
-- **`NetworkPeakMonitor.xcworkspace`**: The main entry point for opening the project in Xcode.
-- **`NetworkPeakMonitor/`**: The app shell containing the entry point (`NetworkPeakMonitorApp.swift`) and entitlements.
-- **`NetworkPeakMonitorPackage/`**: The core feature code, structured as a Swift Package.
-  - **`Sources/NetworkPeakMonitorFeature/`**: Contains all views, view models, services, and models.
-  - **`Tests/NetworkPeakMonitorFeatureTests/`**: Contains unit tests.
+- **`BandwidthECG.xcworkspace`**: The main entry point for opening the project in Xcode.
+- **`BandwidthECG/`**: The app shell containing the entry point (`BandwidthECGApp.swift`) and entitlements.
+- **`BandwidthECGPackage/`**: The core feature code, structured as a Swift Package.
+  - **`Sources/BandwidthECGFeature/`**: Contains all views, view models, services, and models.
+  - **`Tests/BandwidthECGFeatureTests/`**: Contains unit tests.
 
-### Key Components (`NetworkPeakMonitorPackage`)
+### Key Components (`BandwidthECGPackage`)
 
 | Component | Type | Description |
 |-----------|------|-------------|
@@ -72,22 +72,22 @@ The project follows a modular structure using an Xcode Workspace and a local Swi
 
 *   **Open in Xcode:**
     ```bash
-    open NetworkPeakMonitor.xcworkspace
+    open BandwidthECG.xcworkspace
     ```
 
 *   **Run Unit Tests:**
     ```bash
-    xcodebuild test -workspace NetworkPeakMonitor.xcworkspace \
-                    -scheme NetworkPeakMonitor \
+    xcodebuild test -workspace BandwidthECG.xcworkspace \
+                    -scheme BandwidthECG \
                     -destination 'platform=macOS'
     ```
 
 *   **Run UI Tests:**
     ```bash
-    xcodebuild test -workspace NetworkPeakMonitor.xcworkspace \
-                    -scheme NetworkPeakMonitor \
+    xcodebuild test -workspace BandwidthECG.xcworkspace \
+                    -scheme BandwidthECG \
                     -destination 'platform=macOS' \
-                    -only-testing:NetworkPeakMonitorUITests
+                    -only-testing:BandwidthECGUITests
     ```
 
 ## Development Conventions
@@ -95,5 +95,5 @@ The project follows a modular structure using an Xcode Workspace and a local Swi
 *   **Language:** The application UI and code comments should be in **Traditional Chinese (Taiwan)**.
 *   **Testing:** Use the Swift Testing framework (`@Test` macro).
 *   **Style:** Follow standard Swift 6 and SwiftUI conventions.
-*   **Sandboxing:** The app is sandboxed (see `NetworkPeakMonitor.entitlements`).
+*   **Sandboxing:** The app is sandboxed (see `BandwidthECG.entitlements`).
 *   **Dependencies:** External dependencies should be managed via `Package.swift`.

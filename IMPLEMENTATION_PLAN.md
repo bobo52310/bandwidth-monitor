@@ -6,7 +6,7 @@ Enhanced the network monitoring charts with interactive hover tooltips that disp
 ## Implementation Details
 
 ### Modified Files
-- `NetworkPeakMonitorPackage/Sources/NetworkPeakMonitorFeature/Views/NetworkChartView.swift`
+- `BandwidthECGPackage/Sources/BandwidthECGFeature/Views/NetworkChartView.swift`
 
 ### Key Features Implemented
 

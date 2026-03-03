@@ -1,4 +1,4 @@
-# PRD: 網路峰值監控器 (Network Peak Monitor)
+# PRD: 網路峰值監控器 (Bandwidth ECG)
 
 ## 1. 簡介 (Introduction)
 
@@ -79,7 +79,7 @@
 *   **詳細資訊彈出視窗 (點擊後):**
     ```
     +--------------------------------------+
-    |  Network Peak Monitor         ⚙️    |
+    |  Bandwidth ECG         ⚙️    |
     |--------------------------------------|
     |  ▼ 下載 (Download)                   |
     |     即時: 288.9 Mbps                 |

@@ -1,4 +1,4 @@
-# 網路峰值監控器 (Network Peak Monitor)
+# 網路峰值監控器 (Bandwidth ECG)
 
 一個現代化的 macOS 選單列應用程式，用於即時監控網路速度並追蹤峰值，幫助您用數據決策是否需要升級網路方案。
 
@@ -69,7 +69,7 @@ git clone https://github.com/bobo52310/bandwidth-monitor-claude.git
 cd bandwidth-monitor-claude
 
 # 2. 開啟專案
-open NetworkPeakMonitor.xcworkspace
+open BandwidthECG.xcworkspace
 
 # 3. 在 Xcode 中按 Cmd+R 建置並執行
 ```
@@ -117,7 +117,7 @@ open NetworkPeakMonitor.xcworkspace
 點擊選單列圖示後會顯示：
 
 ```
-Network Peak Monitor                    ⚙️
+Bandwidth ECG                    ⚙️
 
 ▼ 下載 (Download)
    即時: 288.9 Mbps
@@ -159,18 +159,18 @@ Network Peak Monitor                    ⚙️
 使用現代化的 **workspace + SPM package** 架構：
 
 ```
-NetworkPeakMonitor/
-├── NetworkPeakMonitor.xcworkspace/      # 在 Xcode 中開啟此檔案
-├── NetworkPeakMonitor.xcodeproj/        # 應用程式殼層
-├── NetworkPeakMonitor/                  # 應用程式目標（最小化）
+BandwidthECG/
+├── BandwidthECG.xcworkspace/      # 在 Xcode 中開啟此檔案
+├── BandwidthECG.xcodeproj/        # 應用程式殼層
+├── BandwidthECG/                  # 應用程式目標（最小化）
 │   ├── Assets.xcassets/                 # 應用程式資源
-│   ├── NetworkPeakMonitorApp.swift      # 應用程式入口
-│   └── NetworkPeakMonitor.entitlements  # 沙盒設定
-├── NetworkPeakMonitorPackage/           # 主要開發區域
+│   ├── BandwidthECGApp.swift      # 應用程式入口
+│   └── BandwidthECG.entitlements  # 沙盒設定
+├── BandwidthECGPackage/           # 主要開發區域
 │   ├── Package.swift                    # 套件配置
 │   ├── Sources/                         # 功能代碼
 │   └── Tests/                           # 單元測試
-└── NetworkPeakMonitorUITests/           # UI 測試
+└── BandwidthECGUITests/           # UI 測試
 ```
 
 ### 核心組件
@@ -191,15 +191,15 @@ NetworkPeakMonitor/
 ```bash
 git clone https://github.com/bobo52310/bandwidth-monitor-claude.git
 cd bandwidth-monitor-claude
-open NetworkPeakMonitor.xcworkspace
+open BandwidthECG.xcworkspace
 ```
 
 ### 專案結構
 
-- 主要功能代碼：`NetworkPeakMonitorPackage/Sources/NetworkPeakMonitorFeature/`
-- 應用程式入口：`NetworkPeakMonitor/NetworkPeakMonitorApp.swift`
-- 單元測試：`NetworkPeakMonitorPackage/Tests/`
-- UI 測試：`NetworkPeakMonitorUITests/`
+- 主要功能代碼：`BandwidthECGPackage/Sources/BandwidthECGFeature/`
+- 應用程式入口：`BandwidthECG/BandwidthECGApp.swift`
+- 單元測試：`BandwidthECGPackage/Tests/`
+- UI 測試：`BandwidthECGUITests/`
 
 ### 建置配置
 
@@ -214,15 +214,15 @@ open NetworkPeakMonitor.xcworkspace
 
 ```bash
 # 執行單元測試
-xcodebuild test -workspace NetworkPeakMonitor.xcworkspace \
-                -scheme NetworkPeakMonitor \
+xcodebuild test -workspace BandwidthECG.xcworkspace \
+                -scheme BandwidthECG \
                 -destination 'platform=macOS'
 
 # 執行 UI 測試
-xcodebuild test -workspace NetworkPeakMonitor.xcworkspace \
-                -scheme NetworkPeakMonitor \
+xcodebuild test -workspace BandwidthECG.xcworkspace \
+                -scheme BandwidthECG \
                 -destination 'platform=macOS' \
-                -only-testing:NetworkPeakMonitorUITests
+                -only-testing:BandwidthECGUITests
 ```
 
 ---
@@ -235,7 +235,7 @@ xcodebuild test -workspace NetworkPeakMonitor.xcworkspace \
 A: 確保使用 Xcode 15.0+ 並且 macOS 部署目標設為 13.0+
 
 **Q: 無法開啟 `.xcworkspace` 檔案**
-A: 請確保已安裝 Xcode，並使用 `open NetworkPeakMonitor.xcworkspace` 命令開啟
+A: 請確保已安裝 Xcode，並使用 `open BandwidthECG.xcworkspace` 命令開啟
 
 ### 功能問題
 

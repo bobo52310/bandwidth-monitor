@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Network Peak Monitor is a macOS menu bar app for real-time network speed monitoring and peak tracking. It helps users make data-driven decisions about whether to upgrade their internet plan by recording download/upload speeds, daily peaks, and historical highs.
+Bandwidth ECG is a macOS menu bar app for real-time network speed monitoring and peak tracking. It helps users make data-driven decisions about whether to upgrade their internet plan by recording download/upload speeds, daily peaks, and historical highs.
 
 ## Tech Stack
 
@@ -15,32 +15,32 @@ Network Peak Monitor is a macOS menu bar app for real-time network speed monitor
 
 ```bash
 # Open in Xcode
-open NetworkPeakMonitor.xcworkspace
+open BandwidthECG.xcworkspace
 
 # Build with script
 ./build.sh            # Debug build
 ./build.sh Release    # Release build
 
 # Run tests
-xcodebuild test -workspace NetworkPeakMonitor.xcworkspace \
-                -scheme NetworkPeakMonitor \
+xcodebuild test -workspace BandwidthECG.xcworkspace \
+                -scheme BandwidthECG \
                 -destination 'platform=macOS'
 ```
 
 ## Project Structure
 
 ```
-NetworkPeakMonitor/
-├── NetworkPeakMonitor.xcworkspace/           # Open this in Xcode
-├── NetworkPeakMonitor/                       # App target (minimal)
-│   ├── NetworkPeakMonitorApp.swift           # Entry point
+BandwidthECG/
+├── BandwidthECG.xcworkspace/           # Open this in Xcode
+├── BandwidthECG/                       # App target (minimal)
+│   ├── BandwidthECGApp.swift           # Entry point
 │   ├── Assets.xcassets/
-│   └── NetworkPeakMonitor.entitlements
-├── NetworkPeakMonitorPackage/                # Primary development area
+│   └── BandwidthECG.entitlements
+├── BandwidthECGPackage/                # Primary development area
 │   ├── Package.swift
-│   ├── Sources/NetworkPeakMonitorFeature/    # Feature code
+│   ├── Sources/BandwidthECGFeature/    # Feature code
 │   └── Tests/                                # Unit tests
-├── NetworkPeakMonitorUITests/
+├── BandwidthECGUITests/
 ├── Config/                                   # XCConfig build settings
 ├── screenshots/
 ├── website/                                  # Marketing/landing page

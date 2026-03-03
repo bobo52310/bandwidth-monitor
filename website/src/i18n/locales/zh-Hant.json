@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Network Peak Monitor - 網路峰值監控器 | 企業級網路監控解決方案",
+    "title": "Bandwidth ECG - 網路峰值監控器 | 企業級網路監控解決方案",
     "description": "企業級網路監控解決方案。即時監控網速、智能峰值追蹤、數據驅動的網路升級決策。"
   },
   "header": {
@@ -105,15 +105,15 @@
   "faq": {
     "sectionBadge": "常見問題",
     "sectionTitle": "您可能想知道的",
-    "sectionSubtitle": "關於 Network Peak Monitor 的常見問題解答",
+    "sectionSubtitle": "關於 Bandwidth ECG 的常見問題解答",
     "items": [
       {
-        "question": "Network Peak Monitor 是免費的嗎？",
-        "answer": "是的，Network Peak Monitor 完全免費使用，沒有任何隱藏費用或功能限制。"
+        "question": "Bandwidth ECG 是免費的嗎？",
+        "answer": "是的，Bandwidth ECG 完全免費使用，沒有任何隱藏費用或功能限制。"
       },
       {
         "question": "支援哪些 macOS 版本？",
-        "answer": "Network Peak Monitor 支援 macOS 13.0 (Ventura) 及更新版本。"
+        "answer": "Bandwidth ECG 支援 macOS 13.0 (Ventura) 及更新版本。"
       },
       {
         "question": "應用程式會影響系統效能嗎？",
@@ -125,7 +125,7 @@
       },
       {
         "question": "如何解除安裝？",
-        "answer": "只需將應用程式從「應用程式」資料夾移至垃圾桶即可。如需清除所有數據，可同時刪除 ~/Library/Application Support/NetworkPeakMonitor 資料夾。"
+        "answer": "只需將應用程式從「應用程式」資料夾移至垃圾桶即可。如需清除所有數據，可同時刪除 ~/Library/Application Support/BandwidthECG 資料夾。"
       }
     ]
   },
@@ -143,7 +143,7 @@
     ]
   },
   "footer": {
-    "copyright": "Network Peak Monitor. 保留所有權利。",
+    "copyright": "Bandwidth ECG. 保留所有權利。",
     "madeWith": "以",
     "madeIn": "製作於台灣"
   }
