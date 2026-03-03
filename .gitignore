@@ -60,3 +60,13 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# IDE & AI tool local settings
+.vscode/
+.cursor/
+.cursorindexingignore
+.specstory/
+.claude/
+
+# macOS
+.DS_Store
