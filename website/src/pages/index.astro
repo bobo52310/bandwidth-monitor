@@ -5,8 +5,8 @@ import Footer from '../components/Footer.astro'
 import Hero from '../components/sections/Hero.astro'
 import Features from '../components/sections/Features.astro'
 import HowItWorks from '../components/sections/HowItWorks.astro'
-import ChartDemo from '../components/sections/ChartDemo.astro'
 import SpeedTest from '../components/sections/SpeedTest.astro'
+import ChartDemo from '../components/sections/ChartDemo.astro'
 import FAQ from '../components/sections/FAQ.astro'
 import DownloadCTA from '../components/sections/DownloadCTA.astro'
 import { defaultLang, useTranslations } from '../i18n'
@@ -21,8 +21,8 @@ const t = useTranslations(lang)
     <Hero lang={lang} />
     <Features lang={lang} />
     <HowItWorks lang={lang} />
-    <ChartDemo />
     <SpeedTest />
+    <ChartDemo lang={lang} />
     <FAQ lang={lang} />
     <DownloadCTA lang={lang} />
   </main>

@@ -1,5 +1,5 @@
 ---
-// V3 專業商務風格 - 企業級頁尾
+// V1 Clinical ECG — Footer with rubber-stamp DIAGNOSTIC READY badge
 import { type Lang, defaultLang, useTranslations, getLocalizedPath } from '../i18n'
 
 interface Props {
@@ -13,60 +13,69 @@ const homeHref = getLocalizedPath(lang, '/')
 const currentYear = new Date().getFullYear()
 ---
 
-<footer class="bg-slate-900 text-slate-300">
-  <div class="max-w-7xl mx-auto px-6 py-16">
-    <div class="grid md:grid-cols-4 gap-12">
+<footer class="bg-[#FBFAF5] border-t border-[#0D0D0D] pt-16 pb-10">
+  <div class="clinic-container">
+
+    <!-- Top: wordmark + legend + stamp -->
+    <div class="grid grid-cols-1 md:grid-cols-[1.3fr_1fr_auto] gap-10 pb-10 border-b border-dashed border-[#8C8677]/40 items-start">
       <!-- Brand -->
-      <div class="md:col-span-2">
-        <a href={homeHref} class="flex items-center gap-3 mb-6">
-          <div class="w-10 h-10 bg-[#1E40AF] rounded-xl flex items-center justify-center">
-            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18M17 8l4 4m0 0l-4 4" />
-            </svg>
-          </div>
-          <div>
-            <span class="font-bold text-white text-lg">Bandwidth ECG</span>
-            <span class="text-slate-500 text-sm block">{t('header.subtitle')}</span>
-          </div>
+      <div>
+        <a href={homeHref} class="flex items-baseline gap-3 mb-4">
+          <svg class="w-6 h-6" viewBox="0 0 24 16" fill="none" aria-hidden="true">
+            <path d="M0 8 L5 8 L7 4 L9 12 L11 2 L13 14 L15 8 L24 8" stroke="#0D0D0D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="font-display text-[22px] font-[650] tracking-tight text-[#0D0D0D]">Bandwidth ECG</span>
         </a>
-        <p class="text-slate-400 leading-relaxed max-w-md">
+        <p class="text-[14px] leading-[1.7] text-[#5A5A5A] max-w-[420px]">
           {t('meta.description')}
+        </p>
+        <p class="mt-4 mono-label text-[10px] text-[#8C8677]">
+          {t('footer.disclaimer')}
         </p>
       </div>
 
-      <!-- Product Links -->
-      <div>
-        <h4 class="text-white font-semibold mb-4">{t('header.features')}</h4>
-        <ul class="space-y-3">
-          <li><a href="#features" class="text-slate-400 hover:text-white transition-colors">{t('header.features')}</a></li>
-          <li><a href="#how-it-works" class="text-slate-400 hover:text-white transition-colors">{t('header.howItWorks')}</a></li>
-          <li><a href="#download" class="text-slate-400 hover:text-white transition-colors">{t('header.download')}</a></li>
-        </ul>
+      <!-- Chart links -->
+      <div class="grid grid-cols-2 gap-8">
+        <div>
+          <h4 class="mono-label text-[#0D0D0D] mb-3">INDEX</h4>
+          <ul class="space-y-2">
+            <li><a href="#features" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">{t('header.features')}</a></li>
+            <li><a href="#how" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">{t('header.howItWorks')}</a></li>
+            <li><a href="#chart" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">Live rhythm strip</a></li>
+            <li><a href="#faq" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">{t('header.faq')}</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="mono-label text-[#0D0D0D] mb-3">SOURCE</h4>
+          <ul class="space-y-2">
+            <li><a href="https://github.com/bobo52310/bandwidth-monitor" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">GitHub</a></li>
+            <li><a href="https://github.com/bobo52310/bandwidth-monitor/releases" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">Releases</a></li>
+            <li><a href="https://github.com/bobo52310/bandwidth-monitor/issues" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">Report issue</a></li>
+            <li><a href="#download" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">{t('header.download')}</a></li>
+          </ul>
+        </div>
       </div>
 
-      <!-- Support Links -->
-      <div>
-        <h4 class="text-white font-semibold mb-4">{t('header.faq')}</h4>
-        <ul class="space-y-3">
-          <li><a href="#faq" class="text-slate-400 hover:text-white transition-colors">{t('header.faq')}</a></li>
-          <li><a href="https://github.com" class="text-slate-400 hover:text-white transition-colors">GitHub</a></li>
-        </ul>
+      <!-- Rubber-stamp badge -->
+      <div class="shrink-0">
+        <div class="stamp">
+          <span aria-hidden="true">✓</span>
+          {t('footer.stamp')}
+        </div>
       </div>
     </div>
 
-    <!-- Copyright -->
-    <div class="mt-12 pt-8 border-t border-slate-800">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-        <p class="text-slate-500 text-sm">
-          © {currentYear} {t('footer.copyright')}
-        </p>
-        <div class="flex items-center gap-2 text-slate-500 text-sm">
-          <span>{t('footer.madeWith')}</span>
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-          </svg>
-          <span>{t('footer.madeIn')}</span>
-        </div>
+    <!-- Bottom legal strip -->
+    <div class="mt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <p class="mono-label text-[10px] text-[#8C8677]">
+        &copy; {currentYear} &middot; {t('footer.copyright')} &middot; {t('footer.madeIn')}
+      </p>
+      <div class="flex items-center gap-5 mono-label text-[10px] text-[#8C8677]">
+        <span class="flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#00B86B] live-dot"></span>
+          <span>SYSTEMS NOMINAL</span>
+        </span>
+        <span>v1.0.0</span>
       </div>
     </div>
   </div>

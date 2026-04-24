@@ -1,5 +1,5 @@
 ---
-// V3 專業商務風格 - Features Section
+// V1 Clinical ECG — Diagnostic Capabilities
 import { type Lang, defaultLang, useTranslations, translations } from '../../i18n'
 
 interface Props {
@@ -9,64 +9,96 @@ interface Props {
 const { lang = defaultLang } = Astro.props
 const t = useTranslations(lang)
 
-const featureIcons = [
-  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>`,
-  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-  </svg>`,
-  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>`,
-  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>`,
-  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>`,
-  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-  </svg>`,
-  `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-  </svg>`
-]
+type Item = {
+  no: string
+  title: string
+  subtitle: string
+  description: string
+  range: string
+  tag: string
+}
 
-const featureItems = translations[lang].features.items as Array<{ title: string; description: string; badge: string }>
+// Pull items from translations — fall back to zh-Hant
+const rawItems = (translations[lang] as any)?.features?.items
+  ?? (translations['zh-Hant'] as any)?.features?.items ?? []
+const items: Item[] = rawItems as Item[]
+
+// Icon mapping per feature (minimal line SVGs — no emojis)
+const icons = [
+  // 01 pulse
+  `<path d="M3 12 L6 12 L8 9 L10 15 L12 6 L14 18 L16 12 L21 12" stroke-linecap="round" stroke-linejoin="round"/>`,
+  // 02 peak
+  `<path d="M4 16 L8 16 L12 4 L16 16 L20 16" stroke-linecap="round" stroke-linejoin="round"/><line x1="4" y1="20" x2="20" y2="20" stroke-dasharray="2 2"/>`,
+  // 03 rhythm strips / multiple windows
+  `<line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/><line x1="7" y1="4" x2="7" y2="20" stroke-dasharray="2 2"/><line x1="17" y1="4" x2="17" y2="20" stroke-dasharray="2 2"/>`,
+  // 04 alert triangle
+  `<path d="M12 3 L22 20 L2 20 Z" stroke-linejoin="round"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r="0.8" fill="currentColor"/>`,
+  // 05 local chart / disk
+  `<rect x="4" y="4" width="16" height="16" rx="1" stroke-linejoin="round"/><line x1="4" y1="9" x2="20" y2="9"/><circle cx="8" cy="14" r="1.5"/>`,
+  // 06 low-draw battery-like vitals
+  `<rect x="3" y="8" width="16" height="8" rx="1"/><line x1="20" y1="10" x2="20" y2="14"/><line x1="6" y1="11" x2="6" y2="13"/><line x1="9" y1="11" x2="9" y2="13"/><line x1="12" y1="11" x2="12" y2="13"/>`,
+]
 ---
 
-<section id="features" class="bg-white">
-  <div class="max-w-7xl mx-auto px-6">
-    <!-- Section Header -->
-    <div class="text-center max-w-3xl mx-auto mb-16">
-      <span class="badge badge-primary mb-4">{t('features.sectionBadge')}</span>
-      <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-        {t('features.sectionTitle')}
-      </h2>
-      <p class="text-lg text-slate-600">
-        {t('features.sectionSubtitle')}
-      </p>
+<section id="features" class="clinic ecg-paper-soft border-t border-b border-[#E8DFD0]">
+  <div class="clinic-container">
+    <!-- Section header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+      <div class="max-w-[720px]">
+        <p class="eyebrow text-[#008050] mb-4">{t('features.sectionEyebrow')}</p>
+        <h2 class="font-display text-[36px] sm:text-[44px] lg:text-[54px] leading-[1.02] font-[650] tracking-[-0.02em]">
+          {t('features.sectionTitleEn')}
+        </h2>
+        <p class="font-display text-[20px] sm:text-[22px] text-[#5A5A5A] mt-2">{t('features.sectionTitleZh')}</p>
+        <p class="mt-6 text-[16px] leading-[1.7] text-[#3A3A3A] max-w-[620px]">
+          {t('features.sectionSubtitle')}
+        </p>
+      </div>
+      <div class="shrink-0 flex items-center gap-3 mono-label text-[#8C8677]">
+        <span class="w-8 h-px bg-[#8C8677]"></span>
+        <span>06 readings</span>
+      </div>
     </div>
 
-    <!-- Features Grid -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {featureItems.map((feature, index) => (
-        <div class="card-pro p-6 group">
-          <div class="flex items-start justify-between mb-4">
-            <div class="w-12 h-12 flex items-center justify-center bg-[#1E40AF]/5 text-[#1E40AF] rounded-xl group-hover:bg-[#1E40AF] group-hover:text-white transition-all duration-200">
-              <Fragment set:html={featureIcons[index] || featureIcons[0]} />
-            </div>
-            <span class="badge badge-gold text-[10px]">{feature.badge}</span>
+    <!-- Chart-style card grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {items.map((item, i) => (
+        <article class="chart-card flex flex-col min-h-[280px]">
+          <div class="chart-card__header">
+            <span class="chart-no"># {item.no}</span>
+            <span class="mono-label text-[#008050]">{item.tag}</span>
           </div>
-          <h3 class="text-lg font-semibold text-slate-900 mb-2">
-            {feature.title}
+
+          <!-- Tiny signal icon drawn in the signal green -->
+          <div class="text-[#008050] mb-5">
+            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" set:html={icons[i % icons.length]} />
+          </div>
+
+          <h3 class="font-display text-[22px] font-[600] leading-tight text-[#0D0D0D]">
+            {item.title}
           </h3>
-          <p class="text-slate-600 text-sm leading-relaxed">
-            {feature.description}
+          <p class="mono-label text-[#8C8677] mt-1.5">{item.subtitle}</p>
+
+          <p class="mt-4 text-[14.5px] leading-[1.7] text-[#3A3A3A] flex-1">
+            {item.description}
           </p>
-        </div>
+
+          <div class="mt-5 pt-4 border-t border-dashed border-[#E8DFD0] flex items-center justify-between gap-2">
+            <span class="mono-label text-[10px] text-[#5A5A5A]">{item.range}</span>
+            <span class="tag-normal text-[9px] py-0.5 px-1.5">
+              <span class="tag-dot"></span>
+              LIVE
+            </span>
+          </div>
+        </article>
       ))}
+    </div>
+
+    <!-- Legend strip -->
+    <div class="mt-10 pt-6 border-t border-dashed border-[#8C8677]/40 flex flex-wrap gap-x-8 gap-y-2 mono-label text-[11px] text-[#5A5A5A]">
+      <span class="flex items-center gap-2"><span class="tag-dot text-[#008050] w-1.5 h-1.5"></span>NORMAL · within limits</span>
+      <span class="flex items-center gap-2"><span class="tag-dot text-[#E8A23B] w-1.5 h-1.5"></span>ALERT · approaching ceiling</span>
+      <span class="flex items-center gap-2"><span class="tag-dot text-[#D1342C] w-1.5 h-1.5"></span>CRITICAL · action required</span>
     </div>
   </div>
 </section>

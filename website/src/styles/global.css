@@ -1,149 +1,398 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
-/* V3 專業商務風格 - Custom Properties */
+/* =========================================================================
+   Bandwidth ECG — Landing V1 "Clinical ECG"
+   Aesthetic: medical diagnostic monitor on EKG paper.
+   ========================================================================= */
+
 @theme {
-  --color-primary: #1E40AF;
-  --color-primary-light: #3B82F6;
-  --color-accent: #D97706;
-  --color-accent-light: #F59E0B;
-  --color-text: #0F172A;
-  --color-text-secondary: #475569;
-  --color-background: #FFFFFF;
-  --color-surface: #F8FAFC;
-  --color-border: #E2E8F0;
+  /* Paper & ink */
+  --color-paper: #FBFAF5;
+  --color-paper-dim: #F5F1E4;
+  --color-grid-fine: #F0E6D2;
+  --color-grid-bold: #E8DFD0;
+  --color-ink: #0D0D0D;
+  --color-ink-2: #5A5A5A;
+  --color-ink-3: #8C8677;
 
-  /* Dark mode */
-  --color-dark-bg: #0F172A;
-  --color-dark-surface: #1E293B;
-  --color-dark-text: #F1F5F9;
-  --color-dark-border: #334155;
+  /* Signal */
+  --color-signal: #00B86B;
+  --color-signal-dark: #008050;
+  --color-signal-glow: rgba(0, 184, 107, 0.35);
 
-  --font-sans: 'DM Sans', 'Noto Sans TC', system-ui, sans-serif;
+  /* Alerts */
+  --color-amber: #E8A23B;
+  --color-red: #D1342C;
+
+  /* Typography */
+  --font-display: 'Fraunces', 'Noto Serif TC', 'Times New Roman', serif;
+  --font-sans: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
 }
 
-/* Base styles */
-html {
-  scroll-behavior: smooth;
-}
+/* ----- Base ----- */
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  color: var(--color-text);
-  background-color: var(--color-background);
+  color: var(--color-ink);
+  background-color: var(--color-paper);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
 }
 
-/* Dark mode support */
-.dark body {
-  background-color: var(--color-dark-bg);
-  color: var(--color-dark-text);
+::selection {
+  background: var(--color-signal);
+  color: var(--color-paper);
 }
 
-/* Professional animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes countUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
-}
-
-.animate-count-up {
-  animation: countUp 0.3s ease-out forwards;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-/* Stagger delays */
-.delay-100 { animation-delay: 0.1s; }
-.delay-200 { animation-delay: 0.2s; }
-.delay-300 { animation-delay: 0.3s; }
-.delay-400 { animation-delay: 0.4s; }
-
-/* Section spacing */
-section {
-  padding-top: 96px;
-  padding-bottom: 96px;
-}
-
-/* Professional card style */
-.card-pro {
-  background: white;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  transition: all 0.2s ease;
-}
-
-.card-pro:hover {
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.dark .card-pro {
-  background: var(--color-dark-surface);
-  border-color: var(--color-dark-border);
-}
-
-/* Badge styles */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  font-size: 12px;
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
   font-weight: 600;
-  border-radius: 9999px;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+/* =========================================================================
+   EKG PAPER GRID — faint 5mm fine lines + bolder 25mm lines.
+   Two layered backgrounds compose the pattern.
+   ========================================================================= */
+.ecg-paper {
+  background-color: var(--color-paper);
+  background-image:
+    /* Bold 25px grid */
+    linear-gradient(to right, var(--color-grid-bold) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid-bold) 1px, transparent 1px),
+    /* Fine 5px grid */
+    linear-gradient(to right, var(--color-grid-fine) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid-fine) 1px, transparent 1px);
+  background-size:
+    25px 25px,
+    25px 25px,
+    5px 5px,
+    5px 5px;
+  background-position: 0 0, 0 0, 0 0, 0 0;
+}
+
+.ecg-paper-soft {
+  /* Lighter version for section backgrounds */
+  background-color: var(--color-paper);
+  background-image:
+    linear-gradient(to right, var(--color-grid-bold) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid-bold) 1px, transparent 1px),
+    linear-gradient(to right, var(--color-grid-fine) 0.5px, transparent 0.5px),
+    linear-gradient(to bottom, var(--color-grid-fine) 0.5px, transparent 0.5px);
+  background-size:
+    50px 50px,
+    50px 50px,
+    10px 10px,
+    10px 10px;
+}
+
+/* Vignette so the paper feels like it has edges */
+.paper-edge {
+  position: relative;
+}
+.paper-edge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 60%, rgba(232, 223, 208, 0.35) 100%);
+}
+
+/* =========================================================================
+   ECG TRACE ANIMATION — a long SVG path drawing itself and looping.
+   Used in hero + chart demo.
+   ========================================================================= */
+@keyframes ecg-trace {
+  0%   { stroke-dashoffset: 2400; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes ecg-fade-tail {
+  0%, 100% { opacity: 1; }
+}
+
+.ecg-trace {
+  stroke: var(--color-signal);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 2400;
+  stroke-dashoffset: 2400;
+  filter: drop-shadow(0 0 4px var(--color-signal-glow));
+  animation: ecg-trace 6s linear infinite;
+}
+
+.ecg-trace--slow { animation-duration: 10s; }
+.ecg-trace--dense { stroke-width: 1.8; }
+
+/* Leading cursor dot */
+@keyframes ecg-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(1.35); }
+}
+.ecg-cursor {
+  fill: var(--color-signal);
+  filter: drop-shadow(0 0 6px var(--color-signal));
+  animation: ecg-pulse 1.1s ease-in-out infinite;
+}
+
+/* Baseline readout blink for "LIVE" tags */
+@keyframes live-blink {
+  0%, 60% { opacity: 1; }
+  80%, 100% { opacity: 0.25; }
+}
+.live-dot { animation: live-blink 1.5s ease-in-out infinite; }
+
+/* Number counter subtle flicker (very mild) */
+@keyframes tick {
+  0%, 95% { transform: translateY(0); }
+  97% { transform: translateY(-0.5px); }
+  100% { transform: translateY(0); }
+}
+.num-tick { animation: tick 2s ease-in-out infinite; }
+
+/* =========================================================================
+   TYPE UTILITIES
+   ========================================================================= */
+.font-display { font-family: var(--font-display); }
+.font-mono    { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.font-ui      { font-family: var(--font-sans); }
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.readout {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+/* =========================================================================
+   CLINICAL CHROME — tags, chips, stamps
+   ========================================================================= */
+.chart-no {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-ink-2);
   letter-spacing: 0.05em;
 }
 
-.badge-primary {
-  background: rgba(30, 64, 175, 0.1);
-  color: #1E40AF;
+.tag-normal,
+.tag-alert,
+.tag-critical {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  background: rgba(251, 250, 245, 0.7);
 }
 
-.badge-gold {
-  background: rgba(217, 119, 6, 0.1);
-  color: #D97706;
+.tag-normal   { color: var(--color-signal-dark); }
+.tag-alert    { color: var(--color-amber); }
+.tag-critical { color: var(--color-red); }
+
+.tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
 }
 
-.badge-success {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10B981;
+/* Horizontal rule — like a chart divider */
+.rule {
+  height: 1px;
+  background: var(--color-grid-bold);
 }
 
-/* Gradient text */
-.gradient-text-pro {
-  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.rule-dashed {
+  border-top: 1px dashed var(--color-ink-3);
+}
+
+/* Rubber-stamp badge */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-signal-dark);
+  border: 2px dashed var(--color-signal-dark);
+  border-radius: 6px;
+  transform: rotate(-3deg);
+  background: rgba(0, 184, 107, 0.04);
+  position: relative;
+}
+.stamp::before,
+.stamp::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--color-signal-dark);
+  border-radius: 9999px;
+}
+
+.stamp--red {
+  color: var(--color-red);
+  border-color: var(--color-red);
+  background: rgba(209, 52, 44, 0.04);
+}
+.stamp--red::before,
+.stamp--red::after {
+  border-color: var(--color-red);
+}
+
+/* Clinical CTA buttons */
+.btn-signal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 22px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-paper);
+  background: var(--color-ink);
+  border: 1px solid var(--color-ink);
+  border-radius: 3px;
+  transition: all 0.15s ease;
+  box-shadow: 3px 3px 0 0 var(--color-signal-dark);
+}
+.btn-signal:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--color-signal-dark);
+}
+.btn-signal:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 var(--color-signal-dark);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 22px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  background: transparent;
+  border: 1px solid var(--color-ink);
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+.btn-ghost:hover {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* =========================================================================
+   CARD — clinical chart card
+   ========================================================================= */
+.chart-card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-grid-bold);
+  border-radius: 2px;
+  padding: 28px;
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.chart-card:hover {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 1px var(--color-ink);
+}
+
+.chart-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--color-grid-bold);
+}
+
+/* =========================================================================
+   Section spacing (>=120px vertical padding on desktop)
+   ========================================================================= */
+section.clinic {
+  padding-top: 120px;
+  padding-bottom: 120px;
+}
+
+@media (max-width: 768px) {
+  section.clinic {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+}
+
+/* Container */
+.clinic-container {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+@media (max-width: 768px) {
+  .clinic-container { padding-inline: 20px; }
+}
+
+/* Prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .ecg-trace,
+  .ecg-cursor,
+  .live-dot,
+  .num-tick {
+    animation: none !important;
+  }
+  .ecg-trace {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Tiny caret used as decorative dividers */
+.caret-right::after {
+  content: ' ▸ ';
+  color: var(--color-ink-3);
+  margin: 0 4px;
 }

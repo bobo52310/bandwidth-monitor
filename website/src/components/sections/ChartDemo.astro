@@ -1,155 +1,175 @@
 ---
-// V3 專業商務風格 - Chart Demo Section
+// V1 Clinical ECG — Live Rhythm Strip demo
+import { type Lang, defaultLang, useTranslations } from '../../i18n'
+
+interface Props {
+  lang?: Lang
+}
+
+const { lang = defaultLang } = Astro.props
+const t = useTranslations(lang)
+
+// A richer, more varied "realistic" waveform — with a sustained burst in the middle
+// simulating a peak event, then returning to baseline.
+const richPath = [
+  'M 0 80',
+  // calm baseline with gentle variance
+  'L 40 80', 'L 60 78', 'L 80 82', 'L 100 80',
+  // first small beat
+  'L 120 80', 'L 130 72', 'L 140 80',
+  'L 160 80', 'L 170 85', 'L 172 40', 'L 178 115', 'L 184 80',
+  'L 210 80', 'L 220 76', 'L 240 80',
+  // quiet zone
+  'L 280 80', 'L 300 82', 'L 320 80',
+  // burst / sustained peak (network congestion)
+  'L 340 80', 'L 346 50', 'L 352 110', 'L 358 55', 'L 366 105', 'L 372 60',
+  'L 380 95', 'L 388 70', 'L 396 90', 'L 404 60', 'L 412 95', 'L 420 75',
+  'L 430 80',
+  // settle
+  'L 470 80', 'L 485 78', 'L 500 80',
+  // second beat
+  'L 530 80', 'L 540 85', 'L 544 35', 'L 550 120', 'L 556 80',
+  'L 580 80', 'L 590 76', 'L 610 80',
+  // quiet
+  'L 650 80', 'L 680 82', 'L 710 80',
+  // micro spike
+  'L 740 80', 'L 748 60', 'L 754 100', 'L 762 80',
+  'L 790 80', 'L 810 78', 'L 830 80',
+  // third beat
+  'L 860 80', 'L 870 85', 'L 874 40', 'L 880 115', 'L 886 80',
+  'L 910 80', 'L 920 76', 'L 940 80',
+  'L 980 80', 'L 1000 78', 'L 1020 80',
+  // small cluster
+  'L 1040 80', 'L 1048 70', 'L 1056 90', 'L 1064 75', 'L 1072 85', 'L 1080 80',
+  'L 1120 80', 'L 1140 78', 'L 1160 80',
+  // fourth beat
+  'L 1180 80', 'L 1190 85', 'L 1194 35', 'L 1200 120', 'L 1206 80',
+  'L 1230 80', 'L 1240 76', 'L 1260 80',
+  'L 1600 80'
+].join(' ')
 ---
 
-<section class="bg-white">
-  <div class="max-w-7xl mx-auto px-6">
-    <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-      <!-- Text Content -->
-      <div>
-        <span class="badge badge-primary mb-4">數據視覺化</span>
-        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-          專業級數據分析
+<section id="chart" class="clinic ecg-paper border-t border-[#E8DFD0]">
+  <div class="clinic-container">
+    <!-- Section header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
+      <div class="max-w-[720px]">
+        <p class="eyebrow text-[#008050] mb-4">{t('chartDemo.sectionEyebrow')}</p>
+        <h2 class="font-display text-[36px] sm:text-[44px] lg:text-[54px] leading-[1.02] font-[650] tracking-[-0.02em]">
+          {t('chartDemo.sectionTitleEn')}
         </h2>
-        <p class="text-lg text-slate-600 leading-relaxed mb-8">
-          從 1 分鐘到 24 小時的多時間區間數據視覺化，協助您深入了解網路使用模式與趨勢變化。
+        <p class="font-display text-[20px] sm:text-[22px] text-[#5A5A5A] mt-2">{t('chartDemo.sectionTitleZh')}</p>
+        <p class="mt-6 text-[16px] leading-[1.7] text-[#3A3A3A] max-w-[620px]">
+          {t('chartDemo.sectionSubtitle')}
         </p>
+      </div>
+      <div class="shrink-0 flex flex-wrap items-center gap-4 mono-label text-[10px] text-[#8C8677]">
+        <span>{t('chartDemo.gain')}</span>
+        <span>{t('chartDemo.speed')}</span>
+        <span>{t('chartDemo.filter')}</span>
+      </div>
+    </div>
 
-        <!-- Feature list -->
-        <div class="space-y-4">
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 flex items-center justify-center bg-[#1E40AF]/5 text-[#1E40AF] rounded-lg flex-shrink-0">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h4 class="font-semibold text-slate-900 mb-1">多時間區間</h4>
-              <p class="text-slate-600 text-sm">支援 1分鐘、5分鐘、1小時、24小時四種時間尺度</p>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 flex items-center justify-center bg-[#1E40AF]/5 text-[#1E40AF] rounded-lg flex-shrink-0">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-              </svg>
-            </div>
-            <div>
-              <h4 class="font-semibold text-slate-900 mb-1">上下行分離顯示</h4>
-              <p class="text-slate-600 text-sm">上傳與下載流量分別追蹤，清晰呈現流量類型</p>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 flex items-center justify-center bg-[#D97706]/5 text-[#D97706] rounded-lg flex-shrink-0">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
-            <div>
-              <h4 class="font-semibold text-slate-900 mb-1">峰值智能標記</h4>
-              <p class="text-slate-600 text-sm">自動識別並標記高峰使用時段，快速定位問題</p>
-            </div>
-          </div>
+    <!-- The "chart print-out" -->
+    <div class="relative border border-[#0D0D0D] rounded-[3px] bg-[#FBFAF5] shadow-[8px_8px_0_0_rgba(13,13,13,0.06)] overflow-hidden">
+      <!-- Printer-head header -->
+      <div class="flex items-center justify-between px-5 py-3 border-b border-[#E8DFD0] bg-[#F5F1E4]">
+        <div class="flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-[#D1342C] live-dot"></span>
+          <span class="mono-label text-[#0D0D0D]">RECORDING</span>
+          <span class="hidden sm:inline mono-label text-[#8C8677]">|</span>
+          <span class="hidden sm:inline mono-label text-[#8C8677]">SESSION 00418</span>
+          <span class="hidden sm:inline mono-label text-[#8C8677]">|</span>
+          <span class="hidden sm:inline mono-label text-[#8C8677]">WINDOW 15m</span>
+        </div>
+        <div class="flex items-center gap-3 mono-label text-[#8C8677]">
+          <button class="px-2 py-1 border border-[#E8DFD0] rounded-[2px] hover:border-[#0D0D0D] hover:text-[#0D0D0D] transition">1m</button>
+          <button class="px-2 py-1 border border-[#E8DFD0] rounded-[2px] hover:border-[#0D0D0D] hover:text-[#0D0D0D] transition">5m</button>
+          <button class="px-2 py-1 bg-[#0D0D0D] text-[#FBFAF5] rounded-[2px]">15m</button>
+          <button class="hidden sm:inline px-2 py-1 border border-[#E8DFD0] rounded-[2px] hover:border-[#0D0D0D] hover:text-[#0D0D0D] transition">30m</button>
+          <button class="hidden md:inline px-2 py-1 border border-[#E8DFD0] rounded-[2px] hover:border-[#0D0D0D] hover:text-[#0D0D0D] transition">1h</button>
+          <button class="hidden md:inline px-2 py-1 border border-[#E8DFD0] rounded-[2px] hover:border-[#0D0D0D] hover:text-[#0D0D0D] transition">24h</button>
         </div>
       </div>
 
-      <!-- Chart Demo -->
-      <div class="card-pro p-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h3 class="font-semibold text-slate-900">歷史趨勢分析</h3>
-            <p class="text-sm text-slate-500">即時更新中</p>
+      <!-- Chart body -->
+      <div class="grid grid-cols-[56px_1fr] md:grid-cols-[80px_1fr]">
+        <!-- Left gutter: lead labels + Y scale marks -->
+        <aside class="border-r border-dashed border-[#E8DFD0] py-4 relative">
+          <div class="sticky top-4 flex flex-col h-full justify-between pl-2 pr-1">
+            <div>
+              <div class="mono-label text-[10px] text-[#008050]">{t('chartDemo.leadDown')}</div>
+              <div class="mono-label text-[9px] text-[#8C8677] mt-0.5">{t('chartDemo.downLabel')}</div>
+            </div>
+            <div class="flex-1 flex flex-col justify-around py-6 mono-label text-[9px] text-[#8C8677]">
+              <span>500</span>
+              <span>250</span>
+              <span>0 Mbps</span>
+            </div>
           </div>
-          <div class="flex gap-1 p-1 bg-slate-100 rounded-lg">
-            <button class="px-3 py-1.5 text-xs font-semibold text-white bg-[#1E40AF] rounded-md">1m</button>
-            <button class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white rounded-md transition-colors">5m</button>
-            <button class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white rounded-md transition-colors">1h</button>
-            <button class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white rounded-md transition-colors">24h</button>
-          </div>
-        </div>
+        </aside>
 
-        <!-- Chart Area -->
-        <div class="relative h-64 bg-slate-50 rounded-xl p-4">
-          <!-- Y-axis labels -->
-          <div class="absolute left-2 top-2 bottom-2 flex flex-col justify-between text-[10px] text-slate-400 font-medium">
-            <span>200</span>
-            <span>150</span>
-            <span>100</span>
-            <span>50</span>
-            <span>0</span>
+        <!-- Paper area with grid and traces -->
+        <div class="relative ecg-paper min-h-[320px] md:min-h-[420px]">
+          <!-- Threshold line (plan ceiling) -->
+          <div class="absolute inset-x-0 top-[22%] flex items-center pointer-events-none">
+            <span class="mono-label text-[9px] text-[#D1342C] px-2 bg-[#FBFAF5] ml-2">PLAN CEILING &middot; 500 Mbps</span>
+            <span class="flex-1 border-t border-dashed border-[#D1342C]"></span>
+          </div>
+          <!-- Amber approach line -->
+          <div class="absolute inset-x-0 top-[35%] flex items-center pointer-events-none">
+            <span class="mono-label text-[9px] text-[#E8A23B] px-2 bg-[#FBFAF5] ml-2">APPROACH &middot; 80%</span>
+            <span class="flex-1 border-t border-dotted border-[#E8A23B]"></span>
           </div>
 
-          <!-- Chart visualization -->
-          <svg class="absolute inset-0 ml-8 mt-2 mb-2 mr-2" viewBox="0 0 400 200" preserveAspectRatio="none">
-            <!-- Grid lines -->
-            <g stroke="#E2E8F0" stroke-width="0.5">
-              <line x1="0" y1="50" x2="400" y2="50" />
-              <line x1="0" y1="100" x2="400" y2="100" />
-              <line x1="0" y1="150" x2="400" y2="150" />
-            </g>
-
-            <!-- Download area -->
-            <defs>
-              <linearGradient id="v3ProGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#1E40AF" stop-opacity="0.15" />
-                <stop offset="100%" stop-color="#1E40AF" stop-opacity="0.02" />
-              </linearGradient>
-            </defs>
-
-            <path
-              d="M0,180 Q20,170 40,160 T80,140 T120,120 T160,90 T200,100 T240,80 T280,60 T320,70 T360,50 T400,40 L400,200 L0,200 Z"
-              fill="url(#v3ProGradient)"
-            />
-            <path
-              d="M0,180 Q20,170 40,160 T80,140 T120,120 T160,90 T200,100 T240,80 T280,60 T320,70 T360,50 T400,40"
-              fill="none"
-              stroke="#1E40AF"
-              stroke-width="2"
-            />
-
-            <!-- Upload line -->
-            <path
-              d="M0,190 Q20,188 40,185 T80,180 T120,175 T160,170 T200,172 T240,165 T280,160 T320,165 T360,155 T400,150"
-              fill="none"
-              stroke="#1E40AF"
-              stroke-width="1.5"
-              stroke-opacity="0.4"
-            />
-
-            <!-- Peak marker -->
-            <circle cx="280" cy="60" r="5" fill="#D97706" />
-            <line x1="280" y1="60" x2="280" y2="200" stroke="#D97706" stroke-width="1" stroke-dasharray="4,4" opacity="0.4" />
+          <!-- The ECG trace -->
+          <svg viewBox="0 0 1600 160" preserveAspectRatio="none" class="w-full h-full absolute inset-0" aria-hidden="true">
+            <path d={richPath} class="ecg-trace ecg-trace--slow"/>
           </svg>
 
-          <!-- Peak Tooltip -->
-          <div class="absolute top-2 right-4 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
-            <div class="flex items-center gap-1.5 mb-1">
-              <span class="badge badge-gold text-[9px] py-0">峰值</span>
-            </div>
-            <div class="text-lg font-bold text-slate-900">156.2 MB/s</div>
+          <!-- Annotation callouts -->
+          <div class="absolute left-[22%] top-[60%] text-[#5A5A5A] pointer-events-none hidden md:block">
+            <div class="mono-label text-[10px]">&uarr; peak event &middot; 14:41</div>
           </div>
-        </div>
-
-        <!-- Legend & Stats -->
-        <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-          <div class="flex items-center gap-6">
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-[#1E40AF] rounded-full"></div>
-              <span class="text-sm text-slate-600">下載速度</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-[#1E40AF]/40 rounded-full"></div>
-              <span class="text-sm text-slate-600">上傳速度</span>
-            </div>
-          </div>
-          <div class="text-sm text-slate-500">
-            單位：MB/s
+          <div class="absolute right-[6%] top-[25%] text-[#008050] pointer-events-none hidden md:block">
+            <div class="mono-label text-[10px]">&larr; returning to baseline</div>
           </div>
         </div>
       </div>
+
+      <!-- Footer strip: readings -->
+      <div class="border-t border-[#E8DFD0] bg-[#F5F1E4] px-5 py-3 flex flex-wrap items-center gap-x-8 gap-y-2">
+        <div class="flex items-baseline gap-2">
+          <span class="mono-label text-[9px] text-[#8C8677]">AVG</span>
+          <span class="readout text-[14px] text-[#0D0D0D]">182.6 <span class="mono-label text-[#8C8677] text-[10px]">Mbps</span></span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="mono-label text-[9px] text-[#8C8677]">PEAK</span>
+          <span class="readout text-[14px] text-[#D1342C]">471.8 <span class="mono-label text-[#8C8677] text-[10px]">Mbps</span></span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="mono-label text-[9px] text-[#8C8677]">DIP</span>
+          <span class="readout text-[14px] text-[#0D0D0D]">18.2 <span class="mono-label text-[#8C8677] text-[10px]">Mbps</span></span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="mono-label text-[9px] text-[#8C8677]">NEAR-PEAK HITS</span>
+          <span class="readout text-[14px] text-[#E8A23B]">3</span>
+        </div>
+        <div class="ml-auto tag-normal">
+          <span class="tag-dot"></span>
+          RHYTHM STABLE
+        </div>
+      </div>
+    </div>
+
+    <!-- Below: timestamps like a printed timeline -->
+    <div class="mt-4 grid grid-cols-6 mono-label text-[10px] text-[#8C8677]">
+      <span>14:25</span>
+      <span>14:28</span>
+      <span>14:31</span>
+      <span>14:34</span>
+      <span>14:37</span>
+      <span class="text-right">14:40</span>
     </div>
   </div>
 </section>

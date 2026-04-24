@@ -1,150 +1,181 @@
 {
   "meta": {
-    "title": "Bandwidth ECG - 網路峰值監控器 | 企業級網路監控解決方案",
-    "description": "企業級網路監控解決方案。即時監控網速、智能峰值追蹤、數據驅動的網路升級決策。"
+    "title": "Bandwidth ECG — 你的網路心電圖診斷儀 · for macOS",
+    "description": "為你的網路做即時心電圖診斷。追蹤頻寬峰值、識別卡頓節律，用醫療級儀表盤回答那個問題：我到底該不該升級？"
   },
   "header": {
-    "subtitle": "網路峰值監控器",
-    "features": "功能",
-    "howItWorks": "運作方式",
-    "faq": "常見問題",
-    "download": "立即下載",
-    "openMenu": "開啟選單"
+    "subtitle": "NETWORK HEALTH MONITOR",
+    "features": "診斷能力",
+    "howItWorks": "體檢流程",
+    "faq": "醫囑",
+    "download": "下載",
+    "openMenu": "開啟選單",
+    "github": "GitHub"
   },
   "hero": {
-    "badge1": "macOS 專屬",
-    "badge2": "企業級效能",
-    "title1": "用數據決定，",
-    "title2": "是否升級網路方案",
-    "subtitle": "即時監控網速、追蹤峰值、做出明智決策。專業級 macOS 網路監控解決方案。",
-    "downloadBtn": "免費下載",
-    "learnMore": "了解更多",
-    "statCpu": "CPU 使用率",
-    "statMemory": "記憶體佔用",
-    "statHistory": "歷史追蹤",
-    "download": "下載",
-    "upload": "上傳",
-    "monitoring": "監控中",
+    "eyebrow": "NETWORK HEALTH MONITOR · for macOS",
+    "titleEn": "Your network, on ECG.",
+    "titleZh": "為你的網路做即時心電圖診斷",
+    "subtitle": "追蹤頻寬峰值、識別卡頓節律，用醫療級儀表盤回答那個問題：我到底該不該升級？",
+    "ctaDownload": "Download · Free",
+    "ctaLearn": "Read the chart",
+    "leadDown": "LEAD I · DOWN",
+    "leadUp": "LEAD II · UP",
+    "live": "LIVE",
+    "acquired": "ACQUIRED",
+    "patient": "PATIENT",
+    "patientName": "Home Network · 192.168.1.1",
+    "rhythm": "RHYTHM",
+    "rhythmValue": "Normal sinus · stable",
     "todayPeak": "今日峰值",
     "allTimePeak": "歷史最高",
-    "planUsage": "方案使用率",
-    "freeToUse": "免費使用"
+    "planUsage": "方案使用率"
   },
   "features": {
-    "sectionBadge": "功能介紹",
-    "sectionTitle": "專業級網路監控功能",
-    "sectionSubtitle": "為 macOS 專業用戶打造的全方位網路監控解決方案",
+    "sectionEyebrow": "CHAPTER 01",
+    "sectionTitleEn": "Diagnostic Capabilities",
+    "sectionTitleZh": "診斷能力",
+    "sectionSubtitle": "六項連續監測，從即時心律到長期趨勢。每一項都像一份可讀的體檢報告。",
     "items": [
       {
-        "title": "即時網速監控",
-        "description": "選單列即時顯示上傳/下載速度，無需開啟任何視窗即可掌握網路狀態。",
-        "badge": "核心功能"
+        "no": "01",
+        "title": "即時心律監測",
+        "subtitle": "Real-time rhythm",
+        "description": "選單列連續顯示上傳 / 下載速度，取樣頻率 1Hz，無需開啟任何視窗即可一眼讀取。",
+        "range": "Normal range · 0 – 1000 Mbps",
+        "tag": "CONTINUOUS"
       },
       {
-        "title": "智能峰值追蹤",
-        "description": "自動記錄每日及歷史峰值速度，透過數據分析評估網路方案是否足夠。",
-        "badge": "數據分析"
+        "no": "02",
+        "title": "峰值自動記錄",
+        "subtitle": "Peak capture",
+        "description": "自動擷取每日峰值與歷史最高值，幫你判斷現有方案是否還有餘裕。",
+        "range": "Alert range · ≥ 80% of plan",
+        "tag": "AUTO-LOG"
       },
       {
-        "title": "互動式圖表",
-        "description": "支援 1 分鐘至 24 小時多種時間區間，視覺化呈現網路使用趨勢。",
-        "badge": "視覺化"
+        "no": "03",
+        "title": "多時段節律圖",
+        "subtitle": "Rhythm strips",
+        "description": "1 分鐘 / 5 / 15 / 30 / 60 分 / 24 小時六種時間窗，看短期尖峰也看長期波形。",
+        "range": "Window · 1m → 24h",
+        "tag": "6 STRIPS"
       },
       {
-        "title": "一鍵速度測試",
-        "description": "整合 Speedtest by Ookla CLI，提供專業級的速度測試與延遲分析。",
-        "badge": "測速整合"
+        "no": "04",
+        "title": "接近上限警示",
+        "subtitle": "Approach alert",
+        "description": "當使用率逼近方案上限時，數字自動轉為 Amber / Red，就像心率監視器的警示。",
+        "range": "Threshold · user-defined %",
+        "tag": "ALERT"
       },
       {
-        "title": "社群排行榜",
-        "description": "支援全球、國家、ISP 三種維度的速度排名，了解您的網路表現。",
-        "badge": "社群功能"
+        "no": "05",
+        "title": "本機資料庫",
+        "subtitle": "Local chart",
+        "description": "所有讀數儲存於本機 ~/Library，沒有雲端、沒有帳號、沒有任何資料上傳。",
+        "range": "Privacy · 100% local",
+        "tag": "NO UPLOAD"
       },
       {
-        "title": "網路異常偵測",
-        "description": "智能監控連線狀態，即時警示連線中斷或速度異常下降等問題。",
-        "badge": "智能警示"
-      },
-      {
-        "title": "輕量高效",
-        "description": "CPU 使用率低於 1%，記憶體佔用小於 50MB，確保系統效能不受影響。",
-        "badge": "效能優化"
+        "no": "06",
+        "title": "低負載儀器",
+        "subtitle": "Low-draw instrument",
+        "description": "CPU 使用率 < 1%，RAM 佔用 < 50MB。就像 ECG 電極，貼著你但幾乎感覺不到。",
+        "range": "Vitals · CPU <1% · RAM <50MB",
+        "tag": "LIGHTWEIGHT"
       }
     ]
   },
   "howItWorks": {
-    "sectionBadge": "使用流程",
-    "sectionTitle": "三步驟開始使用",
-    "sectionSubtitle": "簡單設定，立即開始監控您的網路效能",
+    "sectionEyebrow": "CHAPTER 02",
+    "sectionTitleEn": "Your First Check-up",
+    "sectionTitleZh": "體檢流程",
+    "sectionSubtitle": "像掛號、貼電極、讀報告一樣簡單。三個步驟，90 秒完成。",
     "steps": [
       {
-        "title": "下載安裝",
-        "description": "從官網下載 DMG 檔案，拖曳至應用程式資料夾即可完成安裝。"
+        "no": "STEP 01",
+        "label": "INTAKE",
+        "title": "下載並掛載電極",
+        "description": "從 GitHub 取得 DMG，拖進 Applications。App 立即接管選單列，不占 Dock。",
+        "runtime": "~ 30s"
       },
       {
-        "title": "設定方案",
-        "description": "輸入您的網路方案速度上限，系統將自動計算使用率並發送警示。"
+        "no": "STEP 02",
+        "label": "CALIBRATION",
+        "title": "輸入方案上限",
+        "description": "填入你的方案標稱速度（例如 500 Mbps），儀器就知道要在幾時發出警示。",
+        "runtime": "~ 20s"
       },
       {
-        "title": "開始監控",
-        "description": "應用程式將在選單列顯示即時網速，點擊可查看詳細圖表與統計。"
+        "no": "STEP 03",
+        "label": "DIAGNOSIS",
+        "title": "開始即時判讀",
+        "description": "從此你每次滑鼠上移，都是一次體檢。用數據判斷是否該升級 — 不再憑感覺。",
+        "runtime": "continuous"
       }
     ]
   },
-  "speedTest": {
-    "sectionBadge": "速度測試",
-    "sectionTitle": "專業級速度測試",
-    "sectionSubtitle": "整合 Speedtest by Ookla CLI，提供準確的網路速度測量",
-    "downloadSpeed": "下載速度",
-    "uploadSpeed": "上傳速度",
-    "ping": "延遲",
-    "server": "測試伺服器",
-    "startTest": "開始測試",
-    "testing": "測試中..."
+  "chartDemo": {
+    "sectionEyebrow": "CHAPTER 03",
+    "sectionTitleEn": "Live Rhythm Strip",
+    "sectionTitleZh": "即時節律圖",
+    "sectionSubtitle": "這是一段真實樣貌的頻寬心電圖：平穩底噪、跨越峰值、偶發尖波，都一目了然。",
+    "leadDown": "LEAD I",
+    "leadUp": "LEAD II",
+    "downLabel": "DOWN",
+    "upLabel": "UP",
+    "gain": "GAIN 10mm/mV",
+    "speed": "SPEED 25mm/s",
+    "filter": "FILTER 0.5-40 Hz"
   },
   "faq": {
-    "sectionBadge": "常見問題",
-    "sectionTitle": "您可能想知道的",
-    "sectionSubtitle": "關於 Bandwidth ECG 的常見問題解答",
+    "sectionEyebrow": "CHAPTER 04",
+    "sectionTitleEn": "Clinical Notes",
+    "sectionTitleZh": "醫囑",
+    "sectionSubtitle": "最常見的五項診間提問。",
     "items": [
       {
-        "question": "Bandwidth ECG 是免費的嗎？",
-        "answer": "是的，Bandwidth ECG 完全免費使用，沒有任何隱藏費用或功能限制。"
+        "question": "這個 App 要錢嗎？",
+        "answer": "不收。100% 免費、開源。沒有訂閱、沒有內購、沒有廣告。"
+      },
+      {
+        "question": "我的網路資料會被上傳嗎？",
+        "answer": "完全不會。所有讀數只寫入你本機的 ~/Library/Application Support/BandwidthECG。這不是雲端服務。"
       },
       {
         "question": "支援哪些 macOS 版本？",
-        "answer": "Bandwidth ECG 支援 macOS 13.0 (Ventura) 及更新版本。"
+        "answer": "macOS 13.0 (Ventura) 以上。Apple Silicon 與 Intel 皆原生支援。"
       },
       {
-        "question": "應用程式會影響系統效能嗎？",
-        "answer": "不會。我們的應用程式經過優化，CPU 使用率低於 1%，記憶體佔用小於 50MB。"
+        "question": "App 會拖慢我的電腦嗎？",
+        "answer": "不會。監測採用系統原生 API，CPU 通常 < 1%，RAM < 50 MB。你幾乎感覺不到它。"
       },
       {
-        "question": "數據會上傳到伺服器嗎？",
-        "answer": "不會。所有監控數據都儲存在本機，我們不會收集或上傳任何用戶數據。"
-      },
-      {
-        "question": "如何解除安裝？",
-        "answer": "只需將應用程式從「應用程式」資料夾移至垃圾桶即可。如需清除所有數據，可同時刪除 ~/Library/Application Support/BandwidthECG 資料夾。"
+        "question": "怎麼完整移除？",
+        "answer": "把 App 丟進垃圾桶就好。如果想連讀數一起清除，刪除 ~/Library/Application Support/BandwidthECG 即可。"
       }
     ]
   },
   "download": {
-    "sectionBadge": "立即下載",
-    "sectionTitle": "開始監控您的網路",
-    "sectionSubtitle": "免費下載，無需註冊，立即開始使用",
-    "downloadBtn": "下載 macOS 版",
-    "version": "版本",
-    "requirements": "需要 macOS 13.0 或更新版本",
+    "sectionEyebrow": "DISCHARGE",
+    "sectionTitleEn": "Take it home.",
+    "sectionTitleZh": "把這台儀器裝進你的 Mac",
+    "sectionSubtitle": "免費、本機、開源。從今天開始，用數據決定你到底需不需要升級。",
+    "ctaDownload": "Download · macOS 13+",
+    "ctaGithub": "View on GitHub",
+    "requirements": "Requires macOS 13.0+ · Apple Silicon & Intel",
+    "stamp": "DIAGNOSTIC READY v1.0",
     "features": [
-      "免費使用，無廣告",
-      "隱私優先，數據不上傳",
-      "輕量高效，不影響系統效能"
+      "Free & open source",
+      "100% local — no data uploaded",
+      "CPU < 1% · RAM < 50 MB"
     ]
   },
   "footer": {
-    "copyright": "Bandwidth ECG. 保留所有權利。",
-    "madeWith": "以",
-    "madeIn": "製作於台灣"
+    "copyright": "Bandwidth ECG. All vitals reserved.",
+    "stamp": "DIAGNOSTIC READY v1.0",
+    "madeIn": "Engineered in Taiwan",
+    "disclaimer": "Not a medical device. For network health only."
   }
 }

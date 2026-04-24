@@ -1,6 +1,5 @@
 ---
-// V3 專業商務風格 - Hero Section
-import Button from '../Button.astro'
+// V1 Clinical ECG — Hero with continuously tracing ECG waveform
 import { type Lang, defaultLang, useTranslations } from '../../i18n'
 
 interface Props {
@@ -9,144 +8,269 @@ interface Props {
 
 const { lang = defaultLang } = Astro.props
 const t = useTranslations(lang)
+
+// Pre-computed ECG PQRST trace path (repeats across 1600 viewBox units)
+// Flat baseline with sharp R-spikes every ~200 units
+const ecgPath = [
+  'M 0 60',
+  // beat 1
+  'L 40 60', 'L 52 58', 'L 60 60',
+  'L 80 60', 'L 86 65', 'L 90 32', 'L 96 90', 'L 102 60',
+  'L 130 60', 'L 140 55', 'L 160 60',
+  // beat 2
+  'L 200 60', 'L 212 58', 'L 220 60',
+  'L 240 60', 'L 246 65', 'L 250 32', 'L 256 90', 'L 262 60',
+  'L 290 60', 'L 300 55', 'L 320 60',
+  // beat 3
+  'L 360 60', 'L 372 58', 'L 380 60',
+  'L 400 60', 'L 406 65', 'L 410 32', 'L 416 90', 'L 422 60',
+  'L 450 60', 'L 460 55', 'L 480 60',
+  // beat 4
+  'L 520 60', 'L 532 58', 'L 540 60',
+  'L 560 60', 'L 566 65', 'L 570 32', 'L 576 90', 'L 582 60',
+  'L 610 60', 'L 620 55', 'L 640 60',
+  // beat 5
+  'L 680 60', 'L 692 58', 'L 700 60',
+  'L 720 60', 'L 726 65', 'L 730 32', 'L 736 90', 'L 742 60',
+  'L 770 60', 'L 780 55', 'L 800 60',
+  // beat 6
+  'L 840 60', 'L 852 58', 'L 860 60',
+  'L 880 60', 'L 886 65', 'L 890 32', 'L 896 90', 'L 902 60',
+  'L 930 60', 'L 940 55', 'L 960 60',
+  // beat 7
+  'L 1000 60', 'L 1012 58', 'L 1020 60',
+  'L 1040 60', 'L 1046 65', 'L 1050 32', 'L 1056 90', 'L 1062 60',
+  'L 1090 60', 'L 1100 55', 'L 1120 60',
+  // beat 8
+  'L 1160 60', 'L 1172 58', 'L 1180 60',
+  'L 1200 60', 'L 1206 65', 'L 1210 32', 'L 1216 90', 'L 1222 60',
+  'L 1250 60', 'L 1260 55', 'L 1280 60',
+  'L 1600 60'
+].join(' ')
+
+// Upload trace — smaller spikes, slightly different phase
+const uploadPath = [
+  'M 0 60',
+  'L 60 60', 'L 72 58', 'L 80 60',
+  'L 100 60', 'L 106 63', 'L 110 45', 'L 116 75', 'L 122 60',
+  'L 150 60', 'L 160 57', 'L 180 60',
+  'L 260 60', 'L 272 58', 'L 280 60',
+  'L 300 60', 'L 306 63', 'L 310 45', 'L 316 75', 'L 322 60',
+  'L 350 60', 'L 360 57', 'L 380 60',
+  'L 460 60', 'L 472 58', 'L 480 60',
+  'L 500 60', 'L 506 63', 'L 510 45', 'L 516 75', 'L 522 60',
+  'L 550 60', 'L 560 57', 'L 580 60',
+  'L 660 60', 'L 672 58', 'L 680 60',
+  'L 700 60', 'L 706 63', 'L 710 45', 'L 716 75', 'L 722 60',
+  'L 750 60', 'L 760 57', 'L 780 60',
+  'L 860 60', 'L 872 58', 'L 880 60',
+  'L 900 60', 'L 906 63', 'L 910 45', 'L 916 75', 'L 922 60',
+  'L 950 60', 'L 960 57', 'L 980 60',
+  'L 1060 60', 'L 1072 58', 'L 1080 60',
+  'L 1100 60', 'L 1106 63', 'L 1110 45', 'L 1116 75', 'L 1122 60',
+  'L 1150 60', 'L 1160 57', 'L 1180 60',
+  'L 1260 60', 'L 1272 58', 'L 1280 60',
+  'L 1600 60'
+].join(' ')
 ---
 
-<section class="pt-28 pb-20 md:pt-36 md:pb-28 bg-gradient-to-b from-slate-50 to-white">
-  <div class="max-w-7xl mx-auto px-6">
-    <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-      <!-- Text Content -->
-      <div class="text-center lg:text-left">
-        <!-- Trust badges -->
-        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-6 animate-fade-in-up">
-          <span class="badge badge-primary">{t('hero.badge1')}</span>
-          <span class="badge badge-gold">{t('hero.badge2')}</span>
-        </div>
+<section class="relative overflow-hidden ecg-paper pt-20 pb-24 md:pt-28 md:pb-32">
+  <div class="clinic-container relative">
 
-        <!-- Title -->
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight mb-6 animate-fade-in-up delay-100">
-          {t('hero.title1')}<br class="hidden sm:block" />
-          <span class="gradient-text-pro">{t('hero.title2')}</span>
+    <!-- Top strip: patient header, like a chart sheet header row -->
+    <div class="flex flex-wrap items-center gap-x-10 gap-y-3 mb-12 pb-4 border-b border-dashed border-[#8C8677]/50">
+      <div class="flex items-baseline gap-2">
+        <span class="mono-label text-[#8C8677]">{t('hero.patient')}</span>
+        <span class="readout text-[13px]">{t('hero.patientName')}</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="mono-label text-[#8C8677]">{t('hero.rhythm')}</span>
+        <span class="readout text-[13px] text-[#008050]">{t('hero.rhythmValue')}</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="mono-label text-[#8C8677]">{t('hero.acquired')}</span>
+        <span class="readout text-[13px]" id="acq-time">14:32:07</span>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#D1342C] live-dot"></span>
+        <span class="mono-label text-[#D1342C] font-semibold">{t('hero.live')}</span>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-[1.15fr_1fr] gap-14 items-start">
+      <!-- LEFT: Copy + CTAs -->
+      <div>
+        <p class="eyebrow mb-6 text-[#008050]">{t('hero.eyebrow')}</p>
+
+        <h1 class="font-display text-[44px] sm:text-[56px] lg:text-[72px] leading-[0.98] font-[650] tracking-[-0.03em] text-[#0D0D0D]">
+          {t('hero.titleEn')}
         </h1>
+        <h2 class="font-display text-[22px] sm:text-[26px] lg:text-[30px] leading-tight font-[600] text-[#5A5A5A] mt-4 tracking-tight">
+          {t('hero.titleZh')}
+        </h2>
 
-        <!-- Subtitle -->
-        <p class="text-lg md:text-xl text-slate-600 leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-in-up delay-200">
+        <!-- Underscore divider — like a signature line -->
+        <div class="mt-8 h-px w-24 bg-[#0D0D0D]"></div>
+
+        <p class="mt-8 text-[17px] lg:text-[18px] leading-[1.7] text-[#3A3A3A] max-w-[560px]">
           {t('hero.subtitle')}
         </p>
 
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-in-up delay-300">
-          <Button href="#download" size="lg">
-            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        <div class="mt-10 flex flex-wrap gap-3 items-center">
+          <a href="#download" class="btn-signal">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            {t('hero.downloadBtn')}
-          </Button>
-          <Button href="#features" variant="ghost" size="lg">
-            {t('hero.learnMore')}
-            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </Button>
+            {t('hero.ctaDownload')}
+          </a>
+          <a href="#features" class="btn-ghost">
+            {t('hero.ctaLearn')}
+            <span aria-hidden="true">&rarr;</span>
+          </a>
         </div>
 
-        <!-- Stats -->
-        <div class="flex items-center justify-center lg:justify-start gap-8 mt-12 pt-8 border-t border-slate-200 animate-fade-in-up delay-400">
-          <div>
-            <div class="text-3xl font-bold text-slate-900">< 1%</div>
-            <div class="text-sm text-slate-500">{t('hero.statCpu')}</div>
+        <!-- Readouts strip — like a lab panel footer -->
+        <div class="mt-14 grid grid-cols-3 gap-4 max-w-[560px]">
+          <div class="border-l-2 border-[#00B86B] pl-4">
+            <div class="mono-label text-[#8C8677]">CPU</div>
+            <div class="readout text-[24px] num-tick">&lt; 1<span class="text-[13px] text-[#8C8677] ml-1">%</span></div>
           </div>
-          <div class="w-px h-12 bg-slate-200"></div>
-          <div>
-            <div class="text-3xl font-bold text-slate-900">< 50MB</div>
-            <div class="text-sm text-slate-500">{t('hero.statMemory')}</div>
+          <div class="border-l-2 border-[#00B86B] pl-4">
+            <div class="mono-label text-[#8C8677]">RAM</div>
+            <div class="readout text-[24px] num-tick">&lt; 50<span class="text-[13px] text-[#8C8677] ml-1">MB</span></div>
           </div>
-          <div class="w-px h-12 bg-slate-200"></div>
-          <div>
-            <div class="text-3xl font-bold text-slate-900">24hr</div>
-            <div class="text-sm text-slate-500">{t('hero.statHistory')}</div>
+          <div class="border-l-2 border-[#00B86B] pl-4">
+            <div class="mono-label text-[#8C8677]">macOS</div>
+            <div class="readout text-[24px]">13<span class="text-[13px] text-[#8C8677] ml-1">+</span></div>
           </div>
         </div>
       </div>
 
-      <!-- App Preview -->
-      <div class="animate-fade-in-up delay-200">
-        <div class="relative">
-          <!-- macOS Window Frame -->
-          <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200 overflow-hidden border border-slate-200">
-            <!-- Window Title Bar -->
-            <div class="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-100">
-              <div class="w-3 h-3 rounded-full bg-red-400"></div>
-              <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
-              <div class="w-3 h-3 rounded-full bg-green-400"></div>
-              <span class="ml-4 text-sm text-slate-500 font-medium">Bandwidth ECG</span>
-            </div>
+      <!-- RIGHT: Monitor mockup with two animated ECG traces -->
+      <div class="relative">
+        <!-- Monitor "hardware" label -->
+        <div class="flex items-center justify-between mb-2 px-1">
+          <span class="mono-label text-[10px] text-[#8C8677]">MONITOR · BandwidthECG.app</span>
+          <span class="mono-label text-[10px] text-[#008050] flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#00B86B] live-dot"></span>
+            RECORDING
+          </span>
+        </div>
 
-            <!-- App Content -->
-            <div class="p-6 bg-white">
-              <!-- Header stats -->
-              <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-6">
-                  <div>
-                    <div class="text-xs text-slate-500 uppercase tracking-wide font-medium">{t('hero.download')}</div>
-                    <div class="text-2xl font-bold text-[#1E40AF]">125.4 MB/s</div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-slate-500 uppercase tracking-wide font-medium">{t('hero.upload')}</div>
-                    <div class="text-2xl font-bold text-slate-700">12.8 MB/s</div>
-                  </div>
+        <div class="relative bg-[#FBFAF5] border border-[#0D0D0D] rounded-[4px] overflow-hidden shadow-[8px_8px_0_0_rgba(13,13,13,0.08)]">
+          <!-- Fake menu bar strip -->
+          <div class="flex items-center justify-between bg-[#F5F1E4] border-b border-[#E8DFD0] px-3 py-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#E8DFD0]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#E8DFD0]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#E8DFD0]"></span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="mono-label text-[10px] text-[#5A5A5A] flex items-center gap-1.5">
+                <svg width="12" height="8" viewBox="0 0 24 16" aria-hidden="true"><path d="M0 8 L5 8 L7 4 L9 12 L11 2 L13 14 L15 8 L24 8" stroke="#00B86B" stroke-width="2" fill="none"/></svg>
+                <span class="readout text-[11px]">318.4</span>
+                <span>&darr;</span>
+                <span class="readout text-[11px]">42.1</span>
+                <span>&uarr;</span>
+                <span class="text-[#8C8677]">Mbps</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Diagnostic panel body -->
+          <div class="ecg-paper p-5">
+            <!-- Lead I — DOWN -->
+            <div class="mb-5">
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-baseline gap-2">
+                  <span class="mono-label text-[#0D0D0D] font-[600]">{t('hero.leadDown')}</span>
+                  <span class="tag-normal text-[9px] py-0.5 px-1.5">
+                    <span class="tag-dot"></span>
+                    NORMAL
+                  </span>
                 </div>
-                <div class="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
-                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span class="text-xs font-medium text-green-700">{t('hero.monitoring')}</span>
+                <div class="flex items-baseline gap-1">
+                  <span class="readout text-[22px] font-[600] text-[#0D0D0D]">318.4</span>
+                  <span class="mono-label text-[#8C8677]">Mbps</span>
                 </div>
               </div>
-
-              <!-- Chart Preview -->
-              <div class="h-40 bg-slate-50 rounded-xl p-4 mb-6">
-                <svg class="w-full h-full" viewBox="0 0 400 120" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="v3ChartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stop-color="#1E40AF" stop-opacity="0.2" />
-                      <stop offset="100%" stop-color="#1E40AF" stop-opacity="0.02" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M0,100 Q20,90 40,85 T80,70 T120,55 T160,40 T200,45 T240,35 T280,25 T320,30 T360,20 T400,15 L400,120 L0,120 Z"
-                    fill="url(#v3ChartGradient)"
-                  />
-                  <path
-                    d="M0,100 Q20,90 40,85 T80,70 T120,55 T160,40 T200,45 T240,35 T280,25 T320,30 T360,20 T400,15"
-                    fill="none"
-                    stroke="#1E40AF"
-                    stroke-width="2"
-                  />
+              <div class="relative h-[110px] bg-[#FBFAF5]/60 border border-[#E8DFD0] rounded-[2px] overflow-hidden">
+                <svg viewBox="0 0 1600 120" preserveAspectRatio="none" class="w-full h-full" aria-hidden="true">
+                  <line x1="0" y1="60" x2="1600" y2="60" stroke="#E8DFD0" stroke-width="0.5" stroke-dasharray="4 4"/>
+                  <path d={ecgPath} class="ecg-trace"/>
                 </svg>
-              </div>
-
-              <!-- Stats Grid -->
-              <div class="grid grid-cols-3 gap-4">
-                <div class="p-4 bg-slate-50 rounded-xl">
-                  <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">{t('hero.todayPeak')}</div>
-                  <div class="text-lg font-bold text-slate-900">156.2 MB/s</div>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-xl">
-                  <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">{t('hero.allTimePeak')}</div>
-                  <div class="text-lg font-bold text-slate-900">312.5 MB/s</div>
-                </div>
-                <div class="p-4 bg-[#1E40AF]/5 rounded-xl">
-                  <div class="text-xs text-[#1E40AF] uppercase tracking-wide font-medium mb-1">{t('hero.planUsage')}</div>
-                  <div class="text-lg font-bold text-[#1E40AF]">78%</div>
+                <div class="absolute top-1/2 right-3 -translate-y-1/2">
+                  <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" class="ecg-cursor"/></svg>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Decorative badge -->
-          <div class="absolute -top-3 -right-3 px-3 py-1.5 bg-[#D97706] text-white text-xs font-semibold rounded-full shadow-lg">
-            {t('hero.freeToUse')}
+            <!-- Lead II — UP -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-baseline gap-2">
+                  <span class="mono-label text-[#0D0D0D] font-[600]">{t('hero.leadUp')}</span>
+                  <span class="tag-normal text-[9px] py-0.5 px-1.5">
+                    <span class="tag-dot"></span>
+                    NORMAL
+                  </span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                  <span class="readout text-[22px] font-[600] text-[#0D0D0D]">42.1</span>
+                  <span class="mono-label text-[#8C8677]">Mbps</span>
+                </div>
+              </div>
+              <div class="relative h-[90px] bg-[#FBFAF5]/60 border border-[#E8DFD0] rounded-[2px] overflow-hidden">
+                <svg viewBox="0 0 1600 120" preserveAspectRatio="none" class="w-full h-full" aria-hidden="true">
+                  <line x1="0" y1="60" x2="1600" y2="60" stroke="#E8DFD0" stroke-width="0.5" stroke-dasharray="4 4"/>
+                  <path d={uploadPath} class="ecg-trace ecg-trace--slow"/>
+                </svg>
+                <div class="absolute top-1/2 right-3 -translate-y-1/2">
+                  <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" class="ecg-cursor"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom readings strip -->
+            <div class="mt-5 pt-4 border-t border-dashed border-[#E8DFD0] grid grid-cols-3 gap-3">
+              <div>
+                <div class="mono-label text-[#8C8677] text-[9px]">{t('hero.todayPeak')}</div>
+                <div class="readout text-[15px] text-[#0D0D0D]">471.8 <span class="text-[#8C8677] text-[10px]">Mbps</span></div>
+              </div>
+              <div>
+                <div class="mono-label text-[#8C8677] text-[9px]">{t('hero.allTimePeak')}</div>
+                <div class="readout text-[15px] text-[#0D0D0D]">812.3 <span class="text-[#8C8677] text-[10px]">Mbps</span></div>
+              </div>
+              <div>
+                <div class="mono-label text-[#8C8677] text-[9px]">{t('hero.planUsage')}</div>
+                <div class="readout text-[15px] text-[#008050]">63 <span class="text-[#8C8677] text-[10px]">% · 500 Mbps</span></div>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <!-- Calibration marks annotation -->
+        <div class="mt-3 flex items-center justify-between px-1">
+          <span class="mono-label text-[10px] text-[#8C8677]">GAIN 10mm/mV &middot; SPEED 25mm/s</span>
+          <span class="mono-label text-[10px] text-[#8C8677]">SHEET 01 / 24</span>
         </div>
       </div>
     </div>
   </div>
+
+  <script is:inline>
+    (() => {
+      const el = document.getElementById('acq-time');
+      if (!el) return;
+      const start = new Date();
+      start.setHours(14, 32, 7);
+      setInterval(() => {
+        start.setSeconds(start.getSeconds() + 1);
+        const hh = String(start.getHours()).padStart(2, '0');
+        const mm = String(start.getMinutes()).padStart(2, '0');
+        const ss = String(start.getSeconds()).padStart(2, '0');
+        el.textContent = `${hh}:${mm}:${ss}`;
+      }, 1000);
+    })();
+  </script>
 </section>

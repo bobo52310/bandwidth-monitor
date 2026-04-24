@@ -10,7 +10,7 @@ interface Props {
 
 const {
   title,
-  description = '企業級網路監控解決方案。即時監控網速、智能峰值追蹤、數據驅動的網路升級決策。',
+  description = '為你的網路做即時心電圖診斷。追蹤頻寬峰值、識別卡頓節律，用醫療級儀表盤回答那個問題：我該不該升級？',
   lang = defaultLang
 } = Astro.props
 
@@ -37,9 +37,17 @@ const htmlLangMap: Record<Lang, string> = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#1E40AF" />
+    <meta name="theme-color" content="#FBFAF5" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
+
+    <!-- Preconnect + fonts: Fraunces (display serif), Inter (UI), IBM Plex Mono (numbers), Noto Serif/Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600&family=Noto+Serif+TC:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Alternate language links -->
     {alternateLinks.map(({ lang: altLang, href }) => (
