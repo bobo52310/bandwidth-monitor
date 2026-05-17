@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #ffffff;
+      }
+      :root {
+        --paper: #ffffff;
+        --paper-dim: #f9fafb;
+        --grid-fine: #f3f4f6;
+        --grid-bold: #e5e7eb;
+        --ink: #0f172a;
+        --ink-2: #475569;
+        --ink-3: #64748b;
+        --signal: #3b82f6;
+        --signal-dark: #2563eb;
+        --signal-glow: rgba(59, 130, 246, 0.22);
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --green: #047857;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        background: var(--paper);
+        background-image:
+          linear-gradient(to right, var(--grid-bold) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--grid-bold) 1px, transparent 1px),
+          linear-gradient(to right, var(--grid-fine) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--grid-fine) 1px, transparent 1px);
+        background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+        background-position: 0 0;
+      }
+
+      .session-strip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 48px 96px 28px;
+        border-bottom: 1px solid var(--grid-bold);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 24px;
+        letter-spacing: 0.18em;
+        color: var(--ink-3);
+        text-transform: uppercase;
+      }
+      .session-strip .live {
+        color: var(--red);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .live-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--red);
+        box-shadow: 0 0 18px rgba(239, 68, 68, 0.55);
+      }
+
+      .eyebrow {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 28px;
+        letter-spacing: 0.32em;
+        color: var(--signal-dark);
+        text-transform: uppercase;
+        font-weight: 500;
+      }
+
+      /* =====================================================
+         Scene 1 · Hook · "$480 / year" punch
+         ===================================================== */
+      .s1-stack {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 140px 100px 60px;
+        gap: 36px;
+        text-align: center;
+      }
+      .s1-setup {
+        font-family: "Inter", sans-serif;
+        font-size: 60px;
+        font-weight: 500;
+        color: var(--ink-2);
+        letter-spacing: -0.018em;
+      }
+      .s1-setup .hl-red {
+        color: var(--red);
+        font-weight: 700;
+      }
+      .giant-dollar {
+        font-family: "Inter", sans-serif;
+        font-weight: 700;
+        line-height: 0.9;
+        display: flex;
+        align-items: baseline;
+        gap: 24px;
+      }
+      .giant-dollar .amount {
+        font-size: 360px;
+        color: var(--red);
+        letter-spacing: -0.055em;
+      }
+      .giant-dollar .suffix {
+        font-size: 96px;
+        font-weight: 500;
+        color: var(--ink-2);
+        letter-spacing: -0.012em;
+      }
+      .s1-proof {
+        font-family: "Inter", sans-serif;
+        font-size: 44px;
+        font-weight: 500;
+        color: var(--ink);
+        letter-spacing: -0.012em;
+        max-width: 1500px;
+        line-height: 1.35;
+      }
+      .s1-proof .hl {
+        color: var(--signal-dark);
+        font-weight: 700;
+      }
+      .s1-proof .hl-red {
+        color: var(--red);
+        font-weight: 700;
+      }
+      .s1-mini-strip {
+        width: 1280px;
+        padding: 22px 36px 18px;
+        background: var(--paper-dim);
+        border: 1px solid var(--grid-bold);
+        border-radius: 14px;
+      }
+      .s1-mini-strip .legend {
+        display: flex;
+        justify-content: space-between;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 22px;
+        letter-spacing: 0.18em;
+        color: var(--ink-2);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .s1-mini-strip .legend .ceil {
+        color: var(--signal-dark);
+      }
+      .s1-mini-svg {
+        display: block;
+        width: 100%;
+        height: 90px;
+      }
+      .ceiling-line {
+        stroke: var(--ink-3);
+        stroke-width: 2;
+        stroke-dasharray: 6 8;
+      }
+      .ecg-path {
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* =====================================================
+         Scene 2 · Twist
+         ===================================================== */
+      .s2-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 36px;
+        padding: 0 100px;
+      }
+      .s2-eyebrow {
+        margin-bottom: 12px;
+      }
+      .s2-wordmark {
+        font-family: "Inter", sans-serif;
+        font-size: 196px;
+        font-weight: 700;
+        letter-spacing: -0.045em;
+        color: var(--ink);
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        gap: 36px;
+      }
+      .s2-wordmark .glyph {
+        width: 196px;
+        height: 196px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .s2-tagline {
+        font-family: "Inter", sans-serif;
+        font-size: 60px;
+        font-weight: 500;
+        color: var(--ink-2);
+        letter-spacing: -0.015em;
+        text-align: center;
+        max-width: 1400px;
+      }
+      .s2-tagline .hl {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .s2-pulse {
+        width: 760px;
+        height: 90px;
+        margin-top: 18px;
+      }
+
+      /* =====================================================
+         Scene 3 · Mechanic
+         ===================================================== */
+      .menu-bar {
+        position: absolute;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1500px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--grid-bold);
+        border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 26px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 26px;
+        color: var(--ink);
+      }
+      .menu-bar-left,
+      .menu-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        color: var(--ink-2);
+      }
+      .menu-bar-right .speed {
+        color: var(--ink);
+        font-weight: 600;
+        font-size: 30px;
+        letter-spacing: 0.02em;
+      }
+      .menu-bar-right .speed .arrow {
+        color: var(--signal-dark);
+        margin-right: 6px;
+      }
+      .menu-bar-right .speed.alert {
+        color: var(--red);
+      }
+      .menu-bar-right .speed.alert .arrow {
+        color: var(--red);
+      }
+      .speed-stack {
+        position: relative;
+        width: 280px;
+        height: 36px;
+      }
+      .speed-frame {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 18px;
+        opacity: 0;
+      }
+
+      .s3-monitor {
+        position: absolute;
+        top: 240px;
+        left: 100px;
+        right: 100px;
+        bottom: 200px;
+        background: var(--paper);
+        border: 1px solid var(--grid-bold);
+        border-radius: 22px;
+        padding: 48px 56px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.06);
+        display: flex;
+        flex-direction: column;
+      }
+      .monitor-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 24px;
+        letter-spacing: 0.22em;
+        color: var(--ink-3);
+        text-transform: uppercase;
+      }
+      .monitor-head .live {
+        color: var(--red);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .monitor-body {
+        flex: 1;
+        position: relative;
+      }
+      .monitor-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .peak-callout {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        background-color: #ffffff;
+        border: 2px solid #b91c1c;
+        border-left: 8px solid #b91c1c;
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 10px 24px rgba(239, 68, 68, 0.18);
+      }
+      .peak-callout .pk-tag {
+        color: #b91c1c;
+      }
+      .peak-callout .pk-sep {
+        color: var(--ink-3);
+      }
+      .peak-callout .pk-val {
+        color: var(--ink);
+      }
+      .s3-caption {
+        position: absolute;
+        left: 100px;
+        right: 100px;
+        bottom: 80px;
+        text-align: center;
+        font-family: "Inter", sans-serif;
+        font-size: 48px;
+        line-height: 1.15;
+        font-weight: 500;
+        color: var(--ink-2);
+        letter-spacing: -0.012em;
+      }
+      .s3-caption .hl {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      /* =====================================================
+         Scene 4 · Range
+         ===================================================== */
+      .s4-grid {
+        position: absolute;
+        top: 160px;
+        left: 100px;
+        right: 100px;
+        bottom: 80px;
+        display: grid;
+        grid-template-columns: 1.05fr 1fr;
+        gap: 60px;
+        align-items: center;
+      }
+      .hist-frame {
+        background: var(--paper-dim);
+        border: 1px solid var(--grid-bold);
+        border-radius: 20px;
+        padding: 44px 48px 40px;
+      }
+      .hist-head {
+        display: flex;
+        justify-content: space-between;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 24px;
+        letter-spacing: 0.18em;
+        color: var(--ink-3);
+        text-transform: uppercase;
+        margin-bottom: 32px;
+      }
+      .hist-head .day-tag {
+        color: var(--signal-dark);
+        font-weight: 600;
+      }
+      .hist-svg {
+        display: block;
+        width: 100%;
+        height: 440px;
+      }
+      .hist-axis-line {
+        stroke: var(--ink-3);
+        stroke-width: 2;
+        stroke-dasharray: 4 6;
+      }
+      .hist-axis-label {
+        fill: var(--ink-3);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 22px;
+        letter-spacing: 0.14em;
+      }
+      .hist-axis-label.signal {
+        fill: var(--signal-dark);
+      }
+      .hist-bar {
+        fill: var(--ink-2);
+      }
+      .hist-bar.warn {
+        fill: var(--amber);
+      }
+
+      .verdict {
+        background: var(--paper);
+        border: 1px solid var(--ink);
+        border-radius: 20px;
+        padding: 44px 52px;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+        font-family: "Inter", sans-serif;
+        position: relative;
+      }
+      .verdict::before {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: -1px;
+        width: 6px;
+        height: calc(100% + 2px);
+        background: var(--green);
+        border-radius: 20px 0 0 20px;
+      }
+      .verdict .v-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 24px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        margin-bottom: 14px;
+      }
+      .verdict h3 {
+        font-family: "Inter", sans-serif;
+        font-size: 64px;
+        font-weight: 700;
+        line-height: 1.05;
+        letter-spacing: -0.025em;
+        color: var(--ink);
+        margin-bottom: 36px;
+      }
+      .verdict-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 16px 0;
+        border-top: 1px solid var(--grid-bold);
+        font-family: "Inter", sans-serif;
+      }
+      .verdict-row .k {
+        font-size: 26px;
+        color: var(--ink-2);
+        letter-spacing: -0.005em;
+      }
+      .verdict-row .v {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 34px;
+        font-weight: 600;
+        color: var(--ink);
+        letter-spacing: 0.02em;
+      }
+      .verdict-row .v.signal { color: var(--signal-dark); }
+      .verdict-row .v.green { color: var(--green); }
+      .verdict-badge {
+        margin-top: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--green);
+        padding: 14px 22px;
+        border-radius: 999px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .verdict-badge .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--green);
+      }
+
+      /* =====================================================
+         Scene 5 · Heart
+         ===================================================== */
+      .s5-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 38px;
+        padding: 0 100px;
+        text-align: center;
+      }
+      .s5-wordmark {
+        font-family: "Inter", sans-serif;
+        font-size: 196px;
+        font-weight: 700;
+        letter-spacing: -0.045em;
+        color: var(--ink);
+        line-height: 1;
+      }
+      .s5-tagline {
+        font-family: "Inter", sans-serif;
+        font-size: 76px;
+        font-weight: 600;
+        color: var(--ink);
+        letter-spacing: -0.025em;
+        max-width: 1500px;
+      }
+      .s5-tagline .hl {
+        color: var(--red);
+      }
+      .s5-sub {
+        font-family: "Inter", sans-serif;
+        font-size: 38px;
+        font-weight: 400;
+        color: var(--ink-2);
+        margin-top: -10px;
+      }
+      .s5-chips {
+        display: flex;
+        gap: 22px;
+        margin-top: 22px;
+      }
+      .chip {
+        background: var(--paper-dim);
+        border: 1px solid var(--grid-bold);
+        border-radius: 999px;
+        padding: 18px 32px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 28px;
+        color: var(--ink);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .chip .dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 12px;
+        vertical-align: middle;
+        background: var(--green);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="28"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- =====================================================
+           SCENE 1 · Hook
+           ===================================================== -->
+      <div id="s1" class="scene">
+        <div class="session-strip">
+          <span>BANDWIDTH ECG &middot; Reality Report &middot; YEAR 1</span>
+          <span class="live"><span class="live-dot"></span>Overpaying</span>
+        </div>
+
+        <div class="s1-stack">
+          <div class="s1-setup">
+            You're probably <span class="hl-red">overpaying</span> your ISP by
+          </div>
+
+          <div class="giant-dollar">
+            <span class="amount">$480</span>
+            <span class="suffix">/ year</span>
+          </div>
+
+          <div class="s1-proof">
+            You bought a <span class="hl">1 Gbps</span> plan &mdash; but only use <span class="hl-red">18%</span> of it. Every month, for a year.
+          </div>
+
+          <div class="s1-mini-strip">
+            <div class="legend">
+              <span>Your daily peaks</span>
+              <span class="ceil">Ceiling &middot; 1 Gbps</span>
+            </div>
+            <svg
+              class="s1-mini-svg"
+              viewBox="0 0 1200 100"
+              preserveAspectRatio="none"
+            >
+              <line
+                class="ceiling-line"
+                x1="0"
+                y1="14"
+                x2="1200"
+                y2="14"
+              />
+              <path
+                id="s1-trace"
+                class="ecg-path"
+                d="M 0 78 L 90 78 L 108 74 L 120 78 L 195 78 L 207 64 L 222 50 L 237 76 L 252 78 L 345 78 L 360 70 L 378 50 L 393 78 L 480 78 L 498 70 L 510 76 L 624 78 L 645 64 L 663 70 L 684 78 L 780 78 L 807 70 L 828 52 L 846 78 L 939 78 L 960 68 L 981 76 L 1080 78 L 1098 62 L 1119 76 L 1200 78"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================
+           SCENE 2 · Twist
+           ===================================================== -->
+      <div id="s2" class="scene">
+        <div class="session-strip">
+          <span>BANDWIDTH ECG &middot; Introducing</span>
+          <span class="live"><span class="live-dot"></span>Quiet listening</span>
+        </div>
+
+        <div class="s2-center">
+          <div class="eyebrow s2-eyebrow">A menu bar app</div>
+          <div class="s2-wordmark">
+            <span class="glyph">
+              <svg viewBox="0 0 196 196" width="196" height="196">
+                <rect
+                  x="2"
+                  y="2"
+                  width="192"
+                  height="192"
+                  rx="44"
+                  fill="#0F172A"
+                />
+                <path
+                  d="M 22 100 L 56 100 L 64 92 L 72 100 L 96 100 L 104 70 L 112 132 L 120 100 L 138 100 L 150 88 L 174 100"
+                  fill="none"
+                  stroke="#FFFFFF"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <span>Bandwidth&nbsp;ECG</span>
+          </div>
+          <div class="s2-tagline">
+            <span class="hl">Quietly listens</span> to your real network &mdash; like a stethoscope, not a speed test.
+          </div>
+          <svg
+            class="s2-pulse"
+            viewBox="0 0 760 90"
+            preserveAspectRatio="none"
+          >
+            <path
+              id="s2-pulse-path"
+              d="M 0 45 L 200 45 L 220 40 L 240 45 L 320 45 L 332 35 L 344 18 L 356 72 L 368 45 L 440 45 L 540 45 L 560 38 L 580 45 L 760 45"
+              fill="none"
+              stroke="#2563EB"
+              stroke-width="5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- =====================================================
+           SCENE 3 · Mechanic
+           ===================================================== -->
+      <div id="s3" class="scene">
+        <div class="menu-bar">
+          <div class="menu-bar-left">
+            <span style="color: var(--ink); font-weight: 600">&#63743;</span>
+            <span>Finder</span>
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+          </div>
+          <div class="menu-bar-right">
+            <div class="speed-stack">
+              <div class="speed-frame" id="speed-f1">
+                <span class="speed"
+                  ><span class="arrow">&uarr;</span>14.8</span
+                >
+                <span class="speed"
+                  ><span class="arrow">&darr;</span>182.4</span
+                >
+                <span style="color: var(--ink-3)">Mbps</span>
+              </div>
+              <div class="speed-frame" id="speed-f2">
+                <span class="speed"
+                  ><span class="arrow">&uarr;</span>22.1</span
+                >
+                <span class="speed"
+                  ><span class="arrow">&darr;</span>241.7</span
+                >
+                <span style="color: var(--ink-3)">Mbps</span>
+              </div>
+              <div class="speed-frame" id="speed-f3">
+                <span class="speed alert"
+                  ><span class="arrow">&uarr;</span>18.6</span
+                >
+                <span class="speed alert"
+                  ><span class="arrow">&darr;</span>295.4</span
+                >
+                <span style="color: var(--ink-3)">Mbps</span>
+              </div>
+            </div>
+            <span>&#128276;</span>
+            <span>14:32</span>
+          </div>
+        </div>
+
+        <div class="s3-monitor">
+          <div class="monitor-head">
+            <span>Live waveform &middot; last 60s</span>
+            <span class="live"
+              ><span class="live-dot"></span>Recording</span
+            >
+          </div>
+          <div class="monitor-body">
+            <svg
+              class="monitor-svg"
+              viewBox="0 0 1700 400"
+              preserveAspectRatio="none"
+            >
+              <line
+                class="ceiling-line"
+                x1="0"
+                y1="60"
+                x2="1700"
+                y2="60"
+              />
+              <text
+                x="20"
+                y="50"
+                class="hist-axis-label signal"
+                style="text-transform: uppercase"
+              >
+                Plan ceiling &middot; 300 Mbps
+              </text>
+              <path
+                id="s3-trace-base"
+                class="ecg-path"
+                d="M 0 360 L 140 360 L 160 350 L 180 360 L 280 360 L 296 340 L 314 296 L 332 360 L 430 360 L 446 348 L 466 320 L 484 360 L 590 360 L 610 354 L 632 358 L 760 360 L 776 348 L 800 308 L 820 360 L 920 360 L 940 350 L 1100 360"
+              />
+              <path
+                id="s3-trace-peak"
+                d="M 1100 360 L 1118 348 L 1136 80 L 1156 380 L 1176 360 L 1340 360 L 1360 348 L 1380 354 L 1500 360 L 1520 350 L 1540 360 L 1700 360"
+                fill="none"
+                stroke="#EF4444"
+                stroke-width="5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div class="peak-callout" id="s3-callout">
+              <span class="pk-tag">PEAK</span>
+              <span class="pk-sep">&middot;</span>
+              <span class="pk-val">295.4 Mbps</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="s3-caption">
+          Real-time speed in the <span class="hl">menu bar</span>. Every peak <span class="hl">marked</span> and remembered.
+        </div>
+      </div>
+
+      <!-- =====================================================
+           SCENE 4 · Range
+           ===================================================== -->
+      <div id="s4" class="scene">
+        <div class="session-strip">
+          <span>BANDWIDTH ECG &middot; 30-day verdict</span>
+          <span class="live"><span class="live-dot"></span>Decision time</span>
+        </div>
+
+        <div class="s4-grid">
+          <div class="hist-frame">
+            <div class="hist-head">
+              <span>Daily peak &middot; last 30 days</span>
+              <span class="day-tag">Day 30</span>
+            </div>
+            <svg
+              class="hist-svg"
+              viewBox="0 0 900 440"
+              preserveAspectRatio="none"
+            >
+              <line
+                class="hist-axis-line"
+                x1="0"
+                y1="60"
+                x2="900"
+                y2="60"
+              />
+              <text
+                x="6"
+                y="48"
+                class="hist-axis-label signal"
+              >
+                CEILING 1000 Mbps
+              </text>
+              <line
+                class="hist-axis-line"
+                x1="0"
+                y1="392"
+                x2="900"
+                y2="392"
+              />
+              <text
+                x="6"
+                y="416"
+                class="hist-axis-label"
+              >
+                30 days &middot; one bar per day
+              </text>
+              <g id="s4-bars">
+                <rect class="hist-bar" x="10" y="332" width="22" height="48" />
+                <rect class="hist-bar" x="40" y="320" width="22" height="60" />
+                <rect class="hist-bar" x="70" y="324" width="22" height="56" />
+                <rect class="hist-bar" x="100" y="328" width="22" height="52" />
+                <rect class="hist-bar" x="130" y="334" width="22" height="46" />
+                <rect class="hist-bar" x="160" y="316" width="22" height="64" />
+                <rect class="hist-bar" x="190" y="320" width="22" height="60" />
+                <rect class="hist-bar" x="220" y="312" width="22" height="68" />
+                <rect class="hist-bar" x="250" y="324" width="22" height="56" />
+                <rect class="hist-bar" x="280" y="306" width="22" height="74" />
+                <rect class="hist-bar warn" x="310" y="262" width="22" height="118" />
+                <rect class="hist-bar" x="340" y="316" width="22" height="64" />
+                <rect class="hist-bar" x="370" y="320" width="22" height="60" />
+                <rect class="hist-bar" x="400" y="312" width="22" height="68" />
+                <rect class="hist-bar" x="430" y="332" width="22" height="48" />
+                <rect class="hist-bar warn" x="460" y="240" width="22" height="140" />
+                <rect class="hist-bar" x="490" y="316" width="22" height="64" />
+                <rect class="hist-bar" x="520" y="324" width="22" height="56" />
+                <rect class="hist-bar" x="550" y="312" width="22" height="68" />
+                <rect class="hist-bar" x="580" y="320" width="22" height="60" />
+                <rect class="hist-bar" x="610" y="328" width="22" height="52" />
+                <rect class="hist-bar" x="640" y="316" width="22" height="64" />
+                <rect class="hist-bar" x="670" y="324" width="22" height="56" />
+                <rect class="hist-bar" x="700" y="312" width="22" height="68" />
+                <rect class="hist-bar" x="730" y="322" width="22" height="58" />
+                <rect class="hist-bar" x="760" y="316" width="22" height="64" />
+                <rect class="hist-bar" x="790" y="324" width="22" height="56" />
+                <rect class="hist-bar" x="820" y="318" width="22" height="62" />
+                <rect class="hist-bar" x="850" y="328" width="22" height="52" />
+                <rect class="hist-bar" x="880" y="314" width="22" height="66" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="verdict">
+            <div class="v-label">Verdict</div>
+            <h3>You can safely <span style="color: var(--green)">downgrade</span>.</h3>
+            <div class="verdict-row">
+              <span class="k">Peak usage</span>
+              <span class="v">22% of 1 Gbps</span>
+            </div>
+            <div class="verdict-row">
+              <span class="k">Recommendation</span>
+              <span class="v signal">300 Mbps plan</span>
+            </div>
+            <div class="verdict-row">
+              <span class="k">Estimated savings</span>
+              <span class="v green">$480 / year</span>
+            </div>
+            <div class="verdict-badge">
+              <span class="dot"></span>Status &middot; Stable for 30 days
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================
+           SCENE 5 · Heart
+           ===================================================== -->
+      <div id="s5" class="scene">
+        <div class="session-strip">
+          <span>BANDWIDTH ECG &middot; v1.0</span>
+          <span class="live"><span class="live-dot"></span>Open source</span>
+        </div>
+
+        <div class="s5-center">
+          <div class="eyebrow">For the people who actually read the bill</div>
+          <div class="s5-wordmark">Bandwidth ECG</div>
+          <div class="s5-tagline">
+            Stop <span class="hl">overpaying</span> your ISP.
+          </div>
+          <div class="s5-sub">
+            Track. Verdict. Decide. &mdash; 100% on your Mac.
+          </div>
+          <div class="s5-chips">
+            <span class="chip"><span class="dot"></span>100% local</span>
+            <span class="chip"><span class="dot"></span>MIT open source</span>
+            <span class="chip"><span class="dot"></span>macOS 14+</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ---------- Initial state: hide everything except s1 ----------
+      gsap.set(["#s2", "#s3", "#s4", "#s5"], {
+        opacity: 0,
+        display: "none",
+      });
+      gsap.set("#s1", { opacity: 1, display: "block" });
+
+      // ---------- Scene 1 · Hook · 0–4.5s · "$480 / year" punch ----------
+      tl.from(
+        "#s1 .session-strip",
+        { opacity: 0, y: -20, duration: 0.5 },
+        0.0
+      );
+      tl.from(
+        "#s1 .s1-setup",
+        { opacity: 0, y: 24, duration: 0.55, ease: "power2.out" },
+        0.35
+      );
+      // GIANT $480 punch
+      tl.from(
+        "#s1 .giant-dollar .amount",
+        { opacity: 0, scale: 0.78, duration: 0.7, ease: "back.out(1.7)" },
+        0.95
+      );
+      tl.from(
+        "#s1 .giant-dollar .suffix",
+        { opacity: 0, x: -18, duration: 0.5 },
+        1.55
+      );
+      tl.from(
+        "#s1 .s1-proof",
+        { opacity: 0, y: 18, duration: 0.55 },
+        2.05
+      );
+      tl.from(
+        "#s1 .s1-mini-strip",
+        { opacity: 0, y: 16, duration: 0.5 },
+        2.55
+      );
+      // Mini ECG trace draw-on
+      const s1Trace = document.getElementById("s1-trace");
+      if (s1Trace) {
+        const len1 = s1Trace.getTotalLength();
+        s1Trace.style.strokeDasharray = len1;
+        s1Trace.style.strokeDashoffset = len1;
+        tl.to(
+          s1Trace,
+          { strokeDashoffset: 0, duration: 1.0, ease: "none" },
+          2.9
+        );
+      }
+      tl.to("#s1", { opacity: 0, duration: 0.5 }, 4.0);
+      tl.set("#s1", { display: "none" }, 4.6);
+
+      // ---------- Scene 2 · Twist · 4.3–9.0s ----------
+      tl.set("#s2", { display: "block" }, 4.2);
+      tl.to("#s2", { opacity: 1, duration: 0.5 }, 4.3);
+      tl.from(
+        "#s2 .s2-eyebrow",
+        { opacity: 0, y: 12, duration: 0.5 },
+        4.6
+      );
+      tl.from(
+        "#s2 .s2-wordmark .glyph",
+        { opacity: 0, scale: 0.85, duration: 0.6, ease: "back.out(1.6)" },
+        4.9
+      );
+      tl.from(
+        "#s2 .s2-wordmark span:last-child",
+        { opacity: 0, x: 30, duration: 0.6 },
+        5.1
+      );
+      tl.from(
+        "#s2 .s2-tagline",
+        { opacity: 0, y: 18, duration: 0.6 },
+        5.6
+      );
+      const s2Pulse = document.getElementById("s2-pulse-path");
+      if (s2Pulse) {
+        const len2 = s2Pulse.getTotalLength();
+        s2Pulse.style.strokeDasharray = len2;
+        s2Pulse.style.strokeDashoffset = len2;
+        tl.to(
+          s2Pulse,
+          { strokeDashoffset: 0, duration: 1.4, ease: "none" },
+          6.2
+        );
+      }
+      tl.to("#s2", { opacity: 0, duration: 0.5 }, 8.5);
+      tl.set("#s2", { display: "none" }, 9.1);
+
+      // ---------- Scene 3 · Mechanic · 8.8–16.0s ----------
+      tl.set("#s3", { display: "block" }, 8.7);
+      tl.to("#s3", { opacity: 1, duration: 0.5 }, 8.8);
+      tl.from(
+        "#s3 .menu-bar",
+        { opacity: 0, y: -30, duration: 0.6, ease: "power2.out" },
+        9.0
+      );
+      // cross-fade speed snapshots: f1 9.6→11.3, f2 11.3→13.0, f3 13.0→15.5
+      tl.set("#speed-f1", { opacity: 0 }, 8.8);
+      tl.set("#speed-f2", { opacity: 0 }, 8.8);
+      tl.set("#speed-f3", { opacity: 0 }, 8.8);
+      tl.to("#speed-f1", { opacity: 1, duration: 0.4 }, 9.6);
+      tl.to("#speed-f1", { opacity: 0, duration: 0.4 }, 11.1);
+      tl.to("#speed-f2", { opacity: 1, duration: 0.4 }, 11.3);
+      tl.to("#speed-f2", { opacity: 0, duration: 0.4 }, 12.8);
+      tl.to("#speed-f3", { opacity: 1, duration: 0.5 }, 13.0);
+
+      tl.from(
+        "#s3 .s3-monitor",
+        { opacity: 0, y: 40, duration: 0.7, ease: "power2.out" },
+        9.3
+      );
+      const s3Base = document.getElementById("s3-trace-base");
+      if (s3Base) {
+        const lenB = s3Base.getTotalLength();
+        s3Base.style.strokeDasharray = lenB;
+        s3Base.style.strokeDashoffset = lenB;
+        tl.to(
+          s3Base,
+          { strokeDashoffset: 0, duration: 3.2, ease: "none" },
+          10.0
+        );
+      }
+      const s3Peak = document.getElementById("s3-trace-peak");
+      if (s3Peak) {
+        const lenP = s3Peak.getTotalLength();
+        s3Peak.style.strokeDasharray = lenP;
+        s3Peak.style.strokeDashoffset = lenP;
+        tl.to(
+          s3Peak,
+          { strokeDashoffset: 0, duration: 0.9, ease: "none" },
+          13.2
+        );
+      }
+      gsap.set("#s3-callout", { display: "none" });
+      tl.set("#s3-callout", { display: "block" }, 13.2);
+      tl.from(
+        "#s3-callout",
+        { y: -28, scale: 0.7, duration: 0.4, ease: "back.out(2)" },
+        13.2
+      );
+      tl.from(
+        "#s3 .s3-caption",
+        { opacity: 0, y: 18, duration: 0.55 },
+        13.0
+      );
+
+      tl.to("#s3", { opacity: 0, duration: 0.5 }, 15.5);
+      tl.set("#s3", { display: "none" }, 16.1);
+
+      // ---------- Scene 4 · Range · 15.8–23.0s ----------
+      tl.set("#s4", { display: "block" }, 15.7);
+      tl.to("#s4", { opacity: 1, duration: 0.5 }, 15.8);
+      tl.from(
+        "#s4 .hist-frame",
+        { opacity: 0, x: -50, duration: 0.7, ease: "power2.out" },
+        16.0
+      );
+      // bars grow from baseline
+      gsap.set("#s4-bars rect", { transformOrigin: "center bottom", scaleY: 0 });
+      tl.to(
+        "#s4-bars rect",
+        {
+          scaleY: 1,
+          duration: 0.7,
+          ease: "power2.out",
+          stagger: { each: 0.025 },
+        },
+        16.6
+      );
+      tl.from(
+        "#s4 .verdict",
+        { opacity: 0, x: 50, duration: 0.7, ease: "power2.out" },
+        17.4
+      );
+      tl.from(
+        "#s4 .verdict h3",
+        { opacity: 0, y: 16, duration: 0.5 },
+        18.0
+      );
+      tl.from(
+        "#s4 .verdict .verdict-row",
+        { opacity: 0, y: 12, duration: 0.45, stagger: 0.25 },
+        18.5
+      );
+      tl.from(
+        "#s4 .verdict-badge",
+        { opacity: 0, scale: 0.9, duration: 0.45, ease: "back.out(1.7)" },
+        20.0
+      );
+
+      tl.to("#s4", { opacity: 0, duration: 0.5 }, 22.5);
+      tl.set("#s4", { display: "none" }, 23.1);
+
+      // ---------- Scene 5 · Heart · 22.8–28s ----------
+      tl.set("#s5", { display: "block" }, 22.7);
+      tl.to("#s5", { opacity: 1, duration: 0.5 }, 22.8);
+      tl.from(
+        "#s5 .eyebrow",
+        { opacity: 0, y: 12, duration: 0.5 },
+        23.1
+      );
+      tl.from(
+        "#s5 .s5-wordmark",
+        { opacity: 0, scale: 0.92, duration: 0.7, ease: "back.out(1.4)" },
+        23.4
+      );
+      tl.from(
+        "#s5 .s5-tagline",
+        { opacity: 0, y: 18, duration: 0.55 },
+        24.0
+      );
+      tl.from(
+        "#s5 .s5-sub",
+        { opacity: 0, y: 14, duration: 0.5 },
+        24.5
+      );
+      tl.from(
+        "#s5 .s5-chips .chip",
+        { opacity: 0, y: 14, duration: 0.45, stagger: 0.18 },
+        24.9
+      );
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

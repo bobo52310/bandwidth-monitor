@@ -70,3 +70,8 @@ fastlane/test_output
 
 # macOS
 .DS_Store
+
+# HyperFrames composition build artifacts (canonical copies live in docs/promo/)
+docs/design/promo-*/renders/
+docs/design/promo-*/snapshots/
+docs/design/promo-*/node_modules/

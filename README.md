@@ -9,17 +9,15 @@
 
 ---
 
-## 📸 螢幕截圖
+## 🎬 簡介動畫
 
-> **注意**: 專案開發中，螢幕截圖即將新增。
+![Bandwidth ECG · 28 秒看完](docs/promo/intro-zh-tw.gif)
 
-<!--
-TODO: 新增以下截圖
-- 選單列顯示
-- 詳細資訊彈出視窗
-- 設定介面
-- 圖表視圖（1小時/24小時）
--->
+> **28 秒看懂**：你付了 1 Gbps 的錢，實際上只用了 18% — Bandwidth ECG 在選單列安靜地量你 30 天，最後給你一個結論：升級、降級、還是維持現狀。
+
+**[🎞️ English version](docs/promo/intro-en.gif)** · [下載 MP4 (zh-TW)](docs/promo/intro-zh-tw.mp4) · [Download MP4 (EN)](docs/promo/intro-en.mp4)
+
+> 動畫原始檔（HyperFrames composition）：[`docs/design/promo-intro/`](docs/design/promo-intro/) · [`docs/design/promo-intro-zh-tw/`](docs/design/promo-intro-zh-tw/)
 
 ---
 
