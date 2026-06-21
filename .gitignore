@@ -75,3 +75,5 @@ fastlane/test_output
 docs/design/promo-*/renders/
 docs/design/promo-*/snapshots/
 docs/design/promo-*/node_modules/
+# Personal IDE workspace (local paths)
+bandwidth-monitor.code-workspace
