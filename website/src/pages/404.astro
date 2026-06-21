@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro'
+---
+
+<Layout title="404 · Bandwidth ECG" description="Signal lost — the page you requested could not be found.">
+  <main class="ecg-paper min-h-screen flex items-center justify-center px-6">
+    <div class="clinic-container max-w-[560px] text-center">
+      <p class="eyebrow mb-6 text-[var(--color-red)]">Flatline · 404</p>
+
+      <div class="readout num-tick text-[72px] sm:text-[96px] leading-none text-[var(--color-ink)]">
+        404
+      </div>
+
+      <h1 class="font-display text-[26px] sm:text-[32px] font-[650] tracking-tight text-[var(--color-ink)] mt-6">
+        Signal lost
+      </h1>
+      <p class="mt-4 text-[16px] leading-[1.7] text-[var(--color-ink-2)]">
+        我們在這個位址上量不到任何訊號。<br />
+        No reading at this address — the page may have moved or never existed.
+      </p>
+
+      <div class="mt-10">
+        <a href="/" class="btn-signal">← 回到首頁 / Back to home</a>
+      </div>
+    </div>
+  </main>
+</Layout>

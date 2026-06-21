@@ -1,0 +1,3 @@
+# Custom 404 — Astro builds /404.html, Cloudflare serves it by default.
+# Keep this catch-all last.
+/*  /404.html  404

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bandwidth-ecg.bobochen.dev/sitemap-index.xml
