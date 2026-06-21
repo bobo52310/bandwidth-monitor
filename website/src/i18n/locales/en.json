@@ -137,7 +137,7 @@
     "items": [
       {
         "question": "Is this really free?",
-        "answer": "Yes — 100% free and open source. No subscription, no in-app purchase, no ads."
+        "answer": "Yes — 100% free. No subscription, no in-app purchase, no ads."
       },
       {
         "question": "Does my data leave my computer?",
@@ -161,20 +161,20 @@
     "sectionEyebrow": "DISCHARGE",
     "sectionTitleEn": "Take it home.",
     "sectionTitleZh": "Install the instrument.",
-    "sectionSubtitle": "Free. Local. Open source. Starting today, decide with data — not gut feel.",
+    "sectionSubtitle": "Free. Local. Lightweight. Starting today, decide with data — not gut feel.",
     "ctaDownload": "Download · macOS 13+",
     "ctaGithub": "View on GitHub",
     "requirements": "Requires macOS 13.0+ · Apple Silicon & Intel",
-    "stamp": "DIAGNOSTIC READY v1.0",
+    "stamp": "COMING SOON",
     "features": [
-      "Free & open source",
+      "Free · No ads",
       "100% local — no data uploaded",
       "CPU < 1% · RAM < 50 MB"
     ]
   },
   "footer": {
     "copyright": "Bandwidth ECG. All vitals reserved.",
-    "stamp": "DIAGNOSTIC READY v1.0",
+    "stamp": "COMING SOON",
     "madeIn": "Engineered in Taiwan",
     "disclaimer": "Not a medical device. For network health only."
   }

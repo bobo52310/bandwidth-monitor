@@ -137,7 +137,7 @@
     "items": [
       {
         "question": "這個軟體需要付費嗎？",
-        "answer": "完全免費且開源。沒有任何訂閱制、應用內購買，也沒有廣告打擾。"
+        "answer": "完全免費。沒有任何訂閱制、應用內購買，也沒有廣告打擾。"
       },
       {
         "question": "我的網路使用紀錄會被上傳嗎？",
@@ -161,20 +161,20 @@
     "sectionEyebrow": "GET STARTED",
     "sectionTitleEn": "Ready to gain insights?",
     "sectionTitleZh": "現在就開始掌握你的網路",
-    "sectionSubtitle": "免費、開源、極致輕量。讓數據成為你升級網路方案的最強後盾。",
+    "sectionSubtitle": "免費、本機運作、極致輕量。讓數據成為你升級網路方案的最強後盾。",
     "ctaDownload": "Download for macOS",
     "ctaGithub": "View on GitHub",
     "requirements": "Requires macOS 13.0+ · Apple Silicon & Intel natively supported",
-    "stamp": "PRODUCTION READY",
+    "stamp": "COMING SOON",
     "features": [
-      "100% Free & Open Source",
+      "100% Free · No ads",
       "No data collection. Privacy first.",
       "Ultra-low system footprint"
     ]
   },
   "footer": {
     "copyright": "Bandwidth ECG. All rights reserved.",
-    "stamp": "PRODUCTION READY",
+    "stamp": "COMING SOON",
     "madeIn": "Designed & Engineered in Taiwan",
     "disclaimer": "A simple tool to help you make better network decisions."
   }
