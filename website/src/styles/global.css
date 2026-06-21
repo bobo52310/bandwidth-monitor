@@ -1,33 +1,33 @@
 @import "tailwindcss";
 
 /* =========================================================================
-   Bandwidth ECG — Landing V1 "Clinical ECG"
-   Aesthetic: medical diagnostic monitor on EKG paper.
+   Bandwidth ECG — Landing V2 "Premium Minimalist"
+   Aesthetic: Clean macOS utility, high contrast, elegant typography.
    ========================================================================= */
 
 @theme {
   /* Paper & ink */
-  --color-paper: #FBFAF5;
-  --color-paper-dim: #F5F1E4;
-  --color-grid-fine: #F0E6D2;
-  --color-grid-bold: #E8DFD0;
-  --color-ink: #0D0D0D;
-  --color-ink-2: #5A5A5A;
-  --color-ink-3: #8C8677;
+  --color-paper: #FFFFFF;
+  --color-paper-dim: #F9FAFB;
+  --color-grid-fine: #F3F4F6;
+  --color-grid-bold: #E5E7EB;
+  --color-ink: #0F172A;
+  --color-ink-2: #475569;
+  --color-ink-3: #94A3B8;
 
   /* Signal */
-  --color-signal: #00B86B;
-  --color-signal-dark: #008050;
-  --color-signal-glow: rgba(0, 184, 107, 0.35);
+  --color-signal: #3B82F6;
+  --color-signal-dark: #2563EB;
+  --color-signal-glow: rgba(59, 130, 246, 0.25);
 
   /* Alerts */
-  --color-amber: #E8A23B;
-  --color-red: #D1342C;
+  --color-amber: #F59E0B;
+  --color-red: #EF4444;
 
   /* Typography */
-  --font-display: 'Fraunces', 'Noto Serif TC', 'Times New Roman', serif;
+  --font-display: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
   --font-sans: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --font-mono: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 }
 
 /* ----- Base ----- */
@@ -56,9 +56,10 @@ h1, h2, h3, h4 {
 
 /* =========================================================================
    EKG PAPER GRID — faint 5mm fine lines + bolder 25mm lines.
-   Two layered backgrounds compose the pattern.
+   Grid is scoped to monitor interiors only; section backgrounds stay clean.
    ========================================================================= */
-.ecg-paper {
+.ecg-paper,
+.ecg-paper-monitor {
   background-color: var(--color-paper);
   background-image:
     /* Bold 25px grid */
@@ -73,21 +74,6 @@ h1, h2, h3, h4 {
     5px 5px,
     5px 5px;
   background-position: 0 0, 0 0, 0 0, 0 0;
-}
-
-.ecg-paper-soft {
-  /* Lighter version for section backgrounds */
-  background-color: var(--color-paper);
-  background-image:
-    linear-gradient(to right, var(--color-grid-bold) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--color-grid-bold) 1px, transparent 1px),
-    linear-gradient(to right, var(--color-grid-fine) 0.5px, transparent 0.5px),
-    linear-gradient(to bottom, var(--color-grid-fine) 0.5px, transparent 0.5px);
-  background-size:
-    50px 50px,
-    50px 50px,
-    10px 10px,
-    10px 10px;
 }
 
 /* Vignette so the paper feels like it has edges */
@@ -375,6 +361,44 @@ section.clinic {
 
 @media (max-width: 768px) {
   .clinic-container { padding-inline: 20px; }
+}
+
+/* =========================================================================
+   SECTION HEAD — larger hierarchy, clear focal point per section
+   ========================================================================= */
+.section-head {
+  max-width: 780px;
+  margin-bottom: 72px;
+}
+.section-head h2 {
+  font-size: clamp(40px, 5vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  font-weight: 650;
+}
+.section-head .zh {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.2vw, 28px);
+  color: var(--color-ink-2);
+  margin-top: 8px;
+}
+.section-head .sub {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #3A3A3A;
+  max-width: 600px;
+  margin-top: 24px;
+}
+
+/* =========================================================================
+   MONITOR SHELL — hardware-like frame around the ECG screen
+   ========================================================================= */
+.monitor-shell {
+  background: var(--color-paper);
+  border: 1px solid var(--color-ink);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 8px 8px 0 0 rgba(13, 13, 13, 0.08);
 }
 
 /* Prefers-reduced-motion */

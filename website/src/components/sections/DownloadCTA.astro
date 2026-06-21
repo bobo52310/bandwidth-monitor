@@ -13,21 +13,21 @@ const features = (translations[lang] as any)?.download?.features
   ?? (translations['zh-Hant'] as any)?.download?.features ?? []
 ---
 
-<section id="download" class="clinic ecg-paper relative overflow-hidden">
+<section id="download" class="clinic relative overflow-hidden">
   <div class="clinic-container">
     <!-- Prescription-sheet card -->
-    <div class="relative mx-auto max-w-[980px] bg-[#FBFAF5] border-2 border-[#0D0D0D] rounded-[4px] p-8 md:p-14 shadow-[10px_10px_0_0_rgba(0,128,80,0.15)]">
+    <div class="relative mx-auto max-w-[980px] bg-[var(--color-paper)] border-2 border-[var(--color-ink)] rounded-[4px] p-8 md:p-14 shadow-[10px_10px_0_0_rgba(0,128,80,0.15)]">
 
       <!-- Header: Rx line -->
-      <div class="flex items-center justify-between mb-8 pb-5 border-b border-dashed border-[#8C8677]/50">
+      <div class="flex items-center justify-between mb-8 pb-5 border-b border-dashed border-[var(--color-ink-3)]/50">
         <div class="flex items-center gap-3">
-          <span class="font-display text-[30px] font-[700] text-[#0D0D0D] leading-none">Rx</span>
+          <span class="font-display text-[30px] font-[700] text-[var(--color-ink)] leading-none">Rx</span>
           <div class="flex flex-col">
-            <span class="mono-label text-[#0D0D0D]">{t('download.sectionEyebrow')}</span>
-            <span class="mono-label text-[10px] text-[#8C8677] mt-0.5">PRESCRIPTION · TAKE HOME</span>
+            <span class="mono-label text-[var(--color-ink)]">{t('download.sectionEyebrow')}</span>
+            <span class="mono-label text-[10px] text-[var(--color-ink-3)] mt-0.5">PRESCRIPTION · TAKE HOME</span>
           </div>
         </div>
-        <div class="hidden md:flex flex-col items-end mono-label text-[10px] text-[#8C8677]">
+        <div class="hidden md:flex flex-col items-end mono-label text-[10px] text-[var(--color-ink-3)]">
           <span>DATE · 2026-04-24</span>
           <span>VALID · indefinitely</span>
         </div>
@@ -36,13 +36,13 @@ const features = (translations[lang] as any)?.download?.features
       <!-- Title -->
       <div class="grid md:grid-cols-[1.2fr_1fr] gap-10 items-start">
         <div>
-          <h2 class="font-display text-[40px] sm:text-[48px] lg:text-[60px] leading-[1.02] font-[650] tracking-[-0.02em] text-[#0D0D0D]">
+          <h2 class="font-display text-[40px] sm:text-[48px] lg:text-[60px] leading-[1.02] font-[650] tracking-[-0.02em] text-[var(--color-ink)]">
             {t('download.sectionTitleEn')}
           </h2>
-          <p class="font-display text-[20px] sm:text-[24px] text-[#5A5A5A] mt-3 tracking-tight">
+          <p class="font-display text-[20px] sm:text-[24px] text-[var(--color-ink-2)] mt-3 tracking-tight">
             {t('download.sectionTitleZh')}
           </p>
-          <p class="mt-6 text-[16px] leading-[1.7] text-[#3A3A3A] max-w-[520px]">
+          <p class="mt-6 text-[16px] leading-[1.7] text-[var(--color-ink-2)] max-w-[520px]">
             {t('download.sectionSubtitle')}
           </p>
 
@@ -61,26 +61,26 @@ const features = (translations[lang] as any)?.download?.features
             </a>
           </div>
 
-          <p class="mt-5 mono-label text-[11px] text-[#8C8677]">{t('download.requirements')}</p>
+          <p class="mt-5 mono-label text-[11px] text-[var(--color-ink-3)]">{t('download.requirements')}</p>
         </div>
 
         <!-- Prescribed checklist -->
         <div class="relative">
-          <div class="bg-[#F5F1E4]/60 border border-dashed border-[#8C8677] rounded-[3px] p-6">
-            <div class="mono-label text-[#0D0D0D] mb-4">PRESCRIBED &middot; 3 ITEMS</div>
+          <div class="bg-[var(--color-paper-dim)]/60 border border-dashed border-[var(--color-ink-3)] rounded-[3px] p-6">
+            <div class="mono-label text-[var(--color-ink)] mb-4">PRESCRIBED &middot; 3 ITEMS</div>
             <ul class="space-y-3">
               {features.map((feat: string) => (
                 <li class="flex items-start gap-3">
-                  <svg class="w-4 h-4 mt-[3px] text-[#00B86B] shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                  <svg class="w-4 h-4 mt-[3px] text-[var(--color-signal)] shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
                     <path d="M2 8 L6 12 L14 4" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                  <span class="text-[14.5px] text-[#0D0D0D] leading-snug">{feat}</span>
+                  <span class="text-[14.5px] text-[var(--color-ink)] leading-snug">{feat}</span>
                 </li>
               ))}
             </ul>
-            <div class="mt-5 pt-4 border-t border-dashed border-[#E8DFD0]">
-              <div class="mono-label text-[10px] text-[#8C8677]">DOSAGE</div>
-              <div class="readout text-[14px] text-[#0D0D0D] mt-0.5">Always-on &middot; 1 click install &middot; 0 maintenance</div>
+            <div class="mt-5 pt-4 border-t border-dashed border-[var(--color-grid-bold)]">
+              <div class="mono-label text-[10px] text-[var(--color-ink-3)]">DOSAGE</div>
+              <div class="readout text-[14px] text-[var(--color-ink)] mt-0.5">Always-on &middot; 1 click install &middot; 0 maintenance</div>
             </div>
           </div>
 
@@ -95,15 +95,15 @@ const features = (translations[lang] as any)?.download?.features
       </div>
 
       <!-- Signature at bottom -->
-      <div class="mt-16 pt-6 border-t border-dashed border-[#8C8677]/40 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div class="mt-16 pt-6 border-t border-dashed border-[var(--color-ink-3)]/40 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <div class="mono-label text-[10px] text-[#8C8677] mb-2">SIGNED BY</div>
+          <div class="mono-label text-[10px] text-[var(--color-ink-3)] mb-2">SIGNED BY</div>
           <div class="flex items-end gap-3">
-            <span class="font-display italic text-[22px] text-[#0D0D0D]">B. Chen, Engineer</span>
-            <span class="h-px w-32 bg-[#0D0D0D] mb-2"></span>
+            <span class="font-display italic text-[22px] text-[var(--color-ink)]">B. Chen, Engineer</span>
+            <span class="h-px w-32 bg-[var(--color-ink)] mb-2"></span>
           </div>
         </div>
-        <div class="mono-label text-[10px] text-[#8C8677]">
+        <div class="mono-label text-[10px] text-[var(--color-ink-3)]">
           Rx &middot; BWECG-2026-04-24
         </div>
       </div>

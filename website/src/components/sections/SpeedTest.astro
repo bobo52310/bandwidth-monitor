@@ -3,27 +3,27 @@
 // Thin full-bleed strip reinforcing the monitor metaphor between sections.
 ---
 
-<section aria-hidden="true" class="relative ecg-paper border-y border-[#E8DFD0]">
+<section aria-hidden="true" class="relative border-y border-[var(--color-grid-bold)]">
   <div class="clinic-container py-10">
     <div class="flex flex-wrap items-center gap-x-8 gap-y-3">
       <!-- Calibration pulse mark -->
       <svg class="shrink-0" width="48" height="24" viewBox="0 0 48 24" fill="none" aria-hidden="true">
-        <path d="M0 12 L12 12 L12 4 L20 4 L20 20 L28 20 L28 12 L48 12" stroke="#008050" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M0 12 L12 12 L12 4 L20 4 L20 20 L28 20 L28 12 L48 12" stroke="var(--color-signal-dark)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
 
-      <span class="mono-label text-[#0D0D0D]">CALIBRATION</span>
-      <span class="mono-label text-[#8C8677]">1mV = 10mm</span>
-      <span class="mono-label text-[#8C8677]">25mm / s</span>
+      <span class="mono-label text-[var(--color-ink)]">CALIBRATION</span>
+      <span class="mono-label text-[var(--color-ink-3)]">1mV = 10mm</span>
+      <span class="mono-label text-[var(--color-ink-3)]">25mm / s</span>
 
-      <span class="flex-1 min-w-[40px] h-px bg-[#8C8677]/30"></span>
+      <span class="flex-1 min-w-[40px] h-px bg-[var(--color-ink-3)]/30"></span>
 
-      <span class="mono-label text-[#008050] flex items-center gap-2">
-        <span class="w-1.5 h-1.5 rounded-full bg-[#00B86B] live-dot"></span>
+      <span class="mono-label text-[var(--color-signal-dark)] flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-signal)] live-dot"></span>
         SIGNAL QUALITY · EXCELLENT
       </span>
 
-      <span class="mono-label text-[#8C8677]">LEAD OFF &middot; NONE</span>
-      <span class="mono-label text-[#8C8677]">ARTIFACTS &middot; 0</span>
+      <span class="mono-label text-[var(--color-ink-3)]">LEAD OFF &middot; NONE</span>
+      <span class="mono-label text-[var(--color-ink-3)]">ARTIFACTS &middot; 0</span>
     </div>
   </div>
 </section>

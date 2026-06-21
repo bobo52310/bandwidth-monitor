@@ -12,39 +12,39 @@ const t = useTranslations(lang)
 const homeHref = getLocalizedPath(lang, '/')
 ---
 
-<header class="sticky top-0 z-50 bg-[#FBFAF5]/90 backdrop-blur-[6px] border-b border-[#E8DFD0]">
+<header class="sticky top-0 z-50 bg-[var(--color-paper)]/90 backdrop-blur-[6px] border-b border-[var(--color-grid-bold)]">
   <div class="max-w-[1200px] mx-auto px-6 h-14 flex items-center justify-between gap-6">
     <!-- Brand wordmark — tight serif + monospace subtitle -->
     <a href={homeHref} class="flex items-baseline gap-3 group">
       <div class="flex items-center gap-2">
         <!-- ECG mini icon: tiny heartbeat path -->
         <svg class="w-5 h-5" viewBox="0 0 24 16" fill="none" aria-hidden="true">
-          <path d="M0 8 L5 8 L7 4 L9 12 L11 2 L13 14 L15 8 L24 8" stroke="#0D0D0D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M0 8 L5 8 L7 4 L9 12 L11 2 L13 14 L15 8 L24 8" stroke="var(--color-ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="font-display text-[18px] font-[650] tracking-tight text-[#0D0D0D]">Bandwidth ECG</span>
+        <span class="font-display text-[18px] font-[650] tracking-tight text-[var(--color-ink)]">Bandwidth ECG</span>
       </div>
-      <span class="hidden md:inline mono-label text-[10px] text-[#8C8677]">{t('header.subtitle')}</span>
+      <span class="hidden md:inline mono-label text-[10px] text-[var(--color-ink-3)]">{t('header.subtitle')}</span>
     </a>
 
     <nav class="hidden lg:flex items-center gap-7">
-      <a href="#features" class="mono-label text-[11px] text-[#5A5A5A] hover:text-[#00B86B] transition-colors">{t('header.features')}</a>
-      <a href="#how" class="mono-label text-[11px] text-[#5A5A5A] hover:text-[#00B86B] transition-colors">{t('header.howItWorks')}</a>
-      <a href="#faq" class="mono-label text-[11px] text-[#5A5A5A] hover:text-[#00B86B] transition-colors">{t('header.faq')}</a>
-      <span class="w-px h-4 bg-[#E8DFD0]"></span>
-      <a href="https://github.com/bobo52310/bandwidth-monitor" class="mono-label text-[11px] text-[#5A5A5A] hover:text-[#0D0D0D] transition-colors flex items-center gap-1.5">
+      <a href="#features" class="mono-label text-[11px] text-[var(--color-ink-2)] hover:text-[var(--color-signal)] transition-colors">{t('header.features')}</a>
+      <a href="#how" class="mono-label text-[11px] text-[var(--color-ink-2)] hover:text-[var(--color-signal)] transition-colors">{t('header.howItWorks')}</a>
+      <a href="#faq" class="mono-label text-[11px] text-[var(--color-ink-2)] hover:text-[var(--color-signal)] transition-colors">{t('header.faq')}</a>
+      <span class="w-px h-4 bg-[var(--color-grid-bold)]"></span>
+      <a href="https://github.com/bobo52310/bandwidth-monitor" class="mono-label text-[11px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)] transition-colors flex items-center gap-1.5">
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49.99.11-.78.42-1.3.76-1.6-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.17 0 0 1.01-.32 3.3 1.23.96-.27 1.98-.4 3-.4s2.04.13 3 .4c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.25 2.87.12 3.17.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.22.69.83.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12Z"/>
         </svg>
         GitHub
       </a>
       <LanguageSwitcher />
-      <a href="#download" class="mono-label text-[11px] flex items-center gap-2 px-3.5 py-2 border border-[#0D0D0D] rounded-[3px] text-[#0D0D0D] hover:bg-[#0D0D0D] hover:text-[#FBFAF5] transition-all">
-        <span class="w-1.5 h-1.5 rounded-full bg-[#00B86B] live-dot"></span>
+      <a href="#download" class="mono-label text-[11px] flex items-center gap-2 px-3.5 py-2 border border-[var(--color-ink)] rounded-[3px] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-paper)] transition-all">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-signal)] live-dot"></span>
         {t('header.download')}
       </a>
     </nav>
 
-    <button class="lg:hidden p-2 text-[#0D0D0D]" aria-label={t('header.openMenu')}>
+    <button class="lg:hidden p-2 text-[var(--color-ink)]" aria-label={t('header.openMenu')}>
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>

@@ -13,23 +13,23 @@ const homeHref = getLocalizedPath(lang, '/')
 const currentYear = new Date().getFullYear()
 ---
 
-<footer class="bg-[#FBFAF5] border-t border-[#0D0D0D] pt-16 pb-10">
+<footer class="bg-[var(--color-paper)] border-t border-[var(--color-ink)] pt-16 pb-10">
   <div class="clinic-container">
 
     <!-- Top: wordmark + legend + stamp -->
-    <div class="grid grid-cols-1 md:grid-cols-[1.3fr_1fr_auto] gap-10 pb-10 border-b border-dashed border-[#8C8677]/40 items-start">
+    <div class="grid grid-cols-1 md:grid-cols-[1.3fr_1fr_auto] gap-10 pb-10 border-b border-dashed border-[var(--color-ink-3)]/40 items-start">
       <!-- Brand -->
       <div>
         <a href={homeHref} class="flex items-baseline gap-3 mb-4">
           <svg class="w-6 h-6" viewBox="0 0 24 16" fill="none" aria-hidden="true">
-            <path d="M0 8 L5 8 L7 4 L9 12 L11 2 L13 14 L15 8 L24 8" stroke="#0D0D0D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M0 8 L5 8 L7 4 L9 12 L11 2 L13 14 L15 8 L24 8" stroke="var(--color-ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span class="font-display text-[22px] font-[650] tracking-tight text-[#0D0D0D]">Bandwidth ECG</span>
+          <span class="font-display text-[22px] font-[650] tracking-tight text-[var(--color-ink)]">Bandwidth ECG</span>
         </a>
-        <p class="text-[14px] leading-[1.7] text-[#5A5A5A] max-w-[420px]">
+        <p class="text-[14px] leading-[1.7] text-[var(--color-ink-2)] max-w-[420px]">
           {t('meta.description')}
         </p>
-        <p class="mt-4 mono-label text-[10px] text-[#8C8677]">
+        <p class="mt-4 mono-label text-[10px] text-[var(--color-ink-3)]">
           {t('footer.disclaimer')}
         </p>
       </div>
@@ -37,21 +37,21 @@ const currentYear = new Date().getFullYear()
       <!-- Chart links -->
       <div class="grid grid-cols-2 gap-8">
         <div>
-          <h4 class="mono-label text-[#0D0D0D] mb-3">INDEX</h4>
+          <h4 class="mono-label text-[var(--color-ink)] mb-3">INDEX</h4>
           <ul class="space-y-2">
-            <li><a href="#features" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">{t('header.features')}</a></li>
-            <li><a href="#how" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">{t('header.howItWorks')}</a></li>
-            <li><a href="#chart" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">Live rhythm strip</a></li>
-            <li><a href="#faq" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">{t('header.faq')}</a></li>
+            <li><a href="#features" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.features')}</a></li>
+            <li><a href="#how" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.howItWorks')}</a></li>
+            <li><a href="#chart" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">Live rhythm strip</a></li>
+            <li><a href="#faq" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.faq')}</a></li>
           </ul>
         </div>
         <div>
-          <h4 class="mono-label text-[#0D0D0D] mb-3">SOURCE</h4>
+          <h4 class="mono-label text-[var(--color-ink)] mb-3">SOURCE</h4>
           <ul class="space-y-2">
-            <li><a href="https://github.com/bobo52310/bandwidth-monitor" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">GitHub</a></li>
-            <li><a href="https://github.com/bobo52310/bandwidth-monitor/releases" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">Releases</a></li>
-            <li><a href="https://github.com/bobo52310/bandwidth-monitor/issues" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">Report issue</a></li>
-            <li><a href="#download" class="text-[14px] text-[#5A5A5A] hover:text-[#0D0D0D]">{t('header.download')}</a></li>
+            <li><a href="https://github.com/bobo52310/bandwidth-monitor" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">GitHub</a></li>
+            <li><a href="https://github.com/bobo52310/bandwidth-monitor/releases" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">Releases</a></li>
+            <li><a href="https://github.com/bobo52310/bandwidth-monitor/issues" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">Report issue</a></li>
+            <li><a href="#download" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.download')}</a></li>
           </ul>
         </div>
       </div>
@@ -67,12 +67,12 @@ const currentYear = new Date().getFullYear()
 
     <!-- Bottom legal strip -->
     <div class="mt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <p class="mono-label text-[10px] text-[#8C8677]">
+      <p class="mono-label text-[10px] text-[var(--color-ink-3)]">
         &copy; {currentYear} &middot; {t('footer.copyright')} &middot; {t('footer.madeIn')}
       </p>
-      <div class="flex items-center gap-5 mono-label text-[10px] text-[#8C8677]">
+      <div class="flex items-center gap-5 mono-label text-[10px] text-[var(--color-ink-3)]">
         <span class="flex items-center gap-2">
-          <span class="w-1.5 h-1.5 rounded-full bg-[#00B86B] live-dot"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-signal)] live-dot"></span>
           <span>SYSTEMS NOMINAL</span>
         </span>
         <span>v1.0.0</span>

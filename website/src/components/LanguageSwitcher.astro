@@ -15,7 +15,7 @@ const shortLabel: Record<Lang, string> = {
 <div class="relative" data-language-switcher>
   <button
     type="button"
-    class="mono-label text-[11px] flex items-center gap-1.5 px-2 py-1.5 text-[#5A5A5A] hover:text-[#0D0D0D] transition-colors"
+    class="mono-label text-[11px] flex items-center gap-1.5 px-2 py-1.5 text-[var(--color-ink-2)] hover:text-[var(--color-ink)] transition-colors"
     aria-label="Switch language"
     data-dropdown-toggle
   >
@@ -26,7 +26,7 @@ const shortLabel: Record<Lang, string> = {
   </button>
 
   <div
-    class="absolute right-0 mt-1 w-36 bg-[#FBFAF5] border border-[#0D0D0D] rounded-[3px] py-1 hidden z-50"
+    class="absolute right-0 mt-1 w-36 bg-[var(--color-paper)] border border-[var(--color-ink)] rounded-[3px] py-1 hidden z-50"
     data-dropdown-menu
   >
     {Object.entries(languages).map(([lang, label]) => (
@@ -35,8 +35,8 @@ const shortLabel: Record<Lang, string> = {
         class:list={[
           'mono-label block px-3 py-2 text-[11px] transition-colors',
           lang === currentLang
-            ? 'bg-[#0D0D0D] text-[#FBFAF5]'
-            : 'text-[#5A5A5A] hover:bg-[#F5F1E4] hover:text-[#0D0D0D]'
+            ? 'bg-[var(--color-ink)] text-[var(--color-paper)]'
+            : 'text-[var(--color-ink-2)] hover:bg-[var(--color-paper-dim)] hover:text-[var(--color-ink)]'
         ]}
       >
         {shortLabel[lang as Lang]} · {label}

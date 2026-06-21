@@ -1,181 +1,181 @@
 {
   "meta": {
-    "title": "Bandwidth ECG — 你的網路心電圖診斷儀 · for macOS",
-    "description": "為你的網路做即時心電圖診斷。追蹤頻寬峰值、識別卡頓節律，用醫療級儀表盤回答那個問題：我到底該不該升級？"
+    "title": "Bandwidth ECG — 你的極簡 macOS 網路監控工具",
+    "description": "常駐選單列的極簡網速監控工具。精準追蹤頻寬峰值與日常用量，用客觀數據幫你決定是否真的需要升級網路。"
   },
   "header": {
-    "subtitle": "NETWORK HEALTH MONITOR",
-    "features": "診斷能力",
-    "howItWorks": "體檢流程",
-    "faq": "醫囑",
-    "download": "下載",
+    "subtitle": "MENU BAR UTILITY",
+    "features": "核心功能",
+    "howItWorks": "輕鬆上手",
+    "faq": "常見問題",
+    "download": "免費下載",
     "openMenu": "開啟選單",
     "github": "GitHub"
   },
   "hero": {
-    "eyebrow": "NETWORK HEALTH MONITOR · for macOS",
-    "titleEn": "Your network, on ECG.",
-    "titleZh": "為你的網路做即時心電圖診斷",
-    "subtitle": "追蹤頻寬峰值、識別卡頓節律，用醫療級儀表盤回答那個問題：我到底該不該升級？",
-    "ctaDownload": "Download · Free",
-    "ctaLearn": "Read the chart",
-    "leadDown": "LEAD I · DOWN",
-    "leadUp": "LEAD II · UP",
+    "eyebrow": "MENU BAR UTILITY · for macOS",
+    "titleEn": "Network speed, visualized.",
+    "titleZh": "告別網路焦慮，用數據說話",
+    "subtitle": "常駐選單列的極簡網速監控工具。精準追蹤頻寬峰值與日常用量，不再憑感覺猜測，用客觀數據決定你是否真的需要升級網路方案。",
+    "ctaDownload": "Download for Free",
+    "ctaLearn": "了解更多",
+    "leadDown": "DOWNLOAD",
+    "leadUp": "UPLOAD",
     "live": "LIVE",
-    "acquired": "ACQUIRED",
-    "patient": "PATIENT",
-    "patientName": "Home Network · 192.168.1.1",
-    "rhythm": "RHYTHM",
-    "rhythmValue": "Normal sinus · stable",
-    "todayPeak": "今日峰值",
-    "allTimePeak": "歷史最高",
+    "acquired": "MONITORING",
+    "patient": "NETWORK",
+    "patientName": "Local Network",
+    "rhythm": "STATUS",
+    "rhythmValue": "Stable connection",
+    "todayPeak": "今日最高網速",
+    "allTimePeak": "歷史峰值",
     "planUsage": "方案使用率"
   },
   "features": {
-    "sectionEyebrow": "CHAPTER 01",
-    "sectionTitleEn": "Diagnostic Capabilities",
-    "sectionTitleZh": "診斷能力",
-    "sectionSubtitle": "六項連續監測，從即時心律到長期趨勢。每一項都像一份可讀的體檢報告。",
+    "sectionEyebrow": "FEATURES",
+    "sectionTitleEn": "Designed for clarity.",
+    "sectionTitleZh": "極致純粹的監控體驗",
+    "sectionSubtitle": "沒有繁雜的設定，沒有多餘的干擾。為 macOS 量身打造，提供你真正需要的核心數據。",
     "items": [
       {
         "no": "01",
-        "title": "即時心律監測",
-        "subtitle": "Real-time rhythm",
-        "description": "選單列連續顯示上傳 / 下載速度，取樣頻率 1Hz，無需開啟任何視窗即可一眼讀取。",
-        "range": "Normal range · 0 – 1000 Mbps",
-        "tag": "CONTINUOUS"
+        "title": "即時網速顯示",
+        "subtitle": "Real-time monitoring",
+        "description": "在選單列即時顯示當前上傳與下載速度，無需開啟任何視窗，網路狀態一目了然。",
+        "range": "Update rate · 1Hz",
+        "tag": "ALWAYS ON"
       },
       {
         "no": "02",
         "title": "峰值自動記錄",
-        "subtitle": "Peak capture",
-        "description": "自動擷取每日峰值與歷史最高值，幫你判斷現有方案是否還有餘裕。",
-        "range": "Alert range · ≥ 80% of plan",
+        "subtitle": "Peak tracking",
+        "description": "自動為你捕捉每天的最高網速與歷史峰值，輕鬆評估目前網路方案的真實效益。",
+        "range": "Smart logging",
         "tag": "AUTO-LOG"
       },
       {
         "no": "03",
-        "title": "多時段節律圖",
-        "subtitle": "Rhythm strips",
-        "description": "1 分鐘 / 5 / 15 / 30 / 60 分 / 24 小時六種時間窗，看短期尖峰也看長期波形。",
-        "range": "Window · 1m → 24h",
-        "tag": "6 STRIPS"
+        "title": "多維度歷史圖表",
+        "subtitle": "History charts",
+        "description": "提供 1 分鐘到 24 小時的多種時間區間，幫助你觀察網路的短期波動與長期趨勢。",
+        "range": "Timeframes · 1m → 24h",
+        "tag": "INSIGHTS"
       },
       {
         "no": "04",
-        "title": "接近上限警示",
-        "subtitle": "Approach alert",
-        "description": "當使用率逼近方案上限時，數字自動轉為 Amber / Red，就像心率監視器的警示。",
-        "range": "Threshold · user-defined %",
-        "tag": "ALERT"
+        "title": "方案達標警示",
+        "subtitle": "Usage alerts",
+        "description": "設定你的網路方案上限。當速度逼近極限時，顏色自動變換，直覺提醒網路滿載。",
+        "range": "Customizable limits",
+        "tag": "SMART ALERT"
       },
       {
         "no": "05",
-        "title": "本機資料庫",
-        "subtitle": "Local chart",
-        "description": "所有讀數儲存於本機 ~/Library，沒有雲端、沒有帳號、沒有任何資料上傳。",
-        "range": "Privacy · 100% local",
-        "tag": "NO UPLOAD"
+        "title": "完全注重隱私",
+        "subtitle": "Privacy first",
+        "description": "所有數據皆安全地儲存在你的 Mac 本機。無需帳號、無需連線雲端，你的資料只屬於你。",
+        "range": "100% Local data",
+        "tag": "SECURE"
       },
       {
         "no": "06",
-        "title": "低負載儀器",
-        "subtitle": "Low-draw instrument",
-        "description": "CPU 使用率 < 1%，RAM 佔用 < 50MB。就像 ECG 電極，貼著你但幾乎感覺不到。",
-        "range": "Vitals · CPU <1% · RAM <50MB",
-        "tag": "LIGHTWEIGHT"
+        "title": "極低系統負載",
+        "subtitle": "Ultra lightweight",
+        "description": "採用 macOS 原生 API 開發，CPU 使用率低於 1%，記憶體佔用極小，絲毫不影響效能。",
+        "range": "Native performance",
+        "tag": "OPTIMIZED"
       }
     ]
   },
   "howItWorks": {
-    "sectionEyebrow": "CHAPTER 02",
-    "sectionTitleEn": "Your First Check-up",
-    "sectionTitleZh": "體檢流程",
-    "sectionSubtitle": "像掛號、貼電極、讀報告一樣簡單。三個步驟，90 秒完成。",
+    "sectionEyebrow": "WORKFLOW",
+    "sectionTitleEn": "Set up in seconds.",
+    "sectionTitleZh": "安裝到啟用，一氣呵成",
+    "sectionSubtitle": "簡單三個步驟，立即掌握你的網路健康度。",
     "steps": [
       {
         "no": "STEP 01",
-        "label": "INTAKE",
-        "title": "下載並掛載電極",
-        "description": "從 GitHub 取得 DMG，拖進 Applications。App 立即接管選單列，不占 Dock。",
+        "label": "DOWNLOAD",
+        "title": "下載並安裝",
+        "description": "從 GitHub 下載最新版本，拖曳至應用程式檔案夾即可完成安裝，純粹無負擔。",
         "runtime": "~ 30s"
       },
       {
         "no": "STEP 02",
-        "label": "CALIBRATION",
-        "title": "輸入方案上限",
-        "description": "填入你的方案標稱速度（例如 500 Mbps），儀器就知道要在幾時發出警示。",
+        "label": "CONFIGURE",
+        "title": "設定方案上限",
+        "description": "輸入你申辦的網路方案速度（例如 500 Mbps），讓系統能為你計算精準的使用率。",
         "runtime": "~ 20s"
       },
       {
         "no": "STEP 03",
-        "label": "DIAGNOSIS",
-        "title": "開始即時判讀",
-        "description": "從此你每次滑鼠上移，都是一次體檢。用數據判斷是否該升級 — 不再憑感覺。",
-        "runtime": "continuous"
+        "label": "MONITOR",
+        "title": "開始無感監控",
+        "description": "App 將安靜地常駐於選單列，為你記錄每一刻的網路波動。從此告別憑空猜測。",
+        "runtime": "Always on"
       }
     ]
   },
   "chartDemo": {
-    "sectionEyebrow": "CHAPTER 03",
-    "sectionTitleEn": "Live Rhythm Strip",
-    "sectionTitleZh": "即時節律圖",
-    "sectionSubtitle": "這是一段真實樣貌的頻寬心電圖：平穩底噪、跨越峰值、偶發尖波，都一目了然。",
-    "leadDown": "LEAD I",
-    "leadUp": "LEAD II",
+    "sectionEyebrow": "DEMO",
+    "sectionTitleEn": "Data that makes sense.",
+    "sectionTitleZh": "一眼看懂的趨勢圖表",
+    "sectionSubtitle": "平穩的日常使用、瞬間的流量爆發，網路狀態的每一個細節都能在圖表中清晰呈現。",
+    "leadDown": "DOWNLOAD",
+    "leadUp": "UPLOAD",
     "downLabel": "DOWN",
     "upLabel": "UP",
-    "gain": "GAIN 10mm/mV",
-    "speed": "SPEED 25mm/s",
-    "filter": "FILTER 0.5-40 Hz"
+    "gain": "SMOOTHING ON",
+    "speed": "REAL-TIME",
+    "filter": "NO NOISE"
   },
   "faq": {
-    "sectionEyebrow": "CHAPTER 04",
-    "sectionTitleEn": "Clinical Notes",
-    "sectionTitleZh": "醫囑",
-    "sectionSubtitle": "最常見的五項診間提問。",
+    "sectionEyebrow": "FAQ",
+    "sectionTitleEn": "Common Questions.",
+    "sectionTitleZh": "常見問題",
+    "sectionSubtitle": "關於 Bandwidth ECG 的所有細節都在這裡。",
     "items": [
       {
-        "question": "這個 App 要錢嗎？",
-        "answer": "不收。100% 免費、開源。沒有訂閱、沒有內購、沒有廣告。"
+        "question": "這個軟體需要付費嗎？",
+        "answer": "完全免費且開源。沒有任何訂閱制、應用內購買，也沒有廣告打擾。"
       },
       {
-        "question": "我的網路資料會被上傳嗎？",
-        "answer": "完全不會。所有讀數只寫入你本機的 ~/Library/Application Support/BandwidthECG。這不是雲端服務。"
+        "question": "我的網路使用紀錄會被上傳嗎？",
+        "answer": "不會。所有的監控數據都只儲存在你的 Mac 本機，這不是雲端服務，我們無法也無意取得你的資料。"
       },
       {
         "question": "支援哪些 macOS 版本？",
-        "answer": "macOS 13.0 (Ventura) 以上。Apple Silicon 與 Intel 皆原生支援。"
+        "answer": "支援 macOS 13.0 (Ventura) 及以上版本，並且原生支援 Apple Silicon (M1/M2/M3) 與 Intel 晶片。"
       },
       {
-        "question": "App 會拖慢我的電腦嗎？",
-        "answer": "不會。監測採用系統原生 API，CPU 通常 < 1%，RAM < 50 MB。你幾乎感覺不到它。"
+        "question": "常駐執行會拖慢我的電腦效能嗎？",
+        "answer": "不會。我們採用極致輕量化的原生開發，CPU 佔用率通常在 1% 以下，記憶體也僅需極小空間，完全不會影響日常工作。"
       },
       {
-        "question": "怎麼完整移除？",
-        "answer": "把 App 丟進垃圾桶就好。如果想連讀數一起清除，刪除 ~/Library/Application Support/BandwidthECG 即可。"
+        "question": "如果我不想用了，該怎麼完全移除？",
+        "answer": "只需將應用程式移至垃圾桶即可。若想一併清除歷史紀錄，請刪除 ~/Library/Application Support/BandwidthECG 目錄。"
       }
     ]
   },
   "download": {
-    "sectionEyebrow": "DISCHARGE",
-    "sectionTitleEn": "Take it home.",
-    "sectionTitleZh": "把這台儀器裝進你的 Mac",
-    "sectionSubtitle": "免費、本機、開源。從今天開始，用數據決定你到底需不需要升級。",
-    "ctaDownload": "Download · macOS 13+",
+    "sectionEyebrow": "GET STARTED",
+    "sectionTitleEn": "Ready to gain insights?",
+    "sectionTitleZh": "現在就開始掌握你的網路",
+    "sectionSubtitle": "免費、開源、極致輕量。讓數據成為你升級網路方案的最強後盾。",
+    "ctaDownload": "Download for macOS",
     "ctaGithub": "View on GitHub",
-    "requirements": "Requires macOS 13.0+ · Apple Silicon & Intel",
-    "stamp": "DIAGNOSTIC READY v1.0",
+    "requirements": "Requires macOS 13.0+ · Apple Silicon & Intel natively supported",
+    "stamp": "PRODUCTION READY",
     "features": [
-      "Free & open source",
-      "100% local — no data uploaded",
-      "CPU < 1% · RAM < 50 MB"
+      "100% Free & Open Source",
+      "No data collection. Privacy first.",
+      "Ultra-low system footprint"
     ]
   },
   "footer": {
-    "copyright": "Bandwidth ECG. All vitals reserved.",
-    "stamp": "DIAGNOSTIC READY v1.0",
-    "madeIn": "Engineered in Taiwan",
-    "disclaimer": "Not a medical device. For network health only."
+    "copyright": "Bandwidth ECG. All rights reserved.",
+    "stamp": "PRODUCTION READY",
+    "madeIn": "Designed & Engineered in Taiwan",
+    "disclaimer": "A simple tool to help you make better network decisions."
   }
 }

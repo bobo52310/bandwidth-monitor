@@ -40,65 +40,54 @@ const icons = [
 ]
 ---
 
-<section id="features" class="clinic ecg-paper-soft border-t border-b border-[#E8DFD0]">
+<section id="features" class="clinic border-t border-b border-[var(--color-grid-bold)]">
   <div class="clinic-container">
     <!-- Section header -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-      <div class="max-w-[720px]">
-        <p class="eyebrow text-[#008050] mb-4">{t('features.sectionEyebrow')}</p>
-        <h2 class="font-display text-[36px] sm:text-[44px] lg:text-[54px] leading-[1.02] font-[650] tracking-[-0.02em]">
-          {t('features.sectionTitleEn')}
-        </h2>
-        <p class="font-display text-[20px] sm:text-[22px] text-[#5A5A5A] mt-2">{t('features.sectionTitleZh')}</p>
-        <p class="mt-6 text-[16px] leading-[1.7] text-[#3A3A3A] max-w-[620px]">
-          {t('features.sectionSubtitle')}
-        </p>
-      </div>
-      <div class="shrink-0 flex items-center gap-3 mono-label text-[#8C8677]">
-        <span class="w-8 h-px bg-[#8C8677]"></span>
-        <span>06 readings</span>
-      </div>
+    <div class="section-head">
+      <p class="eyebrow text-[var(--color-signal-dark)] mb-4">{t('features.sectionEyebrow')}</p>
+      <h2>{t('features.sectionTitleEn')}</h2>
+      <p class="zh">{t('features.sectionTitleZh')}</p>
+      <p class="sub">{t('features.sectionSubtitle')}</p>
     </div>
 
-    <!-- Chart-style card grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Seamless diagnostic grid — single bordered container with cells separated by thin lines -->
+    <div class="feature-grid border border-[var(--color-grid-bold)] rounded-[3px] bg-[var(--color-paper)] overflow-hidden">
       {items.map((item, i) => (
-        <article class="chart-card flex flex-col min-h-[280px]">
-          <div class="chart-card__header">
-            <span class="chart-no"># {item.no}</span>
-            <span class="mono-label text-[#008050]">{item.tag}</span>
+        <article class="feature-cell flex flex-col p-8 min-h-[220px]">
+          <div class="flex items-center justify-between mb-6">
+            <span class="mono-label text-[var(--color-ink-3)]">{item.no}</span>
+            <div class="text-[var(--color-signal-dark)]">
+              <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" set:html={icons[i % icons.length]} />
+            </div>
           </div>
 
-          <!-- Tiny signal icon drawn in the signal green -->
-          <div class="text-[#008050] mb-5">
-            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" set:html={icons[i % icons.length]} />
-          </div>
-
-          <h3 class="font-display text-[22px] font-[600] leading-tight text-[#0D0D0D]">
+          <h3 class="font-display text-[22px] font-[600] leading-tight text-[var(--color-ink)]">
             {item.title}
           </h3>
-          <p class="mono-label text-[#8C8677] mt-1.5">{item.subtitle}</p>
+          <p class="mono-label text-[var(--color-ink-3)] mt-1.5">{item.subtitle}</p>
 
-          <p class="mt-4 text-[14.5px] leading-[1.7] text-[#3A3A3A] flex-1">
+          <p class="mt-4 text-[14.5px] leading-[1.7] text-[var(--color-ink-2)] flex-1">
             {item.description}
           </p>
-
-          <div class="mt-5 pt-4 border-t border-dashed border-[#E8DFD0] flex items-center justify-between gap-2">
-            <span class="mono-label text-[10px] text-[#5A5A5A]">{item.range}</span>
-            <span class="tag-normal text-[9px] py-0.5 px-1.5">
-              <span class="tag-dot"></span>
-              LIVE
-            </span>
-          </div>
         </article>
       ))}
     </div>
-
-    <!-- Legend strip -->
-    <div class="mt-10 pt-6 border-t border-dashed border-[#8C8677]/40 flex flex-wrap gap-x-8 gap-y-2 mono-label text-[11px] text-[#5A5A5A]">
-      <span class="flex items-center gap-2"><span class="tag-dot text-[#008050] w-1.5 h-1.5"></span>NORMAL · within limits</span>
-      <span class="flex items-center gap-2"><span class="tag-dot text-[#E8A23B] w-1.5 h-1.5"></span>ALERT · approaching ceiling</span>
-      <span class="flex items-center gap-2"><span class="tag-dot text-[#D1342C] w-1.5 h-1.5"></span>CRITICAL · action required</span>
-    </div>
   </div>
 </section>
+
+<style>
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0;
+  }
+  .feature-cell {
+    border-right: 1px solid var(--color-grid-bold);
+    border-bottom: 1px solid var(--color-grid-bold);
+    background: var(--color-paper);
+    transition: background 0.2s;
+  }
+  .feature-cell:hover {
+    background: rgba(245, 241, 228, 0.4);
+  }
+</style>

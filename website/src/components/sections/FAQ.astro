@@ -15,51 +15,41 @@ const rawItems = (translations[lang] as any)?.faq?.items
 const items: Item[] = rawItems as Item[]
 ---
 
-<section id="faq" class="clinic ecg-paper-soft border-t border-b border-[#E8DFD0]">
+<section id="faq" class="clinic border-t border-[var(--color-grid-bold)]">
   <div class="clinic-container">
     <!-- Section header -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
-      <div class="max-w-[720px]">
-        <p class="eyebrow text-[#008050] mb-4">{t('faq.sectionEyebrow')}</p>
-        <h2 class="font-display text-[36px] sm:text-[44px] lg:text-[54px] leading-[1.02] font-[650] tracking-[-0.02em]">
-          {t('faq.sectionTitleEn')}
-        </h2>
-        <p class="font-display text-[20px] sm:text-[22px] text-[#5A5A5A] mt-2">{t('faq.sectionTitleZh')}</p>
-        <p class="mt-6 text-[16px] leading-[1.7] text-[#3A3A3A] max-w-[620px]">
-          {t('faq.sectionSubtitle')}
-        </p>
-      </div>
-      <div class="shrink-0 mono-label text-[#8C8677] flex items-center gap-3">
-        <span class="w-8 h-px bg-[#8C8677]"></span>
-        <span>CHART NOTES · 05</span>
-      </div>
+    <div class="section-head">
+      <p class="eyebrow text-[var(--color-signal-dark)] mb-4">{t('faq.sectionEyebrow')}</p>
+      <h2>{t('faq.sectionTitleEn')}</h2>
+      <p class="zh">{t('faq.sectionTitleZh')}</p>
+      <p class="sub">{t('faq.sectionSubtitle')}</p>
     </div>
 
     <!-- Chart-style Q/A entries, numbered -->
-    <div class="bg-[#FBFAF5] border border-[#0D0D0D] rounded-[3px] divide-y divide-[#E8DFD0]">
+    <div class="bg-[var(--color-paper)] border border-[var(--color-ink)] rounded-[3px] divide-y divide-[var(--color-grid-bold)]">
       {items.map((item, i) => {
         const no = String(i + 1).padStart(2, '0');
         return (
           <details class="group" open={i === 0}>
-            <summary class="flex items-start gap-5 px-6 py-5 cursor-pointer select-none list-none hover:bg-[#F5F1E4]/60 transition">
-              <span class="shrink-0 w-9 h-9 rounded-full border-2 border-[#0D0D0D] flex items-center justify-center font-display text-[13px] font-[700] text-[#0D0D0D]">{no}</span>
+            <summary class="flex items-start gap-5 px-6 py-5 cursor-pointer select-none list-none hover:bg-[var(--color-paper-dim)]/60 transition">
+              <span class="shrink-0 w-9 h-9 rounded-full border-2 border-[var(--color-ink)] flex items-center justify-center font-display text-[13px] font-[700] text-[var(--color-ink)]">{no}</span>
               <div class="flex-1 min-w-0">
                 <div class="flex items-baseline gap-2 mb-1">
-                  <span class="mono-label text-[10px] text-[#008050]">Q:</span>
+                  <span class="mono-label text-[10px] text-[var(--color-signal-dark)]">Q:</span>
                 </div>
-                <h3 class="font-display text-[18px] sm:text-[20px] font-[600] text-[#0D0D0D] leading-snug">
+                <h3 class="font-display text-[18px] sm:text-[20px] font-[600] text-[var(--color-ink)] leading-snug">
                   {item.question}
                 </h3>
               </div>
-              <span class="shrink-0 mt-1 mono-label text-[11px] text-[#8C8677] group-open:text-[#00B86B]">
+              <span class="shrink-0 mt-1 mono-label text-[11px] text-[var(--color-ink-3)] group-open:text-[var(--color-signal)]">
                 <span class="group-open:hidden">[ + ]</span>
                 <span class="hidden group-open:inline">[ &ndash; ]</span>
               </span>
             </summary>
             <div class="px-6 pb-6 pl-[80px]">
               <div class="flex items-start gap-2">
-                <span class="mono-label text-[10px] text-[#008050] mt-1 shrink-0">A:</span>
-                <p class="text-[15px] leading-[1.75] text-[#3A3A3A]">
+                <span class="mono-label text-[10px] text-[var(--color-signal-dark)] mt-1 shrink-0">A:</span>
+                <p class="text-[15px] leading-[1.75] text-[var(--color-ink-2)]">
                   {item.answer}
                 </p>
               </div>
@@ -72,13 +62,13 @@ const items: Item[] = rawItems as Item[]
     <!-- Signature line -->
     <div class="mt-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
       <div>
-        <div class="mono-label text-[10px] text-[#8C8677] mb-2">SIGNED</div>
+        <div class="mono-label text-[10px] text-[var(--color-ink-3)] mb-2">SIGNED</div>
         <div class="flex items-end gap-3">
-          <span class="font-display italic text-[26px] text-[#0D0D0D]">Dr. Bandwidth</span>
-          <span class="h-px w-40 bg-[#0D0D0D] mb-2"></span>
+          <span class="font-display italic text-[26px] text-[var(--color-ink)]">Dr. Bandwidth</span>
+          <span class="h-px w-40 bg-[var(--color-ink)] mb-2"></span>
         </div>
       </div>
-      <div class="mono-label text-[10px] text-[#8C8677]">
+      <div class="mono-label text-[10px] text-[var(--color-ink-3)]">
         Document ID · BWECG-FAQ-2026-04
       </div>
     </div>

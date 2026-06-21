@@ -22,60 +22,42 @@ const rawSteps = (translations[lang] as any)?.howItWorks?.steps
 const steps: Step[] = rawSteps as Step[]
 ---
 
-<section id="how" class="clinic ecg-paper">
+<section id="how" class="clinic">
   <div class="clinic-container">
-    <!-- Section header -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-      <div class="max-w-[720px]">
-        <p class="eyebrow text-[#008050] mb-4">{t('howItWorks.sectionEyebrow')}</p>
-        <h2 class="font-display text-[36px] sm:text-[44px] lg:text-[54px] leading-[1.02] font-[650] tracking-[-0.02em]">
-          {t('howItWorks.sectionTitleEn')}
-        </h2>
-        <p class="font-display text-[20px] sm:text-[22px] text-[#5A5A5A] mt-2">{t('howItWorks.sectionTitleZh')}</p>
-        <p class="mt-6 text-[16px] leading-[1.7] text-[#3A3A3A] max-w-[620px]">
-          {t('howItWorks.sectionSubtitle')}
-        </p>
+    <!-- Section header with side duration label -->
+    <div class="section-head flex flex-col md:flex-row md:items-end justify-between gap-6" style="max-width: none;">
+      <div class="max-w-[780px]">
+        <p class="eyebrow text-[var(--color-signal-dark)] mb-4">{t('howItWorks.sectionEyebrow')}</p>
+        <h2>{t('howItWorks.sectionTitleEn')}</h2>
+        <p class="zh">{t('howItWorks.sectionTitleZh')}</p>
+        <p class="sub">{t('howItWorks.sectionSubtitle')}</p>
       </div>
-      <div class="shrink-0 flex items-center gap-3 mono-label text-[#8C8677]">
-        <span class="w-8 h-px bg-[#8C8677]"></span>
-        <span>~ 90 seconds total</span>
+      <div class="shrink-0 flex items-center gap-3 mono-label text-[var(--color-ink-3)]">
+        <span class="w-8 h-px bg-[var(--color-ink-3)]"></span>
+        <span>~ 90 SECONDS</span>
       </div>
     </div>
 
-    <!-- Procedure cards — connected by a dashed line across the top on desktop -->
-    <div class="relative">
-      <div class="hidden md:block absolute top-[26px] left-[10%] right-[10%] border-t border-dashed border-[#8C8677]/40 z-0"></div>
-
-      <ol class="relative grid md:grid-cols-3 gap-6 z-10">
-        {steps.map((step, i) => (
-          <li class="chart-card flex flex-col">
-            <!-- Procedure number circle -->
-            <div class="flex items-center justify-between mb-5">
-              <div class="w-[52px] h-[52px] rounded-full border-2 border-[#0D0D0D] bg-[#FBFAF5] flex items-center justify-center">
-                <span class="font-display text-[22px] font-[700] text-[#0D0D0D]">{String(i + 1).padStart(2, '0')}</span>
-              </div>
-              <span class="tag-normal text-[9px] py-0.5 px-2">
-                <span class="tag-dot"></span>
-                {step.label}
-              </span>
+    <!-- Procedure cards -->
+    <ol class="grid md:grid-cols-3 gap-6">
+      {steps.map((step, i) => (
+        <li class="chart-card flex flex-col">
+          <div class="flex items-center justify-between mb-5">
+            <div class="w-12 h-12 rounded-full border-2 border-[var(--color-ink)] bg-[var(--color-paper)] flex items-center justify-center">
+              <span class="font-display text-[20px] font-[700] text-[var(--color-ink)]">{String(i + 1).padStart(2, '0')}</span>
             </div>
+            <span class="mono-label text-[var(--color-ink-3)]">{step.label}</span>
+          </div>
 
-            <span class="chart-no"># {step.no}</span>
-            <h3 class="font-display text-[22px] font-[600] leading-tight mt-2 text-[#0D0D0D]">{step.title}</h3>
-            <p class="mt-3 text-[14.5px] leading-[1.7] text-[#3A3A3A] flex-1">{step.description}</p>
+          <h3 class="font-display text-[22px] font-[600] leading-tight text-[var(--color-ink)]">{step.title}</h3>
+          <p class="mt-3 text-[14.5px] leading-[1.7] text-[var(--color-ink-2)] flex-1">{step.description}</p>
 
-            <div class="mt-5 pt-4 border-t border-dashed border-[#E8DFD0] flex items-center justify-between">
-              <span class="mono-label text-[10px] text-[#8C8677]">RUNTIME</span>
-              <span class="readout text-[13px] text-[#0D0D0D]">{step.runtime}</span>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
-
-    <!-- Footnote -->
-    <p class="mt-10 text-center mono-label text-[11px] text-[#8C8677]">
-      Signed &middot; Diagnostic protocol v1.0 &middot; No contrast agent required
-    </p>
+          <div class="mt-5 pt-3.5 border-t border-dashed border-[var(--color-grid-bold)] flex items-center justify-between">
+            <span class="mono-label text-[10px] text-[var(--color-ink-3)]">RUNTIME</span>
+            <span class="readout text-[13px] text-[var(--color-ink)]">{step.runtime}</span>
+          </div>
+        </li>
+      ))}
+    </ol>
   </div>
 </section>
