@@ -6,11 +6,11 @@ public enum L10n {
     public static let appTitle = String(localized: "app.title", defaultValue: "Bandwidth ECG")
 
     // MARK: - Buttons
-    public static let buttonPin = String(localized: "button.pin", defaultValue: "Pin")
-    public static let buttonSettings = String(localized: "button.settings", defaultValue: "Settings")
+    public static let buttonPin = String(localized: "button.pin", defaultValue: "釘選")
+    public static let buttonSettings = String(localized: "button.settings", defaultValue: "設定")
     public static let buttonBack = String(localized: "button.back", defaultValue: "返回")
     public static let buttonClose = String(localized: "button.close", defaultValue: "關閉")
-    public static let buttonOK = String(localized: "button.ok", defaultValue: "OK")
+    public static let buttonOK = String(localized: "button.ok", defaultValue: "確定")
     public static let buttonPrevious = String(localized: "button.previous", defaultValue: "上一步")
     public static let buttonNext = String(localized: "button.next", defaultValue: "下一步")
     public static let buttonGetStarted = String(localized: "button.getStarted", defaultValue: "開始使用")
@@ -134,8 +134,8 @@ public enum L10n {
     public static let peakNoApproachToday = String(localized: "peak.no.approach.today", defaultValue: "今日尚未接近速率上限")
 
     // MARK: - Statistics
-    public static let statsDownload = String(localized: "stats.download", defaultValue: "下載統計 (Download Stats)")
-    public static let statsUpload = String(localized: "stats.upload", defaultValue: "上傳統計 (Upload Stats)")
+    public static let statsDownload = String(localized: "stats.download", defaultValue: "下載統計")
+    public static let statsUpload = String(localized: "stats.upload", defaultValue: "上傳統計")
     public static let statsTodayPeak = String(localized: "stats.today.peak", defaultValue: "今日峰值")
     public static let statsAllTimePeak = String(localized: "stats.alltime.peak", defaultValue: "歷史總峰值")
     public static let statsHourlyPeak = String(localized: "stats.hourly.peak", defaultValue: "1小時峰值")
@@ -294,6 +294,19 @@ public enum L10n {
     public static let chartTimeRangeTwelveHours = String(localized: "chart.timeRange.twelveHours", defaultValue: "12 小時")
     public static let chartTimeRangeTwentyFourHours = String(localized: "chart.timeRange.twentyFourHours", defaultValue: "24 小時")
 
+    // MARK: - Chart Time Range
+    /// The accessibility label of the time range picker. It has no visible text of its own.
+    public static let chartTimeRangeAccessibility = String(localized: "chart.timeRange.accessibility", defaultValue: "時間範圍")
+
+    // MARK: - Chart Audio Graph Labels
+    /// The names VoiceOver reads for the chart's values. `PlottableValue.value` takes
+    /// `LocalizedStringKey`s, so a literal would be looked up under the English word.
+    public static let chartAxisTime = String(localized: "chart.axis.time", defaultValue: "時間")
+    public static let chartAxisSpeed = String(localized: "chart.axis.speed", defaultValue: "速度")
+    public static let chartAxisMinimum = String(localized: "chart.axis.minimum", defaultValue: "最小值")
+    public static let chartAxisSelectedTime = String(localized: "chart.axis.selectedTime", defaultValue: "選取時間")
+    public static let chartSeriesType = String(localized: "chart.series.type", defaultValue: "類型")
+
     // MARK: - Chart Y-Axis Labels & Tooltips
     /// `speed` is the plan with its unit, as shown on the axis ("300 Mbps", "37.5 MB/s"). The key
     /// is new: the old one took an `Int` and no unit.
@@ -424,6 +437,10 @@ public enum L10n {
     }
     public static func reportCollectingDays(_ have: Int, _ need: Int) -> String {
         String(format: String(localized: "report.collecting.days", defaultValue: "資料收集中：已監控 %1$d 天，滿 %2$d 天後提供建議"), have, need)
+    }
+    /// The plan the month was judged against, whole Mbps: "方案 ↓500 / ↑50 Mbps".
+    public static func reportPlanSpeeds(_ download: String, _ upload: String) -> String {
+        String(format: String(localized: "report.plan.speeds", defaultValue: "方案 ↓%1$@ / ↑%2$@ Mbps"), download, upload)
     }
     public static let reportScopeNote = String(localized: "report.note.scope", defaultValue: "只計算這台 Mac，包含區網傳輸")
     public static let reportSustainedNote = String(localized: "report.note.sustained", defaultValue: "峰值為持續 3 秒的速度")

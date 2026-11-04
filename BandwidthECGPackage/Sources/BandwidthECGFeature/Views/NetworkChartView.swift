@@ -156,7 +156,7 @@ public struct NetworkChartView: View {
             // Time Range Picker - Dual Layer Design with Y-Axis Mode Toggle
             HStack(spacing: 8) {
                 // Standard ranges (quick access segmented control)
-                Picker("Time Range", selection: segmentedControlBinding) {
+                Picker(L10n.chartTimeRangeAccessibility, selection: segmentedControlBinding) {
                     ForEach(TimeRange.standardRanges, id: \.self) { range in
                         Text(range.displayName).tag(Optional(range))
                     }
@@ -347,10 +347,10 @@ public struct NetworkChartView: View {
                     if timeRange.drawsAverageArea {
                         // Upload area (gradient fill)
                         AreaMark(
-                            x: .value("Time", point.timestamp),
-                            yStart: .value("Min", 0),
-                            yEnd: .value("Speed", convertSpeed(point.avgUploadMbps)),
-                            series: .value("Type", "上傳")
+                            x: .value(L10n.chartAxisTime, point.timestamp),
+                            yStart: .value(L10n.chartAxisMinimum, 0),
+                            yEnd: .value(L10n.chartAxisSpeed, convertSpeed(point.avgUploadMbps)),
+                            series: .value(L10n.chartSeriesType, L10n.chartLegendUpload)
                         )
                         .foregroundStyle(
                             LinearGradient(
@@ -364,9 +364,9 @@ public struct NetworkChartView: View {
 
                     // Upload line
                     LineMark(
-                        x: .value("Time", point.timestamp),
-                        y: .value("Speed", convertSpeed(point.lineUploadMbps)),
-                        series: .value("Type", "上傳")
+                        x: .value(L10n.chartAxisTime, point.timestamp),
+                        y: .value(L10n.chartAxisSpeed, convertSpeed(point.lineUploadMbps)),
+                        series: .value(L10n.chartSeriesType, L10n.chartLegendUpload)
                     )
                     .foregroundStyle(.green)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
@@ -380,10 +380,10 @@ public struct NetworkChartView: View {
                     if timeRange.drawsAverageArea {
                         // Download area (gradient fill)
                         AreaMark(
-                            x: .value("Time", point.timestamp),
-                            yStart: .value("Min", 0),
-                            yEnd: .value("Speed", convertSpeed(point.avgDownloadMbps)),
-                            series: .value("Type", "下載")
+                            x: .value(L10n.chartAxisTime, point.timestamp),
+                            yStart: .value(L10n.chartAxisMinimum, 0),
+                            yEnd: .value(L10n.chartAxisSpeed, convertSpeed(point.avgDownloadMbps)),
+                            series: .value(L10n.chartSeriesType, L10n.chartLegendDownload)
                         )
                         .foregroundStyle(
                             LinearGradient(
@@ -397,9 +397,9 @@ public struct NetworkChartView: View {
 
                     // Download line
                     LineMark(
-                        x: .value("Time", point.timestamp),
-                        y: .value("Speed", convertSpeed(point.lineDownloadMbps)),
-                        series: .value("Type", "下載")
+                        x: .value(L10n.chartAxisTime, point.timestamp),
+                        y: .value(L10n.chartAxisSpeed, convertSpeed(point.lineDownloadMbps)),
+                        series: .value(L10n.chartSeriesType, L10n.chartLegendDownload)
                     )
                     .foregroundStyle(.blue)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
@@ -409,7 +409,7 @@ public struct NetworkChartView: View {
 
             // Visual crosshair at hover position
             if let selectedDate = selectedDate {
-                RuleMark(x: .value("Selected", selectedDate))
+                RuleMark(x: .value(L10n.chartAxisSelectedTime, selectedDate))
                     .foregroundStyle(.gray.opacity(0.5))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
             }
@@ -417,13 +417,13 @@ public struct NetworkChartView: View {
             // Plan speed reference lines. A plan above the top of the axis is not drawn; the
             // legend says so instead (UI-P2-1).
             if let line = planLines.first(where: { $0.isDownload }), line.isDrawn {
-                RuleMark(y: .value("Plan", convertSpeed(line.planMbps)))
+                RuleMark(y: .value(L10n.chartLegendPlanSpeed, convertSpeed(line.planMbps)))
                     .foregroundStyle(.blue.opacity(0.4))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
             }
 
             if let line = planLines.first(where: { !$0.isDownload }), line.isDrawn {
-                RuleMark(y: .value("Plan", convertSpeed(line.planMbps)))
+                RuleMark(y: .value(L10n.chartLegendPlanSpeed, convertSpeed(line.planMbps)))
                     .foregroundStyle(.green.opacity(0.4))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
             }
