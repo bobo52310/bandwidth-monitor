@@ -1,3 +1,5 @@
+> **Note:** the minimum version is now macOS 14.0; every macOS 13.0 fallback in this document is obsolete. This is a record of the first chart tooltip implementation: the hourly-aggregate 24-hour chart, the `...Basic` fallback views and `ChartTooltipView24Hour` no longer exist (every range is now drawn by `NetworkChartView.swift` from `NetworkHistoryRecorder`: every sample up to 15 minutes, 10-second points for longer ranges).
+
 # Chart Hover Tooltip Implementation
 
 ## Overview

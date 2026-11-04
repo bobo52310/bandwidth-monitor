@@ -55,7 +55,7 @@ The project follows a modular structure using an Xcode Workspace and a local Swi
 
 **Prerequisites:**
 -   macOS 14.0+
--   Xcode 15.0+
+-   Xcode 26+ (Swift 6.2)
 -   Speedtest CLI (optional, for speed test features): `brew install speedtest-cli`
 
 **Commands:**
