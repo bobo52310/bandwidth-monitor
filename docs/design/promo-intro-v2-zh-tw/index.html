@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @font-face { font-family: "PingFang TC"; src: local("PingFang TC"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #ffffff;
+      }
+      :root {
+        --paper: #ffffff;
+        --paper-dim: #f9fafb;
+        --grid-fine: #f3f4f6;
+        --grid-bold: #e5e7eb;
+        --ink: #0f172a;
+        --ink-2: #475569;
+        --ink-3: #94a3b8;
+        --signal: #3b82f6;
+        --signal-dark: #2563eb;
+        --red: #ef4444;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+
+      .scene,
+      .paper {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        background-color: var(--paper);
+        background-image:
+          linear-gradient(to right, var(--grid-bold) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--grid-bold) 1px, transparent 1px),
+          linear-gradient(to right, var(--grid-fine) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--grid-fine) 1px, transparent 1px);
+        background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+      }
+      #s1 { background-image: none; }
+
+      .sans {
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+      }
+      .mono {
+        font-family: "JetBrains Mono", "Noto Sans TC", "PingFang TC", monospace;
+      }
+      .hl { color: var(--signal-dark); }
+      .demo-tag {
+        position: absolute;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 42px;
+        font-weight: 600;
+        line-height: 1;
+        color: var(--ink-2);
+        background: var(--paper);
+        border: 2px solid var(--ink-3);
+        border-radius: 12px;
+        padding: 12px 24px;
+      }
+      svg.full {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: visible;
+      }
+
+      /* =====================================================
+         Month timeline: shared by Scene 1 and Scene 5
+         ===================================================== */
+      .month {
+        position: absolute;
+        left: 100px;
+        top: 740px;
+        width: 1720px;
+        height: 0;
+      }
+      .month svg {
+        position: absolute;
+        left: 0;
+        top: -100px;
+        width: 1720px;
+        height: 200px;
+        overflow: visible;
+      }
+      .month-rule { stroke: var(--ink-2); stroke-width: 4; }
+      .month-ticks { stroke: var(--ink-3); stroke-width: 3; fill: none; }
+      .month-end {
+        position: absolute;
+        top: 34px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 34px;
+        font-weight: 500;
+        color: var(--ink-2);
+        white-space: nowrap;
+      }
+      .month-end.a { left: 0; }
+      .month-end.b { right: 0; }
+      .month-you {
+        position: absolute;
+        left: 460px;
+        width: 400px;
+        top: -142px;
+        text-align: center;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 44px;
+        font-weight: 700;
+        color: var(--signal-dark);
+        white-space: nowrap;
+      }
+
+      /* =====================================================
+         Scene 1 · Hook
+         ===================================================== */
+      .s1-hook {
+        position: absolute;
+        left: 100px;
+        right: 100px;
+        top: 118px;
+        text-align: center;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 176px;
+        line-height: 1.22;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+      .s1-big {
+        position: absolute;
+        left: 100px;
+        right: 100px;
+        top: 136px;
+        text-align: center;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        color: var(--ink);
+        font-weight: 700;
+      }
+      .s1-big .lead {
+        font-size: 96px;
+        line-height: 1.2;
+        color: var(--ink-2);
+        font-weight: 600;
+      }
+      .s1-big .value {
+        margin-top: 10px;
+        font-size: 104px;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+      .s1-big .value .mono {
+        font-size: 244px;
+        letter-spacing: -0.03em;
+      }
+
+      /* =====================================================
+         Persistent macOS menu bar (Scene 2 → Scene 3)
+         ===================================================== */
+      #menubar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 92px;
+        z-index: 20;
+        background: var(--paper-dim);
+        border-bottom: 2px solid var(--grid-bold);
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
+      }
+      .mb-menu {
+        position: absolute;
+        left: 48px;
+        top: 0;
+        height: 92px;
+        display: flex;
+        align-items: center;
+        gap: 52px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 30px;
+        font-weight: 500;
+        color: var(--ink-2);
+      }
+      .mb-reading {
+        position: absolute;
+        left: 1060px;
+        top: 10px;
+        width: 500px;
+        height: 72px;
+        border-radius: 14px;
+        background: rgba(59, 130, 246, 0.12);
+      }
+      .rd-line {
+        position: absolute;
+        inset: 0;
+        text-align: center;
+        line-height: 72px;
+        font-family: "JetBrains Mono", "Noto Sans TC", "PingFang TC", monospace;
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--ink);
+        white-space: pre;
+      }
+      .slot {
+        display: inline-block;
+        position: relative;
+        height: 72px;
+        vertical-align: top;
+      }
+      .slot.d { width: 120px; }
+      .slot.u { width: 96px; }
+      .slot div {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: none;
+      }
+      .mb-status {
+        position: absolute;
+        left: 1590px;
+        top: 0;
+        width: 124px;
+        height: 92px;
+      }
+      .mb-clock {
+        position: absolute;
+        right: 40px;
+        top: 0;
+        line-height: 92px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 30px;
+        font-weight: 500;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+
+      /* =====================================================
+         Scene 2 · Twist
+         ===================================================== */
+      .s2-stack {
+        position: absolute;
+        left: 100px;
+        right: 100px;
+        top: 456px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 64px;
+      }
+      .wordmark {
+        display: flex;
+        align-items: center;
+        gap: 34px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: var(--ink);
+        line-height: 1;
+        white-space: nowrap;
+      }
+      .s2-stack .wordmark { font-size: 176px; }
+      .s2-copy {
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 88px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+
+      /* =====================================================
+         Scene 3 · Mechanic
+         ===================================================== */
+      .s3-copy {
+        position: absolute;
+        left: 100px;
+        right: 100px;
+        top: 882px;
+        text-align: center;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 88px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      #s3 .demo-tag { left: 100px; top: 128px; }
+      .wave {
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .wave.red { stroke: var(--red); stroke-width: 10; }
+      .pen-rule {
+        stroke: var(--ink-3);
+        stroke-width: 3;
+        stroke-dasharray: 8 10;
+      }
+      .flag-box { fill: var(--paper); stroke: var(--ink); stroke-width: 3; }
+      .flag-accent { fill: var(--red); }
+      .flag-stem { stroke: var(--ink); stroke-width: 3; }
+      .flag-time {
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 40px;
+        font-weight: 600;
+        fill: var(--ink-2);
+      }
+      .flag-value {
+        font-family: "JetBrains Mono", "Noto Sans TC", "PingFang TC", monospace;
+        font-size: 60px;
+        font-weight: 700;
+        fill: var(--ink);
+      }
+
+      /* =====================================================
+         Scene 4 · Range
+         ===================================================== */
+      .s4-head {
+        position: absolute;
+        left: 100px;
+        top: 44px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 104px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      #s4 .demo-tag { right: 100px; top: 66px; }
+      .s4-plan {
+        position: absolute;
+        left: 100px;
+        top: 196px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 52px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      .plan-line {
+        stroke: var(--ink);
+        stroke-width: 5;
+        stroke-dasharray: 22 14;
+      }
+      .base-line { stroke: var(--ink-2); stroke-width: 3; }
+      .bar { fill: var(--signal); }
+      .bar.top { fill: var(--signal-dark); }
+      .gap-arrow {
+        stroke: var(--signal-dark);
+        stroke-width: 6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+      }
+      .s4-ends {
+        position: absolute;
+        top: 946px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 36px;
+        font-weight: 500;
+        color: var(--ink-2);
+        white-space: nowrap;
+      }
+      .s4-ends.a { left: 100px; }
+      .s4-ends.b { right: 100px; }
+      .s4-top {
+        position: absolute;
+        right: 1432px;
+        top: 672px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 40px;
+        font-weight: 600;
+        color: var(--ink);
+        white-space: nowrap;
+        text-align: right;
+      }
+      .s4-use {
+        position: absolute;
+        left: 562px;
+        top: 372px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+      }
+      .s4-use .k {
+        font-size: 52px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--ink-2);
+        white-space: nowrap;
+      }
+      .s4-use .v {
+        font-family: "JetBrains Mono", "Noto Sans TC", "PingFang TC", monospace;
+        font-size: 176px;
+        font-weight: 700;
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+        color: var(--signal-dark);
+      }
+      .stamp {
+        position: absolute;
+        left: 990px;
+        top: 388px;
+        width: 820px;
+        height: 216px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 10px solid var(--signal-dark);
+        border-radius: 22px;
+        outline: 3px solid var(--signal-dark);
+        outline-offset: -24px;
+        background: var(--paper);
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 100px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        color: var(--signal-dark);
+        white-space: nowrap;
+      }
+
+      /* =====================================================
+         Scene 5 · Heart
+         ===================================================== */
+      .s5-row {
+        position: absolute;
+        left: 100px;
+        right: 100px;
+        top: 376px;
+        display: flex;
+        justify-content: center;
+        gap: 72px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 104px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      .lit {
+        fill: none;
+        stroke: var(--signal);
+        stroke-width: 6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .s5-outro {
+        position: absolute;
+        left: 100px;
+        right: 100px;
+        top: 600px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .s5-outro .wordmark { font-size: 180px; }
+      .s5-private {
+        margin-top: 34px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 60px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      .s5-cta {
+        margin-top: 22px;
+        font-family: "Inter", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        font-size: 48px;
+        font-weight: 500;
+        line-height: 1.2;
+        color: var(--ink-2);
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="32"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- =====================================================
+           SCENE 1 · Hook · 0–5.5s
+           ===================================================== -->
+      <div id="s1" class="scene" style="opacity: 0">
+        <div id="s1-paper" class="paper" data-layout-allow-overflow></div>
+
+        <div id="s1-month" class="month">
+          <svg viewBox="0 -100 1720 200">
+            <g id="s1-month-axis">
+              <line class="month-rule" x1="0" y1="0" x2="1720" y2="0" />
+              <path class="month-ticks" data-ticks="1"></path>
+            </g>
+            <circle id="s1-dot" cx="660" cy="0" r="11" fill="#2563eb" />
+          </svg>
+          <div id="s1-you" class="month-you">你的 <span class="mono">30</span> 秒</div>
+          <div class="month-end a s1-end">第 1 天</div>
+          <div class="month-end b s1-end">第 30 天</div>
+        </div>
+
+        <div id="s1-big" class="s1-big">
+          <div class="lead">一個月有</div>
+          <div class="value"><span class="mono hl">2,592,000</span> 秒。</div>
+        </div>
+
+        <div id="s1-hook" class="s1-hook">
+          <div>你上次測速，</div>
+          <div>量了 <span class="mono hl">30</span> 秒。</div>
+        </div>
+
+        <svg class="full" viewBox="0 0 1920 1080">
+          <g id="s1-strip">
+            <path id="s1-trace" fill="none" stroke="#3b82f6" stroke-width="10"
+              stroke-linecap="round" stroke-linejoin="round"></path>
+          </g>
+        </svg>
+      </div>
+
+      <!-- =====================================================
+           SCENE 2 · Twist · 5.5–11s
+           ===================================================== -->
+      <div id="s2" class="scene">
+        <svg class="full" viewBox="0 0 1920 1080">
+          <path id="s2-trace" fill="none" stroke="#3b82f6" stroke-width="7"
+            stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <div class="s2-stack">
+          <div id="s2-mark" class="wordmark">
+            <svg id="s2-glyph" viewBox="0 0 196 196" width="176" height="176">
+              <rect x="2" y="2" width="192" height="192" rx="44" fill="#0F172A" />
+              <path
+                d="M 22 100 L 56 100 L 64 92 L 72 100 L 96 100 L 104 70 L 112 132 L 120 100 L 138 100 L 150 88 L 174 100"
+                fill="none" stroke="#FFFFFF" stroke-width="10"
+                stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span>Bandwidth&nbsp;ECG</span>
+          </div>
+          <div id="s2-copy" class="s2-copy">
+            所以它住進選單列，<span class="hl">每秒聽一次</span>。
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================
+           SCENE 3 · Mechanic · 11–19s
+           ===================================================== -->
+      <div id="s3" class="scene">
+        <svg class="full" viewBox="0 0 1920 1080">
+          <defs>
+            <clipPath id="s3-clip">
+              <rect x="0" y="92" width="1310" height="900" />
+            </clipPath>
+          </defs>
+          <line class="pen-rule" x1="1310" y1="92" x2="1310" y2="860" />
+          <g clip-path="url(#s3-clip)">
+            <g id="s3-strip">
+              <path id="s3-wave" class="wave"></path>
+              <path id="s3-red" class="wave red"></path>
+            </g>
+          </g>
+          <circle id="s3-pen" cx="1310" cy="0" r="14" fill="#0f172a" />
+          <g id="s3-strip-flag">
+            <g id="s3-flag">
+              <line class="flag-stem" id="s3-flag-stem" />
+              <rect class="flag-box" id="s3-flag-box" width="424" height="152" rx="4" />
+              <rect class="flag-accent" id="s3-flag-accent" width="10" height="152" />
+              <text class="flag-time" id="s3-flag-time">下午9:47</text>
+              <text class="flag-value" id="s3-flag-value">284.6 Mbps</text>
+            </g>
+          </g>
+        </svg>
+        <div class="demo-tag">示意數據</div>
+        <div id="s3-copy" class="s3-copy">
+          每天的尖峰，都留下<span class="hl">時間和數字</span>。
+        </div>
+      </div>
+
+      <!-- =====================================================
+           SCENE 4 · Range · 19–26s
+           ===================================================== -->
+      <div id="s4" class="scene">
+        <svg class="full" viewBox="0 0 1920 1080">
+          <line class="base-line" x1="100" y1="930" x2="1820" y2="930" />
+          <g id="s4-bars"></g>
+          <line id="s4-plan-line" class="plan-line" x1="100" y1="270" x2="1820" y2="270" />
+          <g id="s4-arrow">
+            <path class="gap-arrow" d="M 530 734 L 530 282" />
+            <path class="gap-arrow" d="M 512 302 L 530 282 L 548 302" />
+            <path class="gap-arrow" d="M 512 714 L 530 734 L 548 714" />
+          </g>
+        </svg>
+        <div id="s4-head" class="s4-head"><span class="mono">30</span> 天後，不用再<span class="hl">憑感覺</span>。</div>
+        <div class="demo-tag">示意數據</div>
+        <div id="s4-plan" class="s4-plan">你的方案 <span class="mono">1000 Mbps</span></div>
+        <div class="s4-ends a">第 1 天</div>
+        <div class="s4-ends b">第 30 天</div>
+        <div id="s4-top" class="s4-top">最高 <span class="mono">284.6 Mbps</span></div>
+        <div id="s4-use" class="s4-use">
+          <div class="k">方案使用率</div>
+          <div class="v">28%</div>
+        </div>
+        <div id="s4-stamp" class="stamp">可考慮降級方案</div>
+      </div>
+
+      <!-- =====================================================
+           SCENE 5 · Heart · 26–32s
+           ===================================================== -->
+      <div id="s5" class="scene">
+        <div id="s5-stage">
+          <div class="s5-row">
+            <div id="s5-a">測速看一瞬間。</div>
+            <div id="s5-b">它陪你看<span class="hl">整個月</span>。</div>
+          </div>
+          <div class="month">
+            <svg viewBox="0 -100 1720 200">
+              <line class="month-rule" x1="0" y1="0" x2="1720" y2="0" />
+              <path class="month-ticks" data-ticks="1"></path>
+              <path id="s5-lit-l" class="lit"></path>
+              <path id="s5-lit-r" class="lit"></path>
+              <circle cx="660" cy="0" r="11" fill="#2563eb" />
+            </svg>
+            <div class="month-you">你的 <span class="mono">30</span> 秒</div>
+            <div class="month-end a">第 1 天</div>
+            <div class="month-end b">第 30 天</div>
+          </div>
+        </div>
+        <div id="s5-outro" class="s5-outro">
+          <div id="s5-mark" class="wordmark">
+            <svg viewBox="0 0 196 196" width="180" height="180">
+              <rect x="2" y="2" width="192" height="192" rx="44" fill="#0F172A" />
+              <path
+                d="M 22 100 L 56 100 L 64 92 L 72 100 L 96 100 L 104 70 L 112 132 L 120 100 L 138 100 L 150 88 L 174 100"
+                fill="none" stroke="#FFFFFF" stroke-width="10"
+                stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span>Bandwidth&nbsp;ECG</span>
+          </div>
+          <div id="s5-private" class="s5-private">資料只留在你的 Mac。</div>
+          <div id="s5-cta" class="s5-cta">
+            即將推出 &middot; <span class="mono hl">bandwidth-ecg.bobochen.dev</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================
+           Menu bar overlay · 5.5–19s
+           ===================================================== -->
+      <div id="menubar" data-layout-allow-overflow>
+        <div class="mb-menu">
+          <span>檔案</span>
+          <span>編輯</span>
+          <span>顯示方式</span>
+          <span>視窗</span>
+          <span>輔助說明</span>
+        </div>
+        <div id="mb-reading" class="mb-reading">
+          <div class="rd-line">↓ <span id="rd-d" class="slot d"></span> ↑ <span id="rd-u" class="slot u"></span> Mbps</div>
+        </div>
+        <svg class="mb-status" viewBox="0 0 124 92">
+          <path d="M 4 38 Q 26 18 48 38 M 13 47 Q 26 35 39 47 M 21 56 Q 26 51 31 56"
+            fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round" />
+          <rect x="66" y="32" width="50" height="28" rx="7" fill="none" stroke="#0f172a" stroke-width="3.5" />
+          <rect x="71" y="37" width="32" height="18" rx="3" fill="#0f172a" />
+        </svg>
+        <div class="mb-clock">下午9:47</div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ---------- Layout constants ----------
+      const MONTH_LEFT = 100;
+      const MONTH_W = 1720;
+      const DOT_X = 660; // relative to .month
+      const TL_Y = 740;
+      const PEN_X = 1310; // centre of the menu-bar reading
+
+      // ---------- Demo data (labelled 示意數據 on screen; see DESIGN.md) ----------
+      // One reading per second, matching NetworkMonitor's 1.0 s timer.
+      const READINGS = [
+        [5.7, "182.4", "14.8"],
+        [6.7, "136.7", "11.2"],
+        [7.7, "118.3", "12.6"],
+        [8.7, "141.8", "12.4"],
+        [9.7, "108.2", "10.7"],
+        [10.7, "126.5", "10.1"],
+        [11.7, "144.6", "11.2"],
+        [12.7, "121.3", "13.5"],
+        [13.7, "284.6", "18.6"],
+        [14.7, "163.2", "15.7"],
+        [15.7, "127.5", "11.8"],
+        [16.7, "116.0", "10.9"],
+        [17.7, "139.4", "12.3"],
+      ];
+      // 30 daily ↓ peaks in Mbps. Max is 284.6 (the spike from Scene 3).
+      const DAILY = [
+        186.2, 204.7, 171.3, 223.5, 198.1, 240.6, 178.9, 284.6, 192.4, 215.8,
+        168.7, 233.1, 201.6, 187.3, 249.2, 176.4, 209.5, 194.8, 227.6, 183.9,
+        238.4, 172.6, 212.3, 196.7, 256.1, 181.2, 219.4, 203.8, 175.5, 230.9,
+      ];
+
+      // ---------- Geometry helpers ----------
+      const toPath = (pts) =>
+        "M " + pts.map((p) => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L ");
+
+      function bump(cx, halfW, h, base) {
+        const out = [];
+        for (let i = 0; i <= 6; i += 1) {
+          const f = i / 6;
+          out.push([cx - halfW + 2 * halfW * f, base - h * Math.sin(Math.PI * f)]);
+        }
+        return out;
+      }
+
+      function pqrst(cx, base, a) {
+        const dip = Math.min(a * 0.18, 34);
+        const small = Math.min(a * 0.16, 44);
+        return [
+          ...bump(cx - 58, 20, small * 0.7, base),
+          [cx - 18, base],
+          [cx - 9, base + dip * 0.45],
+          [cx, base - a],
+          [cx + 10, base + dip],
+          [cx + 20, base],
+          [cx + 36, base],
+          ...bump(cx + 62, 26, small, base),
+        ];
+      }
+
+      // ---------- Scene 1 trace ----------
+      const s1Pts = [[516, 760]];
+      [608, 784, 960, 1136, 1312].forEach((cx, i) => {
+        s1Pts.push(...pqrst(cx, 760, [100, 148, 120, 168, 130][i]));
+      });
+      s1Pts.push([1404, 760]);
+      const s1Trace = document.getElementById("s1-trace");
+      s1Trace.setAttribute("d", toPath(s1Pts));
+
+      // ---------- Month ticks ----------
+      let ticks = "";
+      for (let d = 0; d <= 30; d += 1) {
+        const x = (MONTH_W / 30) * d;
+        ticks += "M " + x.toFixed(1) + " -9 L " + x.toFixed(1) + " 9 ";
+      }
+      document.querySelectorAll("[data-ticks]").forEach((el) => el.setAttribute("d", ticks));
+
+      // ---------- Scene 2 trace: leaves the reading, runs left ----------
+      const s2Base = 262;
+      const s2Pts = [];
+      [190, 430, 670, 910, 1150].forEach((cx, i) => {
+        s2Pts.push(...pqrst(cx, s2Base, [118, 150, 110, 142, 124][i]));
+      });
+      s2Pts.unshift([-30, s2Base]);
+      s2Pts.push([PEN_X - 34, s2Base]);
+      s2Pts.reverse();
+      const s2d =
+        "M " + PEN_X + " 92 L " + PEN_X + " " + (s2Base - 34) +
+        " Q " + PEN_X + " " + s2Base + " " + (PEN_X - 34) + " " + s2Base +
+        " L " + s2Pts.slice(1).map((p) => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L ");
+      const s2Trace = document.getElementById("s2-trace");
+      s2Trace.setAttribute("d", s2d);
+
+      // ---------- Scene 3 wave: one complex per reading ----------
+      const WAVE_BASE = 800;
+      const WAVE_K = 1.9; // px per Mbps
+      const WAVE_V = 200; // px per second
+      const waveAt = (i) => 200 * i + 50;
+      const AMPS = [
+        118, 131, 137, 118, 142, 108, 126, 145, 121, 284.6, 163, 128, 116, 139, 123, 131, 118,
+      ];
+      const SPIKE = 9;
+      const wavePts = [[-40, WAVE_BASE]];
+      AMPS.forEach((v, i) => {
+        wavePts.push(...pqrst(waveAt(i), WAVE_BASE, v * WAVE_K));
+      });
+      wavePts.push([waveAt(AMPS.length), WAVE_BASE]);
+      document.getElementById("s3-wave").setAttribute("d", toPath(wavePts));
+      const spikePts = pqrst(waveAt(SPIKE), WAVE_BASE, AMPS[SPIKE] * WAVE_K).slice(7, 12);
+      document.getElementById("s3-red").setAttribute("d", toPath(spikePts));
+
+      // Spike flag sits in strip coordinates so it scrolls with the wave.
+      const spikeX = waveAt(SPIKE);
+      const spikeTop = WAVE_BASE - AMPS[SPIKE] * WAVE_K;
+      const flagX = spikeX + 34;
+      const flagY = spikeTop - 34;
+      const setA = (id, attrs) => {
+        const el = document.getElementById(id);
+        Object.keys(attrs).forEach((k) => el.setAttribute(k, attrs[k]));
+      };
+      setA("s3-flag-stem", { x1: spikeX, y1: spikeTop, x2: flagX, y2: spikeTop });
+      setA("s3-flag-box", { x: flagX, y: flagY });
+      setA("s3-flag-accent", { x: flagX, y: flagY });
+      setA("s3-flag-time", { x: flagX + 34, y: flagY + 58 });
+      setA("s3-flag-value", { x: flagX + 34, y: flagY + 126 });
+
+      // ---------- Scene 4 bars ----------
+      const CHART_BASE = 930;
+      const CHART_K = 0.66; // px per Mbps, zero-based so the gap is honest
+      const BAR_W = 40;
+      const pitch = MONTH_W / 30;
+      const barsG = document.getElementById("s4-bars");
+      DAILY.forEach((v, i) => {
+        const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        const h = v * CHART_K;
+        r.setAttribute("x", (MONTH_LEFT + pitch * i + (pitch - BAR_W) / 2).toFixed(1));
+        r.setAttribute("y", (CHART_BASE - h).toFixed(1));
+        r.setAttribute("width", BAR_W);
+        r.setAttribute("height", h.toFixed(1));
+        r.setAttribute("rx", 5);
+        r.setAttribute("class", i === 7 ? "bar top" : "bar");
+        barsG.appendChild(r);
+      });
+
+      // ---------- Scene 5 lit month ----------
+      function monthBlips(from, to, step) {
+        const pts = [[DOT_X, 0]];
+        for (let d = from; d !== to; d += step) {
+          const cx = pitch * (d + 0.5);
+          if (Math.abs(cx - DOT_X) < 20) continue;
+          const h = DAILY[d] * 0.3;
+          const seg = [[cx - 12, 0], [cx - 5, 7], [cx, -h], [cx + 6, 11], [cx + 13, 0]];
+          pts.push(...(step > 0 ? seg : seg.reverse()));
+        }
+        pts.push([step > 0 ? MONTH_W : 0, 0]);
+        return pts;
+      }
+      const litL = document.getElementById("s5-lit-l");
+      const litR = document.getElementById("s5-lit-r");
+      litL.setAttribute("d", toPath(monthBlips(11, -1, -1)));
+      litR.setAttribute("d", toPath(monthBlips(12, 30, 1)));
+
+      // ---------- Dash reveal helper ----------
+      function prepDash(el, shownFraction) {
+        const len = el.getTotalLength();
+        el.style.strokeDasharray = len;
+        el.style.strokeDashoffset = len * (1 - shownFraction);
+      }
+      prepDash(s1Trace, 0.42);
+      prepDash(s2Trace, 0);
+      prepDash(litL, 0);
+      prepDash(litR, 0);
+
+      // ---------- Initial state ----------
+      gsap.set(["#s2", "#s3", "#s4", "#s5", "#menubar"], { opacity: 0, display: "none" });
+      gsap.set("#s1", { opacity: 1, display: "block" });
+
+      // ---------- Scene 1 · Hook · 0–5.5s ----------
+      gsap.set("#s1-paper", {
+        scale: 2.5,
+        transformOrigin: MONTH_LEFT + DOT_X + "px " + TL_Y + "px",
+      });
+      gsap.set("#s1-big", { opacity: 0, y: 24 });
+      gsap.set(["#s1-month-axis"], {
+        scaleX: 0,
+        transformOrigin: DOT_X + "px 0px",
+      });
+      gsap.set(["#s1-dot", "#s1-you", ".s1-end"], { opacity: 0 });
+
+      tl.to(s1Trace, { strokeDashoffset: 0, duration: 2.3, ease: "none" }, 0);
+      tl.to("#s1-hook", { opacity: 0, y: -48, duration: 0.42, ease: "power2.in" }, 2.45);
+      tl.to(
+        "#s1-strip",
+        {
+          svgOrigin: "960 745",
+          scale: 0.018,
+          x: MONTH_LEFT + DOT_X - 960,
+          y: TL_Y - 745,
+          duration: 0.9,
+          ease: "power3.inOut",
+        },
+        2.4
+      );
+      tl.to("#s1-paper", { scale: 1, duration: 1.0, ease: "power3.inOut" }, 2.4);
+      tl.to("#s1-dot", { opacity: 1, duration: 0.14 }, 3.18);
+      tl.set("#s1-strip", { opacity: 0 }, 3.32);
+      tl.to("#s1-month-axis", { scaleX: 1, duration: 0.7, ease: "power2.out" }, 3.0);
+      tl.to(".s1-end", { opacity: 1, duration: 0.3 }, 3.4);
+      tl.to("#s1-you", { opacity: 1, duration: 0.3 }, 3.3);
+      tl.to("#s1-big", { opacity: 1, y: 0, duration: 0.42, ease: "power2.out" }, 3.0);
+
+      // ---------- Cross-dissolve to Scene 2 ----------
+      tl.set("#s2", { display: "block" }, 5.2);
+      tl.to("#s2", { opacity: 1, duration: 0.5, ease: "none" }, 5.25);
+      tl.to("#s1", { opacity: 0, duration: 0.4, ease: "none" }, 5.15);
+      tl.set("#s1", { display: "none" }, 5.55);
+
+      // ---------- Menu bar + reading ticker ----------
+      // Format mirrors menuBarText: "↓ <down> ↑ <up> Mbps". Only the numbers tick.
+      [["rd-d", 1], ["rd-u", 2]].forEach(([id, col]) => {
+        const host = document.getElementById(id);
+        READINGS.forEach((r, i) => {
+          const cell = document.createElement("div");
+          cell.textContent = r[col];
+          host.appendChild(cell);
+          tl.set(cell, { display: "block" }, r[0]);
+          if (i < READINGS.length - 1) tl.set(cell, { display: "none" }, READINGS[i + 1][0]);
+        });
+      });
+      gsap.set("#menubar", { y: -100 });
+      tl.set("#menubar", { display: "block", opacity: 1 }, 5.5);
+      tl.to("#menubar", { y: 0, duration: 0.5, ease: "power3.out" }, 5.6);
+      tl.to("#menubar", { opacity: 0, duration: 0.4, ease: "none" }, 18.6);
+      tl.set("#menubar", { display: "none" }, 19.05);
+
+      // ---------- Scene 2 · Twist · 5.5–11s ----------
+      gsap.set("#s2-mark", { opacity: 0, y: 28 });
+      gsap.set("#s2-copy", { opacity: 0, y: 22 });
+      tl.to(s2Trace, { strokeDashoffset: 0, duration: 4.5, ease: "none" }, 6.2);
+      tl.to("#s2-mark", { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, 6.7);
+      tl.to("#s2-copy", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 7.3);
+
+      tl.set("#s3", { display: "block" }, 10.7);
+      tl.to("#s3", { opacity: 1, duration: 0.5, ease: "none" }, 10.75);
+      tl.to("#s2", { opacity: 0, duration: 0.4, ease: "none" }, 10.65);
+      tl.set("#s2", { display: "none" }, 11.05);
+
+      // ---------- Scene 3 · Mechanic · 11–19s ----------
+      const SCROLL_START = 10.75;
+      const SCROLL_END = 19.05;
+      const stripXAt = (t) => -WAVE_V * (t - 11);
+      gsap.set("#s3-strip", { x: stripXAt(SCROLL_START) });
+      gsap.set("#s3-strip-flag", { x: stripXAt(SCROLL_START) });
+      ["#s3-strip", "#s3-strip-flag"].forEach((sel) => {
+        tl.to(
+          sel,
+          {
+            x: stripXAt(SCROLL_END),
+            duration: SCROLL_END - SCROLL_START,
+            ease: "none",
+          },
+          SCROLL_START
+        );
+      });
+
+      // Pen tracks the wave at the fixed "now" line under the reading.
+      const penStart = PEN_X - stripXAt(SCROLL_START);
+      const penEnd = PEN_X - stripXAt(SCROLL_END);
+      const yOnWave = (x) => {
+        for (let i = 1; i < wavePts.length; i += 1) {
+          const a = wavePts[i - 1];
+          const b = wavePts[i];
+          if (x >= a[0] && x <= b[0]) {
+            return a[1] + ((b[1] - a[1]) * (x - a[0])) / (b[0] - a[0] || 1);
+          }
+        }
+        return WAVE_BASE;
+      };
+      gsap.set("#s3-pen", { y: yOnWave(penStart) });
+      const penKeys = [];
+      let lastX = penStart;
+      wavePts
+        .filter((p) => p[0] > penStart && p[0] < penEnd)
+        .concat([[penEnd, yOnWave(penEnd)]])
+        .forEach((p) => {
+          penKeys.push({ y: p[1], duration: (p[0] - lastX) / WAVE_V, ease: "none" });
+          lastX = p[0];
+        });
+      tl.to("#s3-pen", { keyframes: penKeys }, SCROLL_START);
+
+      // Spike: red for 0.5 s, back to ink, marker stays.
+      const SPIKE_T = 13.7;
+      gsap.set("#s3-red", { opacity: 0 });
+      gsap.set("#s3-flag", { opacity: 0 });
+      gsap.set("#s3-copy", { opacity: 0, y: 22 });
+      tl.to("#s3-red", { opacity: 1, duration: 0.05, ease: "none" }, SPIKE_T - 0.1);
+      tl.to("#s3-red", { opacity: 0, duration: 0.12, ease: "none" }, SPIKE_T + 0.4);
+      tl.to("#s3-flag", { opacity: 1, duration: 0.24, ease: "power2.out" }, SPIKE_T + 0.12);
+      tl.to("#s3-copy", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, SPIKE_T + 0.5);
+
+      tl.set("#s4", { display: "block" }, 18.7);
+      tl.to("#s4", { opacity: 1, duration: 0.5, ease: "none" }, 18.75);
+      tl.to("#s3", { opacity: 0, duration: 0.4, ease: "none" }, 18.65);
+      tl.set("#s3", { display: "none" }, 19.05);
+
+      // ---------- Scene 4 · Range · 19–26s ----------
+      gsap.set("#s4-bars rect", { scaleY: 0, svgOrigin: "0 " + CHART_BASE });
+      gsap.set("#s4-plan-line", { scaleX: 0, svgOrigin: "100 270" });
+      gsap.set("#s4-head", { opacity: 0, y: 20 });
+      gsap.set("#s4-plan", { opacity: 0 });
+      gsap.set(["#s4-top", "#s4-use", "#s4-arrow"], { opacity: 0 });
+      gsap.set("#s4-stamp", { opacity: 0, scale: 1.55, rotation: -4 });
+
+      tl.to("#s4-head", { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 19.25);
+      tl.to("#s4-plan-line", { scaleX: 1, duration: 0.6, ease: "power2.out" }, 19.3);
+      tl.to("#s4-plan", { opacity: 1, duration: 0.35 }, 19.6);
+      tl.to(
+        "#s4-bars rect",
+        {
+          scaleY: 1,
+          duration: 0.45,
+          ease: "power2.out",
+          stagger: { each: 0.035 },
+        },
+        19.75
+      );
+      tl.to("#s4-top", { opacity: 1, duration: 0.3 }, 21.2);
+      tl.to("#s4-arrow", { opacity: 1, duration: 0.35 }, 21.35);
+      tl.to("#s4-use", { opacity: 1, duration: 0.4, ease: "power2.out" }, 21.5);
+      tl.to("#s4-stamp", { opacity: 1, scale: 1, duration: 0.26, ease: "power4.in" }, 22.7);
+
+      tl.to("#s4-arrow", { opacity: 0, duration: 0.12, ease: "none" }, 25.56);
+      tl.set("#s5", { display: "block" }, 25.7);
+      tl.to("#s5", { opacity: 1, duration: 0.5, ease: "none" }, 25.75);
+      tl.to("#s4", { opacity: 0, duration: 0.4, ease: "none" }, 25.65);
+      tl.set("#s4", { display: "none" }, 26.05);
+
+      // ---------- Scene 5 · Heart · 26–32s ----------
+      gsap.set("#s5-a", { opacity: 0, y: 20 });
+      gsap.set("#s5-b", { opacity: 0, y: 20 });
+      gsap.set("#s5-outro", { opacity: 0, y: 28 });
+      tl.to("#s5-a", { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 26.2);
+      tl.to("#s5-b", { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 27.15);
+      tl.to(litL, { strokeDashoffset: 0, duration: 1.2, ease: "power2.inOut" }, 27.05);
+      tl.to(litR, { strokeDashoffset: 0, duration: 1.45, ease: "power2.inOut" }, 27.05);
+      tl.to("#s5-stage", { y: -240, duration: 0.75, ease: "power2.inOut" }, 28.55);
+      tl.to("#s5-outro", { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, 29.15);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
