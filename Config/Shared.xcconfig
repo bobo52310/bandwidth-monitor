@@ -21,6 +21,9 @@ MACOSX_DEPLOYMENT_TARGET = 14.0
 // Info PLIST
 // ==========================================
 GENERATE_INFOPLIST_FILE = YES
+// Menu bar app: start without a Dock icon. "Show in Dock" turns it on at runtime, so the
+// icon never flashes at launch for a user who left it off.
+INFOPLIST_KEY_LSUIElement = YES
 
 // ==========================================
 // Entitlements

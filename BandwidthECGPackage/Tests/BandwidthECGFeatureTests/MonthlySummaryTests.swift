@@ -36,7 +36,10 @@ import Foundation
         totalDowntimeSeconds: 0,
         avgLatencyMs: 15.0,
         avgJitterMs: 3.0,
-        daysMonitored: 30
+        daysMonitored: 30,
+        saturatedDays: 3,
+        downloadDailyPeakP95Ratio: 0.95,
+        uploadDailyPeakP95Ratio: 0.9
     )
     #expect(summary.recommendation == .considerUpgrade)
 }
@@ -55,7 +58,10 @@ import Foundation
         totalDowntimeSeconds: 0,
         avgLatencyMs: 10.0,
         avgJitterMs: 2.0,
-        daysMonitored: 30
+        daysMonitored: 30,
+        saturatedDays: 0,
+        downloadDailyPeakP95Ratio: 0.08,
+        uploadDailyPeakP95Ratio: 0.04
     )
     #expect(summary.recommendation == .considerDowngrade)
 }
@@ -74,7 +80,16 @@ import Foundation
         totalDowntimeSeconds: 30.0,
         avgLatencyMs: 20.0,
         avgJitterMs: 5.0,
-        daysMonitored: 30
+        daysMonitored: 30,
+        saturatedDays: 0,
+        downloadDailyPeakP95Ratio: 0.66,
+        uploadDailyPeakP95Ratio: 0.5
     )
     #expect(summary.recommendation == .planFits)
+}
+
+@Test func reportCollectingDays_showsBothNumbers() {
+    let text = L10n.reportCollectingDays(3, 7)
+    #expect(text.contains("3"))
+    #expect(text.contains("7"))
 }

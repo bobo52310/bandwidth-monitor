@@ -1,5 +1,4 @@
 import Foundation
-import Network
 import Observation
 
 /// Represents a single network disconnection event with start/end times and interface info.
@@ -46,56 +45,143 @@ public struct DisconnectEvent: Codable, Identifiable, Sendable {
     }
 }
 
-/// Tracks network disconnection events using NWPathMonitor and persists them to UserDefaults.
+/// Records disconnections and persists them to UserDefaults.
 ///
-/// Monitors connectivity changes in real time and records disconnection events
-/// with their duration and interface type. Events are persisted across app launches
-/// and automatically pruned when they exceed age or count limits.
+/// The connection counts as down while the network path is unsatisfied, or while the latency
+/// probe has failed twice in a row with the path up (an ISP outage behind a working router,
+/// CORE-23). Turning Wi-Fi off by hand cannot be told apart from losing it, so it counts too.
+///
+/// Sleep is not downtime: `handleSleep()` ends an open outage, nothing is recorded while the
+/// Mac sleeps, and an outage still going at wake starts at wake. An outage that began less than
+/// 5 seconds before sleep is the sleep taking the network down and is dropped. A loss that
+/// begins and ends within 10 seconds of waking is the network reconnecting and is not recorded.
 @MainActor
 @Observable
 public class DisconnectTracker {
-    public var events: [DisconnectEvent] = []
-    public var isConnected: Bool = true
-    public var currentInterfaceType: String = "unknown"
+    public static let probeFailuresForOutage = 2
+    public static let wakeGraceSeconds: TimeInterval = 10
+    /// An outage that began less than this long before sleep is not recorded at all.
+    public static let preSleepGraceSeconds: TimeInterval = 5
 
-    private var pathMonitor: NWPathMonitor?
-    private var monitorQueue: DispatchQueue?
-    private var disconnectStartTime: Date?
-    private var disconnectInterfaceType: String = "unknown"
+    public var events: [DisconnectEvent] = []
+    /// False while an outage is open.
+    public var isConnected: Bool = true
+    /// The interface of the latest path update, satisfied or not.
+    public var currentInterfaceType: String = "unknown"
+    /// The interface of the last satisfied path. A path that reports a loss often has no
+    /// interface left and reads "other", so outages are attributed to this one (CORE-31).
+    public private(set) var lastKnownInterfaceType: String = "unknown"
+    public private(set) var isPathSatisfied = true
+    /// Probe failures in a row while the path was up. With the path down the probe is bound
+    /// to fail, so those failures are not counted.
+    public private(set) var consecutiveProbeFailures = 0
+    /// Called when a connection comes back, with the finished disconnect.
+    public var onEvent: ((DisconnectEvent) -> Void)?
+    /// Called with the path's new state whenever it changes, asleep or not.
+    public var onConnectivityChange: ((Bool) -> Void)?
+
+    private let defaults: UserDefaults
+    private let clock: AppClock
+    private let pathSource: any PathStatusSource
+    private var isStarted = false
+
+    @ObservationIgnored private var isAsleep = false
+    /// Monotonic time at which the grace after the last wake ends.
+    @ObservationIgnored private var wakeGraceEnd: TimeInterval?
+    @ObservationIgnored private var firstProbeFailureTime: Date?
+    @ObservationIgnored private var firstProbeFailureMonotonic: TimeInterval?
+    @ObservationIgnored private var outageStart: Date?
+    /// Monotonic time the open outage began, so a wall-clock change cannot move it.
+    @ObservationIgnored private var outageStartMonotonic: TimeInterval?
+    @ObservationIgnored private var outageInterfaceType = "unknown"
+    @ObservationIgnored private var outageOpenedInGrace = false
 
     private let userDefaultsKey = "disconnectEvents"
     private let maxEvents = 200
     private let maxAgeDays = 30
 
-    public init() {
+    public init(
+        defaults: UserDefaults = .standard,
+        clock: AppClock = .live,
+        pathSource: any PathStatusSource = SystemPathStatusSource()
+    ) {
+        self.defaults = defaults
+        self.clock = clock
+        self.pathSource = pathSource
         loadEvents()
     }
 
     // MARK: - Public API
 
-    /// Starts monitoring network connectivity using NWPathMonitor.
+    /// Starts monitoring network connectivity through the path source.
     public func startMonitoring() {
-        guard pathMonitor == nil else { return }
+        guard !isStarted else { return }
+        isStarted = true
 
-        let monitor = NWPathMonitor()
-        let queue = DispatchQueue(label: "com.bandwidthecg.disconnecttracker")
-        monitorQueue = queue
-
-        monitor.pathUpdateHandler = { [weak self] path in
+        pathSource.start { [weak self] snapshot in
             Task { @MainActor in
-                self?.handlePathUpdate(path)
+                self?.handle(snapshot)
             }
         }
-
-        monitor.start(queue: queue)
-        pathMonitor = monitor
     }
 
     /// Stops monitoring network connectivity.
     public func stopMonitoring() {
-        pathMonitor?.cancel()
-        pathMonitor = nil
-        monitorQueue = nil
+        guard isStarted else { return }
+        isStarted = false
+        pathSource.stop()
+    }
+
+    /// One latency probe's result. Two failures in a row with the path up open an outage that
+    /// starts at the first of them; the next success closes it.
+    public func noteProbe(success: Bool) {
+        guard !isAsleep else { return }
+        if success {
+            resetProbeFailures()
+            reconcileNow()
+        } else {
+            guard isPathSatisfied else { return }
+            let now = clock.now()
+            let monotonic = clock.monotonic()
+            if consecutiveProbeFailures == 0 {
+                firstProbeFailureTime = now
+                firstProbeFailureMonotonic = monotonic
+            }
+            consecutiveProbeFailures += 1
+            reconcile(
+                openingAt: firstProbeFailureTime ?? now,
+                monotonic: firstProbeFailureMonotonic ?? monotonic
+            )
+        }
+    }
+
+    /// The probe was switched off, so only the path counts from now on. An outage that only
+    /// the probe was holding open ends here.
+    public func clearProbeFailures() {
+        resetProbeFailures()
+        reconcileNow()
+    }
+
+    /// Before the Mac sleeps: an open outage ends now, and nothing is recorded until wake.
+    /// One that began less than `preSleepGraceSeconds` ago is dropped: the network going down
+    /// with the sleep can be reported just before `willSleep`.
+    public func handleSleep() {
+        guard !isAsleep else { return }
+        if let outageStartMonotonic, clock.monotonic() - outageStartMonotonic < Self.preSleepGraceSeconds {
+            discardOutage()
+        } else {
+            closeOutage(at: clock.now())
+        }
+        isAsleep = true
+        resetProbeFailures()
+        wakeGraceEnd = nil
+    }
+
+    /// After wake. A path that is still down starts an outage now, not when it went down.
+    public func handleWake() {
+        isAsleep = false
+        wakeGraceEnd = clock.monotonic() + Self.wakeGraceSeconds
+        reconcileNow()
     }
 
     /// Adds a disconnect event for testing purposes.
@@ -114,7 +200,7 @@ public class DisconnectTracker {
 
     /// Returns only today's disconnect events.
     public var todayEvents: [DisconnectEvent] {
-        let startOfToday = Calendar.current.startOfDay(for: Date())
+        let startOfToday = clock.calendar.startOfDay(for: clock.now())
         return events.filter { $0.startTime >= startOfToday }
     }
 
@@ -152,55 +238,92 @@ public class DisconnectTracker {
 
     // MARK: - Private
 
-    /// Handles NWPath updates to detect connectivity changes.
-    private func handlePathUpdate(_ path: NWPath) {
-        let wasConnected = isConnected
-        let nowConnected = path.status == .satisfied
+    /// Handles a path update. Internal so tests can feed snapshots directly.
+    func handle(_ snapshot: PathSnapshot) {
+        currentInterfaceType = snapshot.interfaceType
+        if snapshot.isSatisfied {
+            lastKnownInterfaceType = snapshot.interfaceType
+        }
 
-        // Update interface type
-        currentInterfaceType = interfaceTypeString(from: path)
+        let changed = snapshot.isSatisfied != isPathSatisfied
+        isPathSatisfied = snapshot.isSatisfied
+        // A single failed probe just before the path drops is explained by the drop. Two or
+        // more already make an outage, and that one carries on.
+        if changed, !snapshot.isSatisfied, consecutiveProbeFailures < Self.probeFailuresForOutage {
+            resetProbeFailures()
+        }
 
-        if wasConnected && !nowConnected {
-            // Connection lost — record the start time
-            disconnectStartTime = Date()
-            disconnectInterfaceType = currentInterfaceType
-            isConnected = false
-        } else if !wasConnected && nowConnected {
-            // Connection restored — record the event
-            if let startTime = disconnectStartTime {
-                let event = DisconnectEvent(
-                    startTime: startTime,
-                    endTime: Date(),
-                    interfaceType: disconnectInterfaceType
-                )
-                events.append(event)
-                pruneEvents()
-                saveEvents()
-            }
-            disconnectStartTime = nil
-            isConnected = true
-        } else {
-            isConnected = nowConnected
+        reconcileNow()
+        if changed {
+            onConnectivityChange?(snapshot.isSatisfied)
         }
     }
 
-    /// Converts NWPath interface types to a human-readable string.
-    private func interfaceTypeString(from path: NWPath) -> String {
-        if path.usesInterfaceType(.wifi) {
-            return "wifi"
-        } else if path.usesInterfaceType(.wiredEthernet) {
-            return "ethernet"
-        } else if path.usesInterfaceType(.cellular) {
-            return "cellular"
+    private var isDown: Bool {
+        !isPathSatisfied || consecutiveProbeFailures >= Self.probeFailuresForOutage
+    }
+
+    /// `reconcile` with an outage that would start now.
+    private func reconcileNow() {
+        reconcile(openingAt: clock.now(), monotonic: clock.monotonic())
+    }
+
+    /// Opens or closes the outage to match `isDown`. Nothing changes while the Mac sleeps.
+    private func reconcile(openingAt start: Date, monotonic: TimeInterval) {
+        guard !isAsleep else { return }
+        if isDown {
+            if outageStart == nil {
+                openOutage(at: start, monotonic: monotonic)
+            }
         } else {
-            return "other"
+            closeOutage(at: clock.now())
         }
+    }
+
+    private func openOutage(at start: Date, monotonic: TimeInterval) {
+        outageStart = start
+        outageStartMonotonic = monotonic
+        outageInterfaceType = lastKnownInterfaceType == "unknown" ? currentInterfaceType : lastKnownInterfaceType
+        outageOpenedInGrace = wakeGraceEnd.map { clock.monotonic() < $0 } ?? false
+        isConnected = false
+    }
+
+    /// Ends the open outage without recording it.
+    private func discardOutage() {
+        outageStart = nil
+        outageStartMonotonic = nil
+        isConnected = true
+    }
+
+    private func closeOutage(at end: Date) {
+        guard let start = outageStart else { return }
+        outageStart = nil
+        outageStartMonotonic = nil
+        isConnected = true
+
+        // Lost and back within the grace after wake: the network was reconnecting.
+        if outageOpenedInGrace, let wakeGraceEnd, clock.monotonic() < wakeGraceEnd {
+            return
+        }
+
+        let event = DisconnectEvent(startTime: start, endTime: end, interfaceType: outageInterfaceType)
+        events.append(event)
+        pruneEvents()
+        saveEvents()
+        onEvent?(event)
+    }
+
+    private func resetProbeFailures() {
+        consecutiveProbeFailures = 0
+        firstProbeFailureTime = nil
+        firstProbeFailureMonotonic = nil
     }
 
     /// Removes events exceeding the maximum count or older than the maximum age.
     private func pruneEvents() {
         // Remove events older than maxAgeDays
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -maxAgeDays, to: Date()) ?? Date()
+        let now = clock.now()
+        let cutoffDate = clock.calendar.date(byAdding: .day, value: -maxAgeDays, to: now) ?? now
         events = events.filter { $0.startTime >= cutoffDate }
 
         // Keep only the most recent maxEvents
@@ -213,7 +336,7 @@ public class DisconnectTracker {
     private func saveEvents() {
         do {
             let data = try JSONEncoder().encode(events)
-            UserDefaults.standard.set(data, forKey: userDefaultsKey)
+            defaults.set(data, forKey: userDefaultsKey)
         } catch {
             // Silently fail — logging can be added later if needed
         }
@@ -221,7 +344,7 @@ public class DisconnectTracker {
 
     /// Loads events from UserDefaults.
     private func loadEvents() {
-        guard let data = UserDefaults.standard.data(forKey: userDefaultsKey) else { return }
+        guard let data = defaults.data(forKey: userDefaultsKey) else { return }
         do {
             events = try JSONDecoder().decode([DisconnectEvent].self, from: data)
             pruneEvents()

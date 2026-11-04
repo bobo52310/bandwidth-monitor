@@ -14,6 +14,7 @@ public enum L10n {
     public static let buttonPrevious = String(localized: "button.previous", defaultValue: "上一步")
     public static let buttonNext = String(localized: "button.next", defaultValue: "下一步")
     public static let buttonGetStarted = String(localized: "button.getStarted", defaultValue: "開始使用")
+    public static let buttonCancel = String(localized: "button.cancel", defaultValue: "取消")
 
     // MARK: - Tooltips
     public static let tooltipPinWindow = String(localized: "tooltip.pinWindow", defaultValue: "固定視窗")
@@ -31,6 +32,8 @@ public enum L10n {
     public static let settingsAnomalyDetectionHelp = String(localized: "settings.anomaly.help", defaultValue: "自動偵測網路中斷、速度驟降等異常狀況")
     public static let settingsAnomalyHistory = String(localized: "settings.anomaly.history", defaultValue: "異常記錄:")
     public static let settingsClearHistory = String(localized: "settings.clear.history", defaultValue: "清除歷史")
+    public static let settingsEnableLatency = String(localized: "settings.latency.enable", defaultValue: "啟用延遲監測")
+    public static let settingsLatencyHelp = String(localized: "settings.latency.help", defaultValue: "每 30 秒向 apple.com 送出一次 HEAD 請求以量測延遲，不含你的監控資料。關閉後不再送出。")
 
     // MARK: - Settings - Display & Notification Section
     public static let settingsDisplayNotificationSection = String(localized: "settings.displayNotification.section", defaultValue: "顯示與通知")
@@ -48,11 +51,20 @@ public enum L10n {
     public static let settingsThresholdHelp = String(localized: "settings.threshold.help", defaultValue: "當速度超過此百分比時觸發通知")
     public static let settingsSendTestNotification = String(localized: "settings.notification.test", defaultValue: "發送測試通知")
     public static let settingsTestNotificationHelp = String(localized: "settings.notification.test.help", defaultValue: "測試通知功能是否正常")
+    public static let settingsNotificationDenied = String(localized: "settings.notification.denied", defaultValue: "通知權限未開啟，請到「系統設定 > 通知」允許 Bandwidth ECG。")
+    public static func settingsNotificationDeliveryFailed(_ reason: String) -> String {
+        String(format: String(localized: "settings.notification.failed", defaultValue: "通知送出失敗：%@"), reason)
+    }
 
     // MARK: - Settings - System & Maintenance Section
     public static let settingsSystemMaintenanceSection = String(localized: "settings.systemMaintenance.section", defaultValue: "系統與維護")
     public static let settingsSystemSettings = String(localized: "settings.system.settings", defaultValue: "系統設定")
     public static let settingsLaunchAtLogin = String(localized: "settings.launch.login", defaultValue: "登入時開啟")
+    public static let settingsLaunchAtLoginMoveHint = String(localized: "settings.launch.login.moveHint", defaultValue: "請先把 App 移到「應用程式」資料夾，才能設定登入時開啟。")
+    public static let settingsLaunchAtLoginNeedsApproval = String(localized: "settings.launch.login.needsApproval", defaultValue: "請在「系統設定 > 一般 > 登入項目」中允許 Bandwidth ECG。")
+    public static func settingsLaunchAtLoginFailed(_ reason: String) -> String {
+        String(format: String(localized: "settings.launch.login.failed", defaultValue: "無法變更登入時開啟：%@"), reason)
+    }
     public static let settingsShowInDock = String(localized: "settings.show.dock", defaultValue: "顯示在 Dock")
     public static let settingsShowInDockHelp = String(localized: "settings.show.dock.help", defaultValue: "關閉後僅在選單列顯示")
     public static let settingsShowOnboarding = String(localized: "settings.show.onboarding", defaultValue: "重新顯示新手引導")
@@ -65,15 +77,14 @@ public enum L10n {
     public static let settingsClearErrors = String(localized: "settings.clear.errors", defaultValue: "清除錯誤")
     public static let settingsClearLogs = String(localized: "settings.clear.logs", defaultValue: "清除日誌")
     public static let settingsExportLogs = String(localized: "settings.export.logs", defaultValue: "導出日誌")
-    public static let settingsMemoryManagement = String(localized: "settings.memory.management", defaultValue: "記憶體管理")
-    public static let settingsMemoryUsage = String(localized: "settings.memory.usage", defaultValue: "使用量:")
-    public static let settingsOptimizeMemory = String(localized: "settings.memory.optimize", defaultValue: "優化記憶體")
-    public static let settingsOptimizeMemoryHelp = String(localized: "settings.memory.optimize.help", defaultValue: "清理過期數據以減少記憶體使用")
     public static let settingsResetAllPeaks = String(localized: "settings.reset.peaks", defaultValue: "重置所有峰值記錄")
 
     // MARK: - Settings - Language
-    public static let settingsLanguageSection = String(localized: "settings.language.section", defaultValue: "語言設定")
     public static let settingsLanguage = String(localized: "settings.language", defaultValue: "語言")
+    public static let settingsLanguageRestartTitle = String(localized: "settings.language.restart.title", defaultValue: "需要重新啟動才會套用新語言")
+    public static let settingsLanguageRestartMessage = String(localized: "settings.language.restart.message", defaultValue: "選擇「稍後」的話，下次開啟 Bandwidth ECG 時會改用新語言。")
+    public static let settingsLanguageRestartNow = String(localized: "settings.language.restart.now", defaultValue: "立即重新啟動")
+    public static let settingsLanguageRestartLater = String(localized: "settings.language.restart.later", defaultValue: "稍後")
     public static let languageSystem = String(localized: "language.system", defaultValue: "系統預設")
     public static let languageEnglish = String(localized: "language.english", defaultValue: "English")
     public static let languageTraditionalChinese = String(localized: "language.traditionalChinese", defaultValue: "繁體中文")
@@ -86,13 +97,37 @@ public enum L10n {
     public static let menuBarModeUploadOnly = String(localized: "menubar.mode.uploadOnly", defaultValue: "僅顯示上傳")
     public static let menuBarModeCompact = String(localized: "menubar.mode.compact", defaultValue: "簡潔模式")
 
+    // MARK: - Menu Bar Alert
+    /// What VoiceOver adds to the menu bar button when the title carries a warning prefix.
+    public static let menuBarAlertWarning = String(localized: "menubar.alert.warning", defaultValue: "接近方案上限")
+    public static let menuBarAlertCritical = String(localized: "menubar.alert.critical", defaultValue: "已達方案上限")
+    public static let menuBarMenuOpen = String(localized: "menubar.menu.open", defaultValue: "開啟 Bandwidth ECG")
+    public static let menuBarMenuQuit = String(localized: "menubar.menu.quit", defaultValue: "結束")
+
+    // MARK: - Accessibility
+    /// The value of a toggle button whose state is otherwise shown by colour only.
+    public static let accessibilityStateOn = String(localized: "accessibility.state.on", defaultValue: "開啟")
+    public static let accessibilityStateOff = String(localized: "accessibility.state.off", defaultValue: "關閉")
+
     // MARK: - Chart Y-Axis Modes
     public static let chartYAxisModeAuto = String(localized: "chart.yaxis.auto", defaultValue: "自動縮放")
     public static let chartYAxisModeFixed = String(localized: "chart.yaxis.fixed", defaultValue: "固定上限")
 
     // MARK: - Peak Approach Section
-    public static func approachingSpeedLimit(_ speed: Int) -> String {
-        String(format: String(localized: "peak.approaching.limit", defaultValue: "接近速率上限(%dMbps)"), speed)
+    /// Each direction against its own plan. The key is new: the old one took one number.
+    public static func approachingSpeedLimit(_ download: Int, _ upload: Int) -> String {
+        String(format: String(localized: "peak.approaching.limit.pair", defaultValue: "接近速率上限 (↓%d / ↑%d Mbps)"), download, upload)
+    }
+    /// What counts as one time. The numbers come from `ReportRules`, so the text cannot drift
+    /// from the rule it describes.
+    public static func approachingHelp(seconds: Int, percent: Int) -> String {
+        String(format: String(localized: "peak.approaching.help", defaultValue: "持續 %1$d 秒達方案 %2$d%% 算一次"), seconds, percent)
+    }
+    public static var approachingHelpCurrent: String {
+        approachingHelp(
+            seconds: Int(ReportRules.approachSustainSeconds),
+            percent: Int((ReportRules.approachRatio * 100).rounded())
+        )
     }
     public static let peakTimesUnit = String(localized: "peak.times.unit", defaultValue: "次")
     public static let peakTriggerTime = String(localized: "peak.trigger.time", defaultValue: "觸發時間")
@@ -134,17 +169,68 @@ public enum L10n {
 
     // MARK: - Export
     public static let exportData = String(localized: "export.data", defaultValue: "導出數據")
-    public static let exportTodayData = String(localized: "export.today.data", defaultValue: "導出今日數據")
+    public static let exportRecent24Hours = String(localized: "export.recent.24h", defaultValue: "導出最近 24 小時數據")
     public static let exportPeakHistory = String(localized: "export.peak.history", defaultValue: "導出峰值記錄")
-    public static let exportFullHistory = String(localized: "export.full.history", defaultValue: "導出完整歷史")
     public static let exportDataHelp = String(localized: "export.data.help", defaultValue: "導出網路數據為 CSV 檔案")
-    public static let exportSuccess = String(localized: "export.success", defaultValue: "導出成功")
-    public static let exportSuccessMessage = String(localized: "export.success.message", defaultValue: "數據已成功導出至下載資料夾")
+    public static let exportSuccessTitle = String(localized: "export.success.title", defaultValue: "已成功導出")
+    public static func exportSuccessDetail(_ fileName: String) -> String {
+        String(format: String(localized: "export.success.detail", defaultValue: "已儲存為「%@」"), fileName)
+    }
+    public static let exportRevealInFinder = String(localized: "export.reveal.in.finder", defaultValue: "在 Finder 中顯示")
     public static let exportFailure = String(localized: "export.failure", defaultValue: "導出失敗")
-    public static let exportFailureMessage = String(localized: "export.failure.message", defaultValue: "無法導出數據，請稍後再試")
+    public static func exportFailureDetail(_ reason: String) -> String {
+        String(format: String(localized: "export.failure.detail", defaultValue: "無法寫入檔案：%@"), reason)
+    }
+
+    // Save panel
+    public static let exportPanelTitle = String(localized: "export.panel.title", defaultValue: "導出網路數據")
+    public static let exportPanelMessage = String(localized: "export.panel.message", defaultValue: "選擇儲存位置")
+    public static let exportPanelPrompt = String(localized: "export.panel.prompt", defaultValue: "導出")
+
+    // CSV column headers and row labels. The unit is part of the header, so a spreadsheet reader
+    // never has to guess whether a number is Mbps or MB/s.
+    public static let exportColumnTime = String(localized: "export.column.time", defaultValue: "時間")
+    public static func exportColumnAvgDownload(_ unit: String) -> String {
+        String(format: String(localized: "export.column.avg.download", defaultValue: "平均下載 (%@)"), unit)
+    }
+    public static func exportColumnMaxDownload(_ unit: String) -> String {
+        String(format: String(localized: "export.column.max.download", defaultValue: "峰值下載 (%@)"), unit)
+    }
+    public static func exportColumnAvgUpload(_ unit: String) -> String {
+        String(format: String(localized: "export.column.avg.upload", defaultValue: "平均上傳 (%@)"), unit)
+    }
+    public static func exportColumnMaxUpload(_ unit: String) -> String {
+        String(format: String(localized: "export.column.max.upload", defaultValue: "峰值上傳 (%@)"), unit)
+    }
+    public static let exportColumnType = String(localized: "export.column.type", defaultValue: "類型")
+    public static func exportColumnPeakSpeed(_ unit: String) -> String {
+        String(format: String(localized: "export.column.peak.speed", defaultValue: "峰值速度 (%@)"), unit)
+    }
+    public static let exportColumnPeakTime = String(localized: "export.column.peak.time", defaultValue: "發生時間")
+    public static let exportRowTodayDownload = String(localized: "export.row.today.download", defaultValue: "今日下載峰值")
+    public static let exportRowTodayUpload = String(localized: "export.row.today.upload", defaultValue: "今日上傳峰值")
+    public static let exportRowAllTimeDownload = String(localized: "export.row.alltime.download", defaultValue: "歷史下載峰值")
+    public static let exportRowAllTimeUpload = String(localized: "export.row.alltime.upload", defaultValue: "歷史上傳峰值")
+    public static let exportRowHourDownload = String(localized: "export.row.hour.download", defaultValue: "1小時下載峰值")
+    public static let exportRowHourUpload = String(localized: "export.row.hour.upload", defaultValue: "1小時上傳峰值")
 
     // MARK: - Actions
     public static let actionResetPeaks = String(localized: "action.reset.peaks", defaultValue: "重置峰值記錄")
+    public static let resetConfirmTitle = String(localized: "reset.confirm.title", defaultValue: "重置所有峰值記錄？")
+    public static let resetConfirmMessage = String(localized: "reset.confirm.message", defaultValue: "將清除所有峰值與圖表歷史，月度報告不受影響。此動作無法復原，可先用「導出數據」備份。")
+
+    // MARK: - Clearing One Peak
+    public static let peakDirectionDownload = String(localized: "peak.direction.download", defaultValue: "下載")
+    public static let peakDirectionUpload = String(localized: "peak.direction.upload", defaultValue: "上傳")
+    public static let peakClearHelp = String(localized: "peak.clear.help", defaultValue: "清除這個歷史峰值")
+    public static let peakClearButton = String(localized: "peak.clear.button", defaultValue: "清除峰值")
+    public static func peakClearAccessibility(_ direction: String) -> String {
+        String(format: String(localized: "peak.clear.accessibility", defaultValue: "清除歷史%@峰值"), direction)
+    }
+    public static func peakClearConfirmTitle(_ direction: String) -> String {
+        String(format: String(localized: "peak.clear.confirm.title", defaultValue: "清除歷史%@峰值？"), direction)
+    }
+    public static let peakClearConfirmMessage = String(localized: "peak.clear.confirm.message", defaultValue: "將清除這筆歷史最高紀錄，若今日峰值來自同一次測量也會一併清除。月度報告不受影響。此動作無法復原。")
     public static let actionQuitApp = String(localized: "action.quit.app", defaultValue: "退出應用程式")
 
     // MARK: - Onboarding
@@ -162,13 +248,14 @@ public enum L10n {
 
     public static let onboardingExportTitle = String(localized: "onboarding.export.title", defaultValue: "數據導出與分析")
     public static let onboardingExportDescription = String(localized: "onboarding.export.description", defaultValue: "輕鬆導出您的網路數據，進行深度分析。")
-    public static let onboardingExportFeature1 = String(localized: "onboarding.export.feature.1", defaultValue: "導出今日數據 (過去24小時)")
+    public static let onboardingExportFeature1 = String(localized: "onboarding.export.feature.recent", defaultValue: "導出最近 24 小時數據")
     public static let onboardingExportFeature2 = String(localized: "onboarding.export.feature.2", defaultValue: "導出峰值記錄")
-    public static let onboardingExportFeature3 = String(localized: "onboarding.export.feature.3", defaultValue: "導出完整歷史記錄")
+    public static let onboardingExportFeature3 = String(localized: "onboarding.export.feature.monthly", defaultValue: "導出每月報告")
     public static let onboardingExportFeature4 = String(localized: "onboarding.export.feature.4", defaultValue: "CSV 格式，方便使用 Excel 分析")
 
     public static let onboardingSetupTitle = String(localized: "onboarding.setup.title", defaultValue: "開始設定")
     public static let onboardingSetupDescription = String(localized: "onboarding.setup.description", defaultValue: "請設定您的網路方案速度上限，以便我們提供更準確的監控。")
+    public static let onboardingPlanHint = String(localized: "onboarding.plan.hint", defaultValue: "預設 300 Mbps，請改成你的方案速度")
 
     public static let onboardingWindowTitle = String(localized: "onboarding.window.title", defaultValue: "歡迎使用 Bandwidth ECG")
 
@@ -184,11 +271,6 @@ public enum L10n {
     public static func notificationUploadReached(_ percentage: Int, _ speed: String) -> String {
         String(format: String(localized: "notification.upload.reached", defaultValue: "上傳速度已達到方案上限的 %d%% (%@ Mbps)"), percentage, speed)
     }
-    public static let notificationPeaksReset = String(localized: "notification.peaks.reset", defaultValue: "峰值已重置")
-    public static let notificationPeaksResetBody = String(localized: "notification.peaks.reset.body", defaultValue: "所有峰值記錄已清除")
-    public static let notificationExportSuccessBody = String(localized: "notification.export.success.body", defaultValue: "數據已成功導出")
-    public static let notificationMemoryOptimized = String(localized: "notification.memory.optimized", defaultValue: "記憶體已優化")
-    public static let notificationMemoryOptimizedBody = String(localized: "notification.memory.optimized.body", defaultValue: "過期數據已清除")
 
     // MARK: - Anomaly Types
     public static let anomalyDownload = String(localized: "anomaly.download", defaultValue: "下載")
@@ -213,8 +295,15 @@ public enum L10n {
     public static let chartTimeRangeTwentyFourHours = String(localized: "chart.timeRange.twentyFourHours", defaultValue: "24 小時")
 
     // MARK: - Chart Y-Axis Labels & Tooltips
-    public static func chartYAxisFixedLabel(_ speed: Int) -> String {
-        String(format: String(localized: "chart.yaxis.fixedLabel", defaultValue: "固定 %d"), speed)
+    /// `speed` is the plan with its unit, as shown on the axis ("300 Mbps", "37.5 MB/s"). The key
+    /// is new: the old one took an `Int` and no unit.
+    public static func chartYAxisFixedLabel(_ speed: String) -> String {
+        String(format: String(localized: "chart.yaxis.fixedLabel.value", defaultValue: "固定 %@"), speed)
+    }
+    public static let chartYAxisAccessibility = String(localized: "chart.yaxis.accessibility", defaultValue: "Y 軸範圍")
+    /// A plan line that does not fit the axis has no line; the legend says where it is.
+    public static func chartPlanOffscale(_ plan: String) -> String {
+        String(format: String(localized: "chart.plan.offscale", defaultValue: "方案 %@（超出範圍）"), plan)
     }
     public static let chartYAxisTooltipAuto = String(localized: "chart.yaxis.tooltip.auto", defaultValue: "當前為自動縮放模式，根據實際使用範圍智能調整 Y 軸。點擊切換為固定上限模式。")
     public static let chartYAxisTooltipFixed = String(localized: "chart.yaxis.tooltip.fixed", defaultValue: "當前為固定上限模式，Y 軸固定顯示方案速度上限。點擊切換為自動縮放模式。")
@@ -290,6 +379,7 @@ public enum L10n {
     public static let latencyLabel = String(localized: "latency.label", defaultValue: "延遲")
     public static let jitterLabel = String(localized: "jitter.label", defaultValue: "抖動")
     public static let latencyUnit = String(localized: "latency.unit", defaultValue: "ms")
+    public static let latencyDisabled = String(localized: "latency.disabled", defaultValue: "延遲監測已關閉")
 
     // MARK: - Disconnect Tracking
     public static let disconnectTitle = String(localized: "disconnect.title", defaultValue: "斷線記錄")
@@ -332,4 +422,9 @@ public enum L10n {
     public static func reportMonthLabel(_ month: String) -> String {
         String(format: String(localized: "report.month.label", defaultValue: "%@ 月度報告"), month)
     }
+    public static func reportCollectingDays(_ have: Int, _ need: Int) -> String {
+        String(format: String(localized: "report.collecting.days", defaultValue: "資料收集中：已監控 %1$d 天，滿 %2$d 天後提供建議"), have, need)
+    }
+    public static let reportScopeNote = String(localized: "report.note.scope", defaultValue: "只計算這台 Mac，包含區網傳輸")
+    public static let reportSustainedNote = String(localized: "report.note.sustained", defaultValue: "峰值為持續 3 秒的速度")
 }

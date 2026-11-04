@@ -57,22 +57,114 @@ struct CollapsibleSection<Content: View>: View {
     }
 }
 
+// MARK: - Plan Speed Field
+
+/// How a plan speed typed into `PlanSpeedField` becomes a model value. Kept apart from the view
+/// so the rules can be tested.
+enum PlanSpeedInput {
+    /// The number in `text`, or `nil` for empty text and anything that isn't a plain finite number.
+    /// Range checks belong to the model (`UserPreferences.planSpeedRange`).
+    static func parse(_ text: String, locale: Locale = .current) -> Double? {
+        // An input method can type full-width digits.
+        let halfWidth = text.applyingTransform(.fullwidthToHalfwidth, reverse: false) ?? text
+        let trimmed = halfWidth.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let parsed = (try? Double(trimmed, format: .number.locale(locale))) ?? Double(trimmed)
+        guard let value = parsed, value.isFinite else { return nil }
+        // The locale-aware parser reads a leading number and ignores the rest ("300abc").
+        let allowed = CharacterSet(charactersIn: "0123456789+-.,e").union(.whitespaces)
+        guard trimmed.unicodeScalars.allSatisfy(allowed.contains) else { return nil }
+        return value
+    }
+
+    /// The text for a model value: no grouping, no trailing ".0".
+    static func display(_ value: Double, locale: Locale = .current) -> String {
+        value.formatted(.number.locale(locale).grouping(.never).precision(.fractionLength(0...2)))
+    }
+
+    /// Writes `text` through `write` when it is a usable number that differs from `current()`,
+    /// and returns the text the field should show afterwards. That is always the model's value,
+    /// so an empty or invalid entry reverts, and a value the model rejected or clamped shows
+    /// what the model kept.
+    @discardableResult
+    static func commit(
+        _ text: String,
+        current: () -> Double,
+        write: (Double) -> Void,
+        locale: Locale = .current
+    ) -> String {
+        if let value = parse(text, locale: locale), value != current() {
+            write(value)
+        }
+        return display(current(), locale: locale)
+    }
+}
+
+/// A plan speed (Mbps) entry shared by Settings and onboarding. It keeps its own text while the
+/// user types and commits on return, when focus leaves, and when the field goes away: the
+/// popover's content is released when it closes, so a value typed but not confirmed must not
+/// be lost with it. An empty or invalid entry reverts to the model's value.
+struct PlanSpeedField: View {
+    let title: String
+    @Binding var value: Double
+    var labelMinWidth: CGFloat = 100
+    var fieldWidth: CGFloat = 80
+
+    @State private var text: String
+    @FocusState private var isFocused: Bool
+
+    init(title: String, value: Binding<Double>, labelMinWidth: CGFloat = 100, fieldWidth: CGFloat = 80) {
+        self.title = title
+        self._value = value
+        self.labelMinWidth = labelMinWidth
+        self.fieldWidth = fieldWidth
+        self._text = State(initialValue: PlanSpeedInput.display(value.wrappedValue))
+    }
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.body)
+                .frame(minWidth: labelMinWidth, alignment: .leading)
+                .fixedSize()
+            TextField("300", text: $text)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: fieldWidth)
+                .focused($isFocused)
+                .onSubmit(commit)
+                .accessibilityLabel(title)
+            Text("Mbps")
+                .font(.body)
+        }
+        .onChange(of: isFocused) { _, focused in
+            if !focused { commit() }
+        }
+        .onChange(of: value) { _, newValue in
+            // The model changed behind the field's back; follow it unless the user is typing.
+            if !isFocused { text = PlanSpeedInput.display(newValue) }
+        }
+        .onDisappear(perform: commit)
+    }
+
+    private func commit() {
+        text = PlanSpeedInput.commit(text, current: { value }, write: { value = $0 })
+    }
+}
+
 public struct SettingsView: View {
     @Bindable var viewModel: NetworkMonitorViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingOnboarding = false
+    @State private var showingResetConfirm = false
+    @State private var showingLanguageRestart = false
 
     // Section expansion states
-    @State private var networkSettingsExpanded = false
+    @State private var networkSettingsExpanded = true
     @State private var displayNotificationExpanded = true
     @State private var systemMaintenanceExpanded = true
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
-    }
-
-    public init() {
-        self.viewModel = NetworkMonitorViewModel()
     }
 
     public var body: some View {
@@ -136,27 +228,15 @@ public struct SettingsView: View {
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
-                            HStack {
-                                Text(L10n.settingsDownloadLimit)
-                                    .font(.body)
-                                    .frame(width: 100, alignment: .leading)
-                                TextField("300", value: $viewModel.preferences.downloadPlanSpeed, format: .number)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 80)
-                                Text("Mbps")
-                                    .font(.body)
-                            }
+                            PlanSpeedField(
+                                title: L10n.settingsDownloadLimit,
+                                value: $viewModel.preferences.downloadPlanSpeed
+                            )
 
-                            HStack {
-                                Text(L10n.settingsUploadLimit)
-                                    .font(.body)
-                                    .frame(width: 100, alignment: .leading)
-                                TextField("300", value: $viewModel.preferences.uploadPlanSpeed, format: .number)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 80)
-                                Text("Mbps")
-                                    .font(.body)
-                            }
+                            PlanSpeedField(
+                                title: L10n.settingsUploadLimit,
+                                value: $viewModel.preferences.uploadPlanSpeed
+                            )
                         }
 
                         Divider()
@@ -166,6 +246,9 @@ public struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Toggle(L10n.settingsEnableAnomalyDetection, isOn: $viewModel.anomalyDetector.isDetectionEnabled)
                                 .help(L10n.settingsAnomalyDetectionHelp)
+
+                            Toggle(L10n.settingsEnableLatency, isOn: $viewModel.latencyMonitor.isEnabled)
+                                .help(L10n.settingsLatencyHelp)
 
                             if viewModel.anomalyDetector.isDetectionEnabled && !viewModel.anomalyDetector.recentAnomalies.isEmpty {
                                 HStack {
@@ -205,6 +288,7 @@ public struct SettingsView: View {
                                         Text(unit.displayName).tag(unit)
                                     }
                                 }
+                                .labelsHidden()
                                 .pickerStyle(.segmented)
                                 .frame(width: 180)
                             }
@@ -217,6 +301,7 @@ public struct SettingsView: View {
                                         Text(mode.displayName).tag(mode)
                                     }
                                 }
+                                .labelsHidden()
                                 .pickerStyle(.menu)
 
                                 // Preview
@@ -247,6 +332,20 @@ public struct SettingsView: View {
                             Toggle(L10n.settingsEnablePeakNotification, isOn: $viewModel.notificationService.isEnabled)
                                 .help(L10n.settingsPeakNotificationHelp)
 
+                            if !viewModel.notificationService.isAuthorized {
+                                Label(L10n.settingsNotificationDenied, systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(Color.Adaptive.warning)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+
+                            if let deliveryError = viewModel.notificationService.lastDeliveryError {
+                                Label(L10n.settingsNotificationDeliveryFailed(deliveryError), systemImage: "xmark.octagon.fill")
+                                    .font(.caption)
+                                    .foregroundColor(Color.Adaptive.error)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+
                             if viewModel.notificationService.isEnabled {
                                 HStack {
                                     Text(L10n.settingsNotificationThreshold)
@@ -257,6 +356,7 @@ public struct SettingsView: View {
                                             Text(option.label).tag(option.value)
                                         }
                                     }
+                                    .labelsHidden()
                                     .pickerStyle(.segmented)
                                     .frame(width: 200)
                                     .help(L10n.settingsThresholdHelp)
@@ -285,7 +385,30 @@ public struct SettingsView: View {
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
 
-                            Toggle(L10n.settingsLaunchAtLogin, isOn: $viewModel.preferences.launchAtLogin)
+                            Toggle(
+                                L10n.settingsLaunchAtLogin,
+                                isOn: Binding(
+                                    get: { viewModel.preferences.launchAtLogin },
+                                    set: { viewModel.preferences.setLaunchAtLogin($0) }
+                                )
+                            )
+                            // Switching it off stays possible: it may have been turned on before the
+                            // app was moved.
+                            .disabled(!launchAtLoginAvailable && !viewModel.preferences.launchAtLogin)
+
+                            // A copy that runs from a disk image or from Downloads can't keep a
+                            // login item across restarts; say why the switch is off.
+                            if !launchAtLoginAvailable {
+                                Text(L10n.settingsLaunchAtLoginMoveHint)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            } else if let message = viewModel.preferences.launchAtLoginMessage {
+                                Text(message)
+                                    .font(.caption)
+                                    .foregroundColor(Color.Adaptive.warning)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
 
                             Toggle(L10n.settingsShowInDock, isOn: $viewModel.preferences.showInDock)
                                 .help(L10n.settingsShowInDockHelp)
@@ -300,8 +423,9 @@ public struct SettingsView: View {
                                         Text(lang.displayName).tag(lang)
                                     }
                                 }
+                                .labelsHidden()
                                 .pickerStyle(.menu)
-                                .frame(width: 150)
+                                .frame(width: 180)
                             }
 
                             Button(L10n.settingsShowOnboarding) {
@@ -388,31 +512,6 @@ public struct SettingsView: View {
                                 }
                             }
                         }
-
-                        Divider()
-                            .padding(.vertical, 4)
-
-                        // Memory Management
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(L10n.settingsMemoryManagement)
-                                .font(.headline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.secondary)
-
-                            let memStats = viewModel.getMemoryStats()
-                            HStack {
-                                Text("\(L10n.settingsMemoryUsage) \(memStats.formattedTotal)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Button(L10n.settingsOptimizeMemory) {
-                                    viewModel.optimizeMemory()
-                                }
-                                .buttonStyle(.bordered)
-                                .font(.subheadline)
-                                .help(L10n.settingsOptimizeMemoryHelp)
-                            }
-                        }
                     }
                 }
                 .padding(.horizontal, 16)
@@ -426,7 +525,7 @@ public struct SettingsView: View {
 
                 HStack(spacing: 12) {
                     Button(L10n.settingsResetAllPeaks) {
-                        viewModel.resetPeaks()
+                        showingResetConfirm = true
                     }
                     .buttonStyle(.bordered)
                     .foregroundColor(.red)
@@ -445,8 +544,37 @@ public struct SettingsView: View {
             .frame(height: 60)
         }
         .frame(width: 400, height: 600)
+        .task {
+            // Permission may have been changed in System Settings since launch.
+            await viewModel.notificationService.refreshAuthorization()
+        }
+        .onAppear {
+            // So may the login item.
+            viewModel.preferences.refreshLaunchAtLogin()
+        }
+        .onChange(of: viewModel.preferences.appLanguage) {
+            showingLanguageRestart = true
+        }
+        .resetPeaksConfirmation(isPresented: $showingResetConfirm) {
+            viewModel.resetPeaks()
+        }
+        .alert(L10n.settingsLanguageRestartTitle, isPresented: $showingLanguageRestart) {
+            Button(L10n.settingsLanguageRestartNow) {
+                // The new instance reads its files while this one is still running.
+                viewModel.flushPersistence()
+                AppRelauncher.relaunch()
+            }
+            Button(L10n.settingsLanguageRestartLater, role: .cancel) { }
+        } message: {
+            Text(L10n.settingsLanguageRestartMessage)
+        }
         .sheet(isPresented: $showingOnboarding) {
             OnboardingView(viewModel: viewModel)
         }
+    }
+
+    /// Login items only survive a restart for a copy that sits in an Applications folder.
+    private var launchAtLoginAvailable: Bool {
+        InstallLocation.currentCopyCanLaunchAtLogin
     }
 }

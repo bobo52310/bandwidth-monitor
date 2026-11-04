@@ -1,49 +1,70 @@
 import Foundation
-import UserNotifications
 import Observation
+import OSLog
 
 @MainActor
 @Observable
 public class NotificationService {
     public var isEnabled: Bool {
         didSet {
-            UserDefaults.standard.set(isEnabled, forKey: "notificationsEnabled")
+            defaults.set(isEnabled, forKey: "notificationsEnabled")
         }
     }
 
     public var threshold: Double {
         didSet {
-            UserDefaults.standard.set(threshold, forKey: "notificationThreshold")
+            defaults.set(threshold, forKey: "notificationThreshold")
         }
     }
+
+    /// Whether the system lets the app show alerts. Assumed until the first answer arrives.
+    public private(set) var isAuthorized: Bool = true
+    /// Why the last delivery failed; cleared by the next one that works.
+    public private(set) var lastDeliveryError: String?
+
+    private let defaults: UserDefaults
+    private let clock: AppClock
+    private let delivery: any NotificationDelivering
+    private let logger = Logger(subsystem: "com.bandwidthecg", category: "Notifications")
 
     private var lastNotificationTime: Date?
     private let cooldownInterval: TimeInterval = 3600 // 1 hour cooldown
 
-    public init() {
-        self.isEnabled = UserDefaults.standard.object(forKey: "notificationsEnabled") as? Bool ?? true
-        self.threshold = UserDefaults.standard.double(forKey: "notificationThreshold")
+    /// The authorization request started by `init`. Internal so tests can await it.
+    @ObservationIgnored
+    private(set) var authorizationTask: Task<Void, Never>?
+    /// The most recent delivery started by this service. Internal so tests can await it.
+    @ObservationIgnored
+    private(set) var lastDeliveryTask: Task<Void, Never>?
+
+    public init(
+        defaults: UserDefaults = .standard,
+        clock: AppClock = .live,
+        delivery: any NotificationDelivering = SystemNotificationDelivery()
+    ) {
+        self.defaults = defaults
+        self.clock = clock
+        self.delivery = delivery
+        self.isEnabled = defaults.object(forKey: "notificationsEnabled") as? Bool ?? true
+        self.threshold = defaults.double(forKey: "notificationThreshold")
 
         // Set default threshold to 95% if not set
         if threshold == 0 {
             threshold = 0.95
         }
 
-        Task {
-            await requestAuthorization()
+        authorizationTask = Task { [weak self] in
+            await self?.refreshAuthorization()
         }
     }
 
-    /// Request notification authorization from the user
-    private func requestAuthorization() async {
-        let center = UNUserNotificationCenter.current()
-        do {
-            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-            if !granted {
-                print("Notification permission denied")
-            }
-        } catch {
-            print("Error requesting notification authorization: \(error)")
+    /// Asks the system whether alerts are allowed. Once the user has answered, this does not
+    /// prompt again; it picks up a change made in System Settings since.
+    public func refreshAuthorization() async {
+        let granted = await delivery.requestAuthorization()
+        isAuthorized = granted
+        if !granted {
+            logger.notice("Notification permission denied")
         }
     }
 
@@ -55,8 +76,21 @@ public class NotificationService {
             return true
         }
 
-        let timeSinceLastNotification = Date().timeIntervalSince(lastTime)
+        let timeSinceLastNotification = clock.now().timeIntervalSince(lastTime)
         return timeSinceLastNotification >= cooldownInterval
+    }
+
+    /// A plan speed that is safe to divide by and to convert to `Int`: finite and positive,
+    /// capped at `UserPreferences.planSpeedRange.upperBound`. `nil` when the plan is unusable.
+    private static func usablePlan(_ plan: Double) -> Double? {
+        guard plan.isFinite, plan > 0 else { return nil }
+        return min(plan, UserPreferences.planSpeedRange.upperBound)
+    }
+
+    /// Whole percent for display, capped at 9999 so an absurd ratio never reaches `Int()` unbounded.
+    /// The caller has already established that `ratio` is not NaN.
+    private static func displayPercentage(_ ratio: Double) -> Int {
+        Int(min(ratio * 100, 9999))
     }
 
     /// Send notification when speed approaches plan limit
@@ -68,74 +102,67 @@ public class NotificationService {
     ) {
         guard shouldSendNotification() else { return }
 
-        let downloadRatio = downloadSpeed / downloadPlanSpeed
-        let uploadRatio = uploadSpeed / uploadPlanSpeed
+        // A direction whose plan is zero, negative or not finite is skipped, never divided by.
+        let downloadPlan = Self.usablePlan(downloadPlanSpeed)
+        let uploadPlan = Self.usablePlan(uploadPlanSpeed)
 
-        var shouldNotify = false
+        // The plans of the directions that reached the threshold; the title names one of them.
+        var triggeredPlans: [Double] = []
         var message = ""
 
-        if downloadRatio >= threshold {
-            shouldNotify = true
-            let percentage = Int(downloadRatio * 100)
-            message = L10n.notificationDownloadReached(percentage, String(format: "%.1f", downloadSpeed))
-        }
-
-        if uploadRatio >= threshold {
-            shouldNotify = true
-            let percentage = Int(uploadRatio * 100)
-            if !message.isEmpty {
-                message += "\n"
+        if let downloadPlan {
+            let downloadRatio = downloadSpeed / downloadPlan
+            // NaN compares false here, so it can never reach the Int conversion.
+            if downloadRatio >= threshold {
+                triggeredPlans.append(downloadPlan)
+                let percentage = Self.displayPercentage(downloadRatio)
+                message = L10n.notificationDownloadReached(percentage, String(format: "%.1f", downloadSpeed))
             }
-            message += L10n.notificationUploadReached(percentage, String(format: "%.1f", uploadSpeed))
         }
 
-        if shouldNotify {
-            // Use the higher of download or upload plan speed for the title
-            let maxPlanSpeed = max(downloadPlanSpeed, uploadPlanSpeed)
-            let title = L10n.notificationApproachingLimit(Int(maxPlanSpeed))
+        if let uploadPlan {
+            let uploadRatio = uploadSpeed / uploadPlan
+            if uploadRatio >= threshold {
+                triggeredPlans.append(uploadPlan)
+                let percentage = Self.displayPercentage(uploadRatio)
+                if !message.isEmpty {
+                    message += "\n"
+                }
+                message += L10n.notificationUploadReached(percentage, String(format: "%.1f", uploadSpeed))
+            }
+        }
+
+        // The plan of the direction that was reached; the larger one when both were.
+        if let titlePlan = triggeredPlans.max() {
+            let title = L10n.notificationApproachingLimit(Int(titlePlan))
             sendNotification(title: title, body: message)
-            lastNotificationTime = Date()
+            lastNotificationTime = clock.now()
         }
     }
 
     /// Send a notification with given title and body
     private func sendNotification(title: String, body: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-        content.badge = 1
-
-        // Create a time-based trigger (deliver immediately)
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-
         // Create a unique identifier
-        let identifier = "peak-speed-alert-\(Date().timeIntervalSince1970)"
+        let identifier = "peak-speed-alert-\(clock.now().timeIntervalSince1970)"
 
-        // Create the request
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-
-        // Add the request to the notification center
-        let center = UNUserNotificationCenter.current()
-        center.add(request) { error in
-            if let error = error {
-                print("Error sending notification: \(error)")
+        lastDeliveryTask = Task { [weak self, delivery] in
+            do {
+                try await delivery.deliver(title: title, body: body, identifier: identifier)
+                self?.lastDeliveryError = nil
+            } catch {
+                self?.logger.error("Error sending notification: \(String(describing: error), privacy: .public)")
+                self?.lastDeliveryError = error.localizedDescription
             }
         }
     }
 
-    /// Manually send a test notification
+    /// Sends a test notification. It does not start the cooldown, so a real alert can still
+    /// follow straight after it.
     public func sendTestNotification() {
         sendNotification(
             title: L10n.notificationTestTitle,
             body: L10n.notificationTestBody
         )
-        lastNotificationTime = Date()
-    }
-
-    /// Clear notification badge
-    public func clearBadge() {
-        UNUserNotificationCenter.current().setBadgeCount(0)
     }
 
     /// Get available threshold options

@@ -4,12 +4,10 @@ import AppKit
 public struct PopoverView: View {
     @Bindable var viewModel: NetworkMonitorViewModel
     @State private var showingSettings = false
-    @State private var showDownload = true  // 預設顯示下載資料
-    @State private var showUpload = true    // 預設顯示上傳資料
-    @State private var showingExportMenu = false
-    @State private var exportSuccess = false
-    @State private var exportError = false
     @State private var showingMonthlyReport = false
+    @State private var showingResetConfirm = false
+    /// The direction whose all-time peak the user asked to clear, until they confirm or cancel.
+    @State private var pendingClear: PeakDirection?
 
     public init(viewModel: NetworkMonitorViewModel) {
         self.viewModel = viewModel
@@ -33,6 +31,7 @@ public struct PopoverView: View {
                                 Image(systemName: viewModel.preferences.isPinned ? "pin.fill" : "pin")
                                     .foregroundColor(viewModel.preferences.isPinned ? .white : .purple)
                                     .font(.subheadline)
+                                    .accessibilityHidden(true)
                                 Text(L10n.buttonPin)
                                     .font(.subheadline)
                                     .fontWeight(.medium)
@@ -45,6 +44,8 @@ public struct PopoverView: View {
                         }
                         .buttonStyle(.plain)
                         .help(L10n.tooltipPinWindow)
+                        // Pinned or not is shown by colour only; say it too.
+                        .accessibilityValue(viewModel.preferences.isPinned ? L10n.accessibilityStateOn : L10n.accessibilityStateOff)
 
                         // Settings button
                         Button(action: { showingSettings = true }) {
@@ -52,6 +53,7 @@ public struct PopoverView: View {
                                 Image(systemName: "gear")
                                     .foregroundColor(.secondary)
                                     .font(.subheadline)
+                                    .accessibilityHidden(true)
                                 Text(L10n.buttonSettings)
                                     .font(.subheadline)
                                     .fontWeight(.medium)
@@ -77,12 +79,17 @@ public struct PopoverView: View {
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 16) {
                     // Chart Section (always visible)
+                    // The chart choices live in the view model: the popover's views are
+                    // released when it closes (D10).
                     NetworkChartView(
                         historyRecorder: viewModel.historyRecorder,
                         preferences: viewModel.preferences,
                         currentSpeed: viewModel.currentSpeed,
-                        showUpload: $showUpload,
-                        showDownload: $showDownload
+                        timeRange: $viewModel.chartRange,
+                        showUpload: $viewModel.showUpload,
+                        showDownload: $viewModel.showDownload,
+                        bannerDismissed: $viewModel.chartBannerDismissed,
+                        warningRatio: viewModel.notificationService.threshold
                     )
 
                     Divider()
@@ -92,9 +99,15 @@ public struct PopoverView: View {
                         HStack {
                             Image(systemName: "gauge.high")
                                 .foregroundColor(Color.Adaptive.warning)
-                            Text(L10n.approachingSpeedLimit(Int(max(viewModel.preferences.downloadPlanSpeed, viewModel.preferences.uploadPlanSpeed))))
+                                .accessibilityHidden(true)
+                            // Each direction against its own plan, and what counts as one time.
+                            Text(L10n.approachingSpeedLimit(
+                                Int(viewModel.preferences.downloadPlanSpeed),
+                                Int(viewModel.preferences.uploadPlanSpeed)
+                            ))
                                 .font(.headline)
                                 .fontWeight(.semibold)
+                                .help(L10n.approachingHelpCurrent)
                             Spacer()
                             Text("\(viewModel.peakApproachTracker.todayApproachCount)")
                                 .font(.title)
@@ -119,6 +132,7 @@ public struct PopoverView: View {
                                             HStack(spacing: 4) {
                                                 Image(systemName: "clock.fill")
                                                     .font(.caption)
+                                                    .accessibilityHidden(true)
                                                 Text(time)
                                                     .font(.subheadline)
                                             }
@@ -156,7 +170,7 @@ public struct PopoverView: View {
                     Divider()
 
                     // Upload and Download Sections
-                    if showDownload && showUpload {
+                    if viewModel.showDownload && viewModel.showUpload {
                         // Side-by-side layout when both are visible
                         HStack(alignment: .top, spacing: 16) {
                             // Download Section - Statistics
@@ -164,6 +178,7 @@ public struct PopoverView: View {
                                 HStack {
                                     Image(systemName: "arrow.down.circle.fill")
                                         .foregroundColor(Color.Adaptive.downloadPrimary)
+                                        .accessibilityHidden(true)
                                     Text(L10n.statsDownload)
                                         .font(.headline)
                                         .fontWeight(.medium)
@@ -184,7 +199,9 @@ public struct PopoverView: View {
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.downloadPlanSpeed,
                                     viewModel: viewModel,
-                                    timestamp: viewModel.peakRecorder.allTimePeakDownloadTime
+                                    timestamp: viewModel.peakRecorder.allTimePeakDownloadTime,
+                                    onClear: { pendingClear = .download },
+                                    clearLabel: L10n.peakClearAccessibility(L10n.peakDirectionDownload)
                                 )
 
                                 HourlyPeakRow(
@@ -202,6 +219,7 @@ public struct PopoverView: View {
                                 HStack {
                                     Image(systemName: "arrow.up.circle.fill")
                                         .foregroundColor(Color.Adaptive.uploadPrimary)
+                                        .accessibilityHidden(true)
                                     Text(L10n.statsUpload)
                                         .font(.headline)
                                         .fontWeight(.medium)
@@ -222,7 +240,9 @@ public struct PopoverView: View {
                                     unit: viewModel.preferences.displayUnit,
                                     planSpeed: viewModel.preferences.uploadPlanSpeed,
                                     viewModel: viewModel,
-                                    timestamp: viewModel.peakRecorder.allTimePeakUploadTime
+                                    timestamp: viewModel.peakRecorder.allTimePeakUploadTime,
+                                    onClear: { pendingClear = .upload },
+                                    clearLabel: L10n.peakClearAccessibility(L10n.peakDirectionUpload)
                                 )
 
                                 HourlyPeakRow(
@@ -237,12 +257,13 @@ public struct PopoverView: View {
                         }
 
                         Divider()
-                    } else if showUpload {
+                    } else if viewModel.showUpload {
                         // Upload Section only - Statistics
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Image(systemName: "arrow.up.circle.fill")
                                     .foregroundColor(.green)
+                                    .accessibilityHidden(true)
                                 Text(L10n.statsUpload)
                                     .font(.headline)
                                     .fontWeight(.medium)
@@ -263,7 +284,9 @@ public struct PopoverView: View {
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.uploadPlanSpeed,
                                 viewModel: viewModel,
-                                timestamp: viewModel.peakRecorder.allTimePeakUploadTime
+                                timestamp: viewModel.peakRecorder.allTimePeakUploadTime,
+                                onClear: { pendingClear = .upload },
+                                clearLabel: L10n.peakClearAccessibility(L10n.peakDirectionUpload)
                             )
 
                             HourlyPeakRow(
@@ -276,12 +299,13 @@ public struct PopoverView: View {
                         }
 
                         Divider()
-                    } else if showDownload {
+                    } else if viewModel.showDownload {
                         // Download Section only - Statistics
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Image(systemName: "arrow.down.circle.fill")
                                     .foregroundColor(.blue)
+                                    .accessibilityHidden(true)
                                 Text(L10n.statsDownload)
                                     .font(.headline)
                                     .fontWeight(.medium)
@@ -302,7 +326,9 @@ public struct PopoverView: View {
                                 unit: viewModel.preferences.displayUnit,
                                 planSpeed: viewModel.preferences.downloadPlanSpeed,
                                 viewModel: viewModel,
-                                timestamp: viewModel.peakRecorder.allTimePeakDownloadTime
+                                timestamp: viewModel.peakRecorder.allTimePeakDownloadTime,
+                                onClear: { pendingClear = .download },
+                                clearLabel: L10n.peakClearAccessibility(L10n.peakDirectionDownload)
                             )
 
                             HourlyPeakRow(
@@ -323,6 +349,7 @@ public struct PopoverView: View {
                             HStack {
                                 Image(systemName: viewModel.anomalyDetector.isConnectionStable ? "wifi" : "wifi.exclamationmark")
                                     .foregroundColor(viewModel.anomalyDetector.isConnectionStable ? .green : Color.Adaptive.error)
+                                    .accessibilityHidden(true)
                                 Text(L10n.networkStatus)
                                     .font(.headline)
                                     .fontWeight(.medium)
@@ -340,6 +367,7 @@ public struct PopoverView: View {
                                         HStack(spacing: 4) {
                                             Image(systemName: "wifi.exclamationmark")
                                                 .font(.caption)
+                                                .accessibilityHidden(true)
                                             Text(L10n.networkInterruptions(summary.connectionDrops))
                                                 .font(.caption)
                                         }
@@ -349,6 +377,7 @@ public struct PopoverView: View {
                                         HStack(spacing: 4) {
                                             Image(systemName: "arrow.down.circle.fill")
                                                 .font(.caption)
+                                                .accessibilityHidden(true)
                                             Text(L10n.networkSpeedDrops(summary.speedDrops))
                                                 .font(.caption)
                                         }
@@ -378,40 +407,54 @@ public struct PopoverView: View {
                     }
 
                     // Connection Quality Section
+                    let latency = viewModel.latencyMonitor
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Image(systemName: viewModel.latencyMonitor.qualityScore.icon)
-                                .foregroundColor(viewModel.latencyMonitor.qualityScore.color)
+                            Image(systemName: latency.isEnabled ? latency.qualityScore.icon : "pause.circle")
+                                .foregroundColor(latency.isEnabled ? latency.qualityScore.color : .secondary)
+                                .accessibilityHidden(true)
                             Text(L10n.connectionQualityTitle)
                                 .font(.headline)
                                 .fontWeight(.medium)
                             Spacer()
-                            Text(viewModel.latencyMonitor.qualityScore.displayName)
-                                .font(.subheadline)
-                                .foregroundColor(viewModel.latencyMonitor.qualityScore.color)
-                                .fontWeight(.bold)
+                            if latency.isEnabled {
+                                Text(latency.qualityScore.displayName)
+                                    .font(.subheadline)
+                                    .foregroundColor(latency.qualityScore.color)
+                                    .fontWeight(.bold)
+                            }
                         }
 
-                        HStack(spacing: 24) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(L10n.latencyLabel)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .textCase(.uppercase)
-                                Text(String(format: "%.0f %@", viewModel.latencyMonitor.currentLatency, L10n.latencyUnit))
-                                    .font(.title3)
-                                    .monospacedDigit()
-                            }
+                        if latency.isEnabled {
+                            // Nothing measured yet, or the last probe failed: no number to show.
+                            HStack(spacing: 24) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(L10n.latencyLabel)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .textCase(.uppercase)
+                                    Text(latency.hasMeasurement
+                                         ? String(format: "%.0f %@", latency.currentLatency, L10n.latencyUnit)
+                                         : "—")
+                                        .font(.title3)
+                                        .monospacedDigit()
+                                }
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(L10n.jitterLabel)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .textCase(.uppercase)
-                                Text(String(format: "%.1f %@", viewModel.latencyMonitor.currentJitter, L10n.latencyUnit))
-                                    .font(.title3)
-                                    .monospacedDigit()
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(L10n.jitterLabel)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .textCase(.uppercase)
+                                    // Also "—" while there is a single sample: it has no spread yet.
+                                    Text(latency.currentJitter.map { String(format: "%.1f %@", $0, L10n.latencyUnit) } ?? "—")
+                                        .font(.title3)
+                                        .monospacedDigit()
+                                }
                             }
+                        } else {
+                            Text(L10n.latencyDisabled)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                         }
                     }
                     .padding(12)
@@ -427,6 +470,7 @@ public struct PopoverView: View {
                         HStack {
                             Image(systemName: viewModel.disconnectTracker.isConnected ? "wifi" : "wifi.slash")
                                 .foregroundColor(viewModel.disconnectTracker.isConnected ? .green : .red)
+                                .accessibilityHidden(true)
                             Text(L10n.disconnectTitle)
                                 .font(.headline)
                                 .fontWeight(.medium)
@@ -464,6 +508,7 @@ public struct PopoverView: View {
                                             HStack(spacing: 4) {
                                                 Image(systemName: "wifi.slash")
                                                     .font(.caption)
+                                                    .accessibilityHidden(true)
                                                 Text(event.formattedDuration)
                                                     .font(.caption)
                                             }
@@ -513,14 +558,13 @@ public struct PopoverView: View {
                 HStack(spacing: 8) {
                     // Export Data Menu
                     Menu {
-                        Button(L10n.exportTodayData) {
-                            exportData(format: .todayData)
+                        // The save panel closes the popover, and the result is shown by the
+                        // view model once the file is written, so nothing here waits for it.
+                        Button(L10n.exportRecent24Hours) {
+                            viewModel.exportData(format: .recent24Hours)
                         }
                         Button(L10n.exportPeakHistory) {
-                            exportData(format: .peakHistory)
-                        }
-                        Button(L10n.exportFullHistory) {
-                            exportData(format: .fullHistory)
+                            viewModel.exportData(format: .peakHistory)
                         }
                     } label: {
                         Label(L10n.exportData, systemImage: "square.and.arrow.up")
@@ -539,7 +583,7 @@ public struct PopoverView: View {
 
                     // Reset Button
                     Button(L10n.actionResetPeaks) {
-                        viewModel.resetPeaks()
+                        showingResetConfirm = true
                     }
                     .buttonStyle(.bordered)
                     .font(.subheadline)
@@ -560,44 +604,55 @@ public struct PopoverView: View {
         }
         .frame(width: 580, height: 700)
         .background(.regularMaterial)
-        .animation(.easeInOut(duration: 0.3), value: showDownload)
-        .animation(.easeInOut(duration: 0.3), value: showUpload)
+        .resetPeaksConfirmation(isPresented: $showingResetConfirm) {
+            viewModel.resetPeaks()
+        }
+        .confirmationDialog(
+            pendingClear.map { L10n.peakClearConfirmTitle(Self.directionName($0)) } ?? "",
+            isPresented: Binding(
+                get: { pendingClear != nil },
+                set: { if !$0 { pendingClear = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: pendingClear
+        ) { direction in
+            Button(L10n.peakClearButton, role: .destructive) {
+                viewModel.clearAllTimePeak(direction)
+            }
+            Button(L10n.buttonCancel, role: .cancel) { }
+        } message: { _ in
+            Text(L10n.peakClearConfirmMessage)
+        }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.showDownload)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.showUpload)
         .sheet(isPresented: $showingSettings) {
             SettingsView(viewModel: viewModel)
         }
         .sheet(isPresented: $showingMonthlyReport) {
             MonthlyReportView(viewModel: viewModel)
         }
-        .alert(L10n.exportSuccess, isPresented: $exportSuccess) {
-            Button(L10n.buttonOK, role: .cancel) { }
-        } message: {
-            Text(L10n.exportSuccessMessage)
-        }
-        .alert(L10n.exportFailure, isPresented: $exportError) {
-            Button(L10n.buttonOK, role: .cancel) { }
-        } message: {
-            Text(L10n.exportFailureMessage)
-        }
     }
 
     // MARK: - Helper Functions
 
-    private func formatDisconnectTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+    private static func directionName(_ direction: PeakDirection) -> String {
+        switch direction {
+        case .download: return L10n.peakDirectionDownload
+        case .upload: return L10n.peakDirectionUpload
+        }
     }
 
-    private func exportData(format: DataExportService.ExportFormat) {
-        viewModel.exportData(format: format) { result in
-            switch result {
-            case .success(let url):
-                DataExportService.revealInFinder(url: url)
-                exportSuccess = true
-            case .failure:
-                exportError = true
-            }
-        }
+    /// One formatter for all the chips: the view is rebuilt every second.
+    private static let shortTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.locale = .autoupdatingCurrent
+        formatter.timeZone = .autoupdatingCurrent
+        return formatter
+    }()
+
+    private func formatDisconnectTime(_ date: Date) -> String {
+        Self.shortTimeFormatter.string(from: date)
     }
 
     /// Get unique recent anomalies, showing only the most recent of each type
@@ -632,12 +687,18 @@ struct SpeedRow: View {
     let planSpeed: Double
     let viewModel: NetworkMonitorViewModel
     let timestamp: Date?
+    /// Shown as a small clear button when set and there is a peak to clear.
+    var onClear: (() -> Void)?
+    /// What the clear button is called for VoiceOver.
+    var clearLabel = ""
 
     var body: some View {
         HStack {
+            // The label keeps its full width: in English "All-Time Peak:" is longer than 80 pt.
             Text(label + ":")
                 .font(.body)
-                .frame(maxWidth: 80, alignment: .leading)
+                .lineLimit(1)
+                .fixedSize()
             Text(viewModel.formatSpeed(speed, unit: unit) + " " + unit.displayName)
                 .font(.title3)
                 .foregroundColor(
@@ -656,6 +717,33 @@ struct SpeedRow: View {
                 }
             }
             Spacer()
+            if let onClear, speed > 0 {
+                Button(action: onClear) {
+                    Image(systemName: "xmark.circle")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
+                }
+                .buttonStyle(.plain)
+                .help(L10n.peakClearHelp)
+                .accessibilityLabel(clearLabel)
+            }
+        }
+    }
+}
+
+/// Reset is destructive and can't be undone, so it always asks first.
+extension View {
+    func resetPeaksConfirmation(isPresented: Binding<Bool>, onConfirm: @escaping () -> Void) -> some View {
+        confirmationDialog(
+            L10n.resetConfirmTitle,
+            isPresented: isPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.actionResetPeaks, role: .destructive, action: onConfirm)
+            Button(L10n.buttonCancel, role: .cancel) { }
+        } message: {
+            Text(L10n.resetConfirmMessage)
         }
     }
 }
@@ -671,7 +759,8 @@ struct HourlyPeakRow: View {
         HStack {
             Text(label + ":")
                 .font(.body)
-                .frame(maxWidth: 80, alignment: .leading)
+                .lineLimit(1)
+                .fixedSize()
             VStack(alignment: .leading, spacing: 2) {
                 Text(viewModel.formatSpeed(speed, unit: unit) + " " + unit.displayName)
                     .font(.title3)
@@ -709,6 +798,7 @@ struct AnomalyBadge: View {
             HStack(spacing: 4) {
                 Image(systemName: anomaly.type.icon)
                     .font(.caption)
+                    .accessibilityHidden(true)
                 Text(anomaly.type.displayText)
                     .font(.caption)
                     .lineLimit(2)

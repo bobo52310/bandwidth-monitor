@@ -1,5 +1,11 @@
 import Foundation
 import Observation
+import OSLog
+
+public enum PeakDirection: Sendable {
+    case download
+    case upload
+}
 
 @Observable
 public class PeakRecorder {
@@ -16,16 +22,27 @@ public class PeakRecorder {
     public var allTimePeakDownloadTime: Date?
     public var allTimePeakUploadTime: Date?
 
-    private let userDefaults = UserDefaults.standard
+    private let userDefaults: UserDefaults
+    private let clock: AppClock
+    private let logger = Logger(subsystem: "com.bandwidthecg", category: "Peaks")
     private var speedHistory: [(speed: NetworkSpeed, timestamp: Date)] = []
 
-    public init() {
+    public init(defaults: UserDefaults = .standard, clock: AppClock = .live) {
+        self.userDefaults = defaults
+        self.clock = clock
         loadPeakData()
     }
 
     public func recordSpeed(_ speed: NetworkSpeed) {
-        let now = Date()
-        let today = Calendar.current.startOfDay(for: now)
+        guard speed.downloadMbps <= SampleGuard.maxPlausibleMbps,
+              speed.uploadMbps <= SampleGuard.maxPlausibleMbps else {
+            logger.warning("Ignored implausible sample: download \(speed.downloadMbps) Mbps, upload \(speed.uploadMbps) Mbps")
+            return
+        }
+
+        let now = clock.now()
+        let calendar = clock.calendar
+        let today = calendar.startOfDay(for: now)
         let lastRecordDate = userDefaults.object(forKey: "lastRecordDate") as? Date ?? Date.distantPast
 
         // Add to speed history
@@ -39,11 +56,9 @@ public class PeakRecorder {
         updateHourlyPeaks()
 
         // Reset today's peaks if it's a new day
-        if !Calendar.current.isDate(lastRecordDate, inSameDayAs: today) {
-            todayPeakDownload = 0
-            todayPeakUpload = 0
-            todayPeakDownloadTime = nil
-            todayPeakUploadTime = nil
+        if !calendar.isDate(lastRecordDate, inSameDayAs: today) {
+            clearTodayPeak(.download)
+            clearTodayPeak(.upload)
             userDefaults.set(today, forKey: "lastRecordDate")
         }
 
@@ -78,6 +93,25 @@ public class PeakRecorder {
         }
     }
 
+    /// Removes one all-time peak, for example one left behind by a bad sample. A today peak with
+    /// the same value came from the same sample, so it goes too.
+    public func clearAllTimePeak(_ direction: PeakDirection) {
+        switch direction {
+        case .download:
+            if todayPeakDownload == allTimePeakDownload { clearTodayPeak(.download) }
+            allTimePeakDownload = 0
+            allTimePeakDownloadTime = nil
+            userDefaults.removeObject(forKey: "allTimePeakDownload")
+            userDefaults.removeObject(forKey: "allTimePeakDownloadTime")
+        case .upload:
+            if todayPeakUpload == allTimePeakUpload { clearTodayPeak(.upload) }
+            allTimePeakUpload = 0
+            allTimePeakUploadTime = nil
+            userDefaults.removeObject(forKey: "allTimePeakUpload")
+            userDefaults.removeObject(forKey: "allTimePeakUploadTime")
+        }
+    }
+
     public func resetPeaks() {
         todayPeakDownload = 0
         todayPeakUpload = 0
@@ -104,6 +138,21 @@ public class PeakRecorder {
         userDefaults.removeObject(forKey: "lastRecordDate")
     }
 
+    private func clearTodayPeak(_ direction: PeakDirection) {
+        switch direction {
+        case .download:
+            todayPeakDownload = 0
+            todayPeakDownloadTime = nil
+            userDefaults.removeObject(forKey: "todayPeakDownload")
+            userDefaults.removeObject(forKey: "todayPeakDownloadTime")
+        case .upload:
+            todayPeakUpload = 0
+            todayPeakUploadTime = nil
+            userDefaults.removeObject(forKey: "todayPeakUpload")
+            userDefaults.removeObject(forKey: "todayPeakUploadTime")
+        }
+    }
+
     private func updateHourlyPeaks() {
         guard !speedHistory.isEmpty else { return }
 
@@ -122,28 +171,71 @@ public class PeakRecorder {
     }
 
     private func loadPeakData() {
-        let today = Calendar.current.startOfDay(for: Date())
+        let calendar = clock.calendar
+        let now = clock.now()
+        let today = calendar.startOfDay(for: now)
         let lastRecordDate = userDefaults.object(forKey: "lastRecordDate") as? Date ?? Date.distantPast
 
-        // Load all-time peaks
-        allTimePeakDownload = userDefaults.double(forKey: "allTimePeakDownload")
-        allTimePeakUpload = userDefaults.double(forKey: "allTimePeakUpload")
-        allTimePeakDownloadTime = userDefaults.object(forKey: "allTimePeakDownloadTime") as? Date
-        allTimePeakUploadTime = userDefaults.object(forKey: "allTimePeakUploadTime") as? Date
+        (allTimePeakDownload, allTimePeakDownloadTime) = loadAllTimePeak(
+            valueKey: "allTimePeakDownload", timeKey: "allTimePeakDownloadTime"
+        )
+        (allTimePeakUpload, allTimePeakUploadTime) = loadAllTimePeak(
+            valueKey: "allTimePeakUpload", timeKey: "allTimePeakUploadTime"
+        )
+        (todayPeakDownload, todayPeakDownloadTime) = loadTodayPeak(
+            valueKey: "todayPeakDownload", timeKey: "todayPeakDownloadTime", now: now
+        )
+        (todayPeakUpload, todayPeakUploadTime) = loadTodayPeak(
+            valueKey: "todayPeakUpload", timeKey: "todayPeakUploadTime", now: now
+        )
 
-        // Load today's peaks if it's the same day
-        if Calendar.current.isDate(lastRecordDate, inSameDayAs: today) {
-            todayPeakDownload = userDefaults.double(forKey: "todayPeakDownload")
-            todayPeakUpload = userDefaults.double(forKey: "todayPeakUpload")
-            todayPeakDownloadTime = userDefaults.object(forKey: "todayPeakDownloadTime") as? Date
-            todayPeakUploadTime = userDefaults.object(forKey: "todayPeakUploadTime") as? Date
-        } else {
-            // Reset today's peaks for new day
-            todayPeakDownload = 0
-            todayPeakUpload = 0
-            todayPeakDownloadTime = nil
-            todayPeakUploadTime = nil
+        // Moved forward here, or the first sample would see a new day and wipe the peaks just loaded.
+        if !calendar.isDate(lastRecordDate, inSameDayAs: today) {
             userDefaults.set(today, forKey: "lastRecordDate")
         }
+    }
+
+    private func loadAllTimePeak(valueKey: String, timeKey: String) -> (peak: Double, time: Date?) {
+        guard let peak = loadPlausiblePeak(valueKey: valueKey, timeKey: timeKey) else { return (0, nil) }
+        return (peak, userDefaults.object(forKey: timeKey) as? Date)
+    }
+
+    /// A direction's today peak is only valid if its own time falls on today. `lastRecordDate`
+    /// is shared by both directions and moves forward without either of them, so it can't tell.
+    private func loadTodayPeak(valueKey: String, timeKey: String, now: Date) -> (peak: Double, time: Date?) {
+        guard let peak = loadPlausiblePeak(valueKey: valueKey, timeKey: timeKey) else { return (0, nil) }
+        guard let time = userDefaults.object(forKey: timeKey) as? Date,
+              clock.calendar.isDate(time, inSameDayAs: now) else {
+            removeStoredPeak(valueKey: valueKey, timeKey: timeKey)
+            return (0, nil)
+        }
+        return (peak, time)
+    }
+
+    /// The stored peak, or `nil` if it can't be a real speed. Such a value is quarantined and
+    /// then removed.
+    private func loadPlausiblePeak(valueKey: String, timeKey: String) -> Double? {
+        let peak = userDefaults.double(forKey: valueKey)
+        guard peak <= SampleGuard.maxPlausibleMbps else {
+            quarantinePeak(peak, valueKey: valueKey)
+            logger.warning("Cleared implausible \(valueKey, privacy: .public): \(peak) Mbps")
+            removeStoredPeak(valueKey: valueKey, timeKey: timeKey)
+            return nil
+        }
+        return peak
+    }
+
+    /// Keeps a copy of a cleared value under `peakQuarantine`, as original key to value, so the
+    /// original survives for diagnosis. Nothing reads it back. The first value for a key stays.
+    private func quarantinePeak(_ peak: Double, valueKey: String) {
+        var quarantine = userDefaults.dictionary(forKey: "peakQuarantine") ?? [:]
+        guard quarantine[valueKey] == nil else { return }
+        quarantine[valueKey] = peak
+        userDefaults.set(quarantine, forKey: "peakQuarantine")
+    }
+
+    private func removeStoredPeak(valueKey: String, timeKey: String) {
+        userDefaults.removeObject(forKey: valueKey)
+        userDefaults.removeObject(forKey: timeKey)
     }
 }

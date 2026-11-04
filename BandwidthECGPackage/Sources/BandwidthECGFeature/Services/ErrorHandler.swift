@@ -9,7 +9,7 @@ public class ErrorHandler {
     public var recentErrors: [ErrorRecord] = []
     public var isLoggingEnabled: Bool {
         didSet {
-            UserDefaults.standard.set(isLoggingEnabled, forKey: "errorLoggingEnabled")
+            defaults.set(isLoggingEnabled, forKey: "errorLoggingEnabled")
         }
     }
 
@@ -19,14 +19,11 @@ public class ErrorHandler {
     // Configuration
     private let maxErrorHistory = 100
     private let logToFile: Bool
+    private let defaults: UserDefaults
 
     // Log file URL
     private var logFileURL: URL? {
-        guard let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            return nil
-        }
-
-        let appDirectory = appSupportURL.appendingPathComponent("BandwidthECG", isDirectory: true)
+        let appDirectory = AppPaths.supportDirectory
 
         // Create directory if it doesn't exist
         try? FileManager.default.createDirectory(at: appDirectory, withIntermediateDirectories: true)
@@ -34,36 +31,10 @@ public class ErrorHandler {
         return appDirectory.appendingPathComponent("error_log.txt")
     }
 
-    public init(logToFile: Bool = true) {
+    public init(logToFile: Bool = true, defaults: UserDefaults = .standard) {
         self.logToFile = logToFile
-        self.isLoggingEnabled = UserDefaults.standard.object(forKey: "errorLoggingEnabled") as? Bool ?? true
-    }
-
-    // MARK: - Data Migration
-
-    /// Migrate data from legacy NetworkPeakMonitor app support directory
-    public static func migrateDataFromLegacyPath() {
-        guard let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            return
-        }
-
-        let oldPath = appSupportURL.appendingPathComponent("NetworkPeakMonitor", isDirectory: true)
-        let newPath = appSupportURL.appendingPathComponent("BandwidthECG", isDirectory: true)
-
-        let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: oldPath.path),
-              !fileManager.fileExists(atPath: newPath.path) else {
-            return
-        }
-
-        do {
-            try fileManager.moveItem(at: oldPath, to: newPath)
-            Logger(subsystem: "com.bandwidthecg", category: "Migration")
-                .info("Successfully migrated data from NetworkPeakMonitor to BandwidthECG")
-        } catch {
-            Logger(subsystem: "com.bandwidthecg", category: "Migration")
-                .error("Failed to migrate data: \(error.localizedDescription)")
-        }
+        self.defaults = defaults
+        self.isLoggingEnabled = defaults.object(forKey: "errorLoggingEnabled") as? Bool ?? true
     }
 
     // MARK: - Error Logging

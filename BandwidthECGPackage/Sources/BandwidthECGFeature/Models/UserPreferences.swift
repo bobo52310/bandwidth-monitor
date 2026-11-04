@@ -4,18 +4,49 @@ import Observation
 
 @Observable
 public class UserPreferences {
-    private let userDefaults = UserDefaults.standard
+    private let userDefaults: UserDefaults
+    private let loginItems: any LoginItemControlling
+
+    /// Plan speeds the rest of the app can safely divide by and convert to `Int`.
+    /// Values above the upper bound are clamped to it. Values below the lower bound (zero,
+    /// negative and tiny ones such as a mistyped 0.3) and non-finite values are rejected.
+    public static let planSpeedRange: ClosedRange<Double> = 1.0...100_000.0
+
+    /// Plan speed (Mbps) used on first launch and whenever a stored value is unusable.
+    public static let defaultPlanSpeed: Double = 300
 
     public var downloadPlanSpeed: Double {
         didSet {
+            let valid = Self.validatedPlanSpeed(downloadPlanSpeed, previous: oldValue)
+            if valid != downloadPlanSpeed {
+                downloadPlanSpeed = valid
+            }
             userDefaults.set(downloadPlanSpeed, forKey: "downloadPlanSpeed")
         }
     }
 
     public var uploadPlanSpeed: Double {
         didSet {
+            let valid = Self.validatedPlanSpeed(uploadPlanSpeed, previous: oldValue)
+            if valid != uploadPlanSpeed {
+                uploadPlanSpeed = valid
+            }
             userDefaults.set(uploadPlanSpeed, forKey: "uploadPlanSpeed")
         }
+    }
+
+    /// A newly assigned plan speed that is not finite or below `planSpeedRange.lowerBound` is
+    /// rejected and the previous value is kept; anything above the upper bound is clamped to it.
+    /// Rejecting rather than clamping a low value means a typo never becomes a 1 Mbps plan.
+    private static func validatedPlanSpeed(_ proposed: Double, previous: Double) -> Double {
+        guard proposed.isFinite, proposed >= planSpeedRange.lowerBound else { return previous }
+        return min(proposed, planSpeedRange.upperBound)
+    }
+
+    /// A stored plan speed that is not finite or below the lower bound falls back to `defaultPlanSpeed`.
+    private static func loadedPlanSpeed(_ stored: Double) -> Double {
+        guard stored.isFinite, stored >= planSpeedRange.lowerBound else { return defaultPlanSpeed }
+        return min(stored, planSpeedRange.upperBound)
     }
 
     public var displayUnit: SpeedUnit {
@@ -24,12 +55,13 @@ public class UserPreferences {
         }
     }
 
-    public var launchAtLogin: Bool {
-        didSet {
-            userDefaults.set(launchAtLogin, forKey: "launchAtLogin")
-            updateLaunchAtLogin()
-        }
-    }
+    /// Whether the system will open the app at login. The system owns this state, so it is read
+    /// from the login item status and never stored in `UserDefaults`; change it with
+    /// `setLaunchAtLogin(_:)`.
+    public private(set) var launchAtLogin: Bool
+
+    /// Why the last `setLaunchAtLogin(_:)` did not end the way the user asked, or `nil`.
+    public private(set) var launchAtLoginMessage: String?
 
     public var menuBarDisplayMode: MenuBarDisplayMode {
         didSet {
@@ -48,13 +80,15 @@ public class UserPreferences {
             userDefaults.set(showInDock, forKey: "showInDock")
             let shouldShowInDock = showInDock
             Task { @MainActor in
-                if shouldShowInDock {
-                    NSApp.setActivationPolicy(.regular)
-                } else {
-                    NSApp.setActivationPolicy(.accessory)
-                }
+                Self.applyActivationPolicy(showInDock: shouldShowInDock)
             }
         }
+    }
+
+    /// Shows or hides the Dock icon. Does nothing without a running application (tests).
+    @MainActor
+    public static func applyActivationPolicy(showInDock: Bool) {
+        NSApp?.setActivationPolicy(showInDock ? .regular : .accessory)
     }
 
     public var chartYAxisMode: ChartYAxisMode {
@@ -111,11 +145,11 @@ public class UserPreferences {
 
     private func applyLanguage() {
         if let localeId = appLanguage.localeIdentifier {
-            UserDefaults.standard.set([localeId], forKey: "AppleLanguages")
+            userDefaults.set([localeId], forKey: "AppleLanguages")
         } else {
-            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+            userDefaults.removeObject(forKey: "AppleLanguages")
         }
-        UserDefaults.standard.synchronize()
+        userDefaults.synchronize()
     }
 
     public enum ChartYAxisMode: String, CaseIterable {
@@ -168,47 +202,90 @@ public class UserPreferences {
                 return L10n.menuBarModeCompact
             }
         }
-
-        public var description: String {
-            switch self {
-            case .both:
-                return "↑ X.X ↓ X.X Mbps"
-            case .downloadOnly:
-                return "↓ X.X Mbps"
-            case .uploadOnly:
-                return "↑ X.X Mbps"
-            case .compact:
-                return "X.X/X.X Mbps"
-            }
-        }
     }
 
-    public init() {
-        self.downloadPlanSpeed = userDefaults.double(forKey: "downloadPlanSpeed")
-        self.uploadPlanSpeed = userDefaults.double(forKey: "uploadPlanSpeed")
+    public init(
+        defaults: UserDefaults = .standard,
+        loginItems: any LoginItemControlling = SystemLoginItemController()
+    ) {
+        self.userDefaults = defaults
+        self.loginItems = loginItems
+        self.downloadPlanSpeed = Self.loadedPlanSpeed(defaults.double(forKey: "downloadPlanSpeed"))
+        self.uploadPlanSpeed = Self.loadedPlanSpeed(defaults.double(forKey: "uploadPlanSpeed"))
         self.displayUnit = SpeedUnit(rawValue: userDefaults.string(forKey: "displayUnit") ?? "Mbps") ?? .mbps
-        self.launchAtLogin = userDefaults.bool(forKey: "launchAtLogin")
+        self.launchAtLogin = loginItems.status == .enabled
         self.menuBarDisplayMode = MenuBarDisplayMode(rawValue: userDefaults.string(forKey: "menuBarDisplayMode") ?? "both") ?? .both
         self.isPinned = userDefaults.bool(forKey: "isPinned")
         self.chartYAxisMode = ChartYAxisMode(rawValue: userDefaults.string(forKey: "chartYAxisMode") ?? "auto") ?? .auto
         self.appLanguage = AppLanguage(rawValue: userDefaults.string(forKey: "appLanguage") ?? "system") ?? .system
 
-        // Default to false (menu bar only, no dock icon)
-        // This will reset all users to the new default behavior
-        self.showInDock = false
-        userDefaults.set(false, forKey: "showInDock")
+        // Menu bar only (no Dock icon) until the user turns it on.
+        self.showInDock = userDefaults.object(forKey: "showInDock") as? Bool ?? false
 
-        // Set default values if not set
-        if downloadPlanSpeed == 0 {
-            downloadPlanSpeed = 300
+        // Older versions kept their own copy of the login item toggle. It says nothing about
+        // what the system has registered, and it must never register the app by itself.
+        defaults.removeObject(forKey: "launchAtLogin")
+
+        // Write back a plan speed that was missing or had to be corrected, so the stored value is valid.
+        if defaults.double(forKey: "downloadPlanSpeed") != downloadPlanSpeed {
+            defaults.set(downloadPlanSpeed, forKey: "downloadPlanSpeed")
         }
-        if uploadPlanSpeed == 0 {
-            uploadPlanSpeed = 300
+        if defaults.double(forKey: "uploadPlanSpeed") != uploadPlanSpeed {
+            defaults.set(uploadPlanSpeed, forKey: "uploadPlanSpeed")
         }
     }
 
-    private func updateLaunchAtLogin() {
-        // Implementation for macOS launch at login
-        // Will be implemented later
+    // MARK: - Launch at login
+
+    /// Asks the system to open (or stop opening) the app at login, then shows what it ended up
+    /// doing: a refused registration rolls the toggle back and says why, and a registration the
+    /// user still has to approve opens System Settings.
+    public func setLaunchAtLogin(_ enabled: Bool) {
+        launchAtLoginMessage = nil
+        let current = loginItems.status
+
+        if enabled {
+            if current == .enabled {
+                launchAtLogin = true
+                return
+            }
+            // Registered already, waiting for the user: registering again changes nothing.
+            if current == .requiresApproval {
+                launchAtLogin = false
+                askForApproval()
+                return
+            }
+        } else if current == .disabled || current == .unavailable {
+            // Nothing is registered, so there is nothing to undo (unregistering would throw).
+            launchAtLogin = false
+            return
+        }
+
+        do {
+            try loginItems.setEnabled(enabled)
+        } catch {
+            launchAtLogin = loginItems.status == .enabled
+            launchAtLoginMessage = L10n.settingsLaunchAtLoginFailed(error.localizedDescription)
+            return
+        }
+
+        let after = loginItems.status
+        launchAtLogin = after == .enabled
+        if enabled, after == .requiresApproval {
+            askForApproval()
+        }
+    }
+
+    /// Re-reads the system state. The user can change it in System Settings at any time.
+    public func refreshLaunchAtLogin() {
+        launchAtLogin = loginItems.status == .enabled
+        if launchAtLogin {
+            launchAtLoginMessage = nil
+        }
+    }
+
+    private func askForApproval() {
+        launchAtLoginMessage = L10n.settingsLaunchAtLoginNeedsApproval
+        loginItems.openSystemSettings()
     }
 }

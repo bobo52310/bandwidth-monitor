@@ -1,7 +1,6 @@
 import SwiftUI
 import AppKit
 import Observation
-import UserNotifications
 
 @MainActor
 public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
@@ -12,6 +11,12 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
     private let viewModel = NetworkMonitorViewModel()
     private var eventMonitor: Any?
     private var onboardingWindow: NSWindow?
+    /// What the menu bar button shows now. A new title equal to this is not set again, so an idle
+    /// connection does no work in the status item (PERF-16.1).
+    private var titleGate = MenuBarTitleGate()
+    /// True while the right-click menu is open. The popover is closed first, and its close
+    /// notification can arrive with the menu up.
+    private var isShowingContextMenu = false
 
     public override init() {
         super.init()
@@ -20,10 +25,61 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         setupPinStateObserver()
         viewModel.initialize()
         checkAndShowOnboarding()
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(systemWillSleep),
+            name: NSWorkspace.willSleepNotification,
+            object: nil
+        )
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+        // "Increase contrast" turns the title colour off. Changing it in System Settings should
+        // show at once, not at the next change of the title.
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(accessibilityDisplayOptionsChanged),
+            name: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
+            object: nil
+        )
+        restorePinnedPanel()
+    }
+
+    /// Applies the "show in Dock" setting. Called once at launch; changing the setting later
+    /// applies it right away. The Info.plist starts the app without a Dock icon, so a user who
+    /// never turned it on sees none at any point.
+    public func applyActivationPolicy() {
+        UserPreferences.applyActivationPolicy(showInDock: viewModel.preferences.showInDock)
+    }
+
+    /// A pinned panel comes back after a relaunch (UI-P3-9). Deferred a turn so the status item
+    /// has a window to position the panel against when there is no saved position.
+    private func restorePinnedPanel() {
+        guard viewModel.preferences.isPinned else { return }
+        Task { @MainActor [weak self] in
+            guard let self, self.viewModel.preferences.isPinned else { return }
+            self.showFloatingPanel()
+        }
+    }
+
+    /// Ends an open outage (sleep is not downtime) and writes pending data.
+    @objc private func systemWillSleep() {
+        viewModel.handleSleep()
+    }
+
+    @objc private func systemDidWake() {
+        viewModel.handleWake()
+    }
+
+    @objc private func accessibilityDisplayOptionsChanged() {
+        updateStatusBarTitle()
     }
 
     private func checkAndShowOnboarding() {
-        let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        let hasCompletedOnboarding = viewModel.defaults.bool(forKey: "hasCompletedOnboarding")
         if !hasCompletedOnboarding {
             showOnboarding()
         }
@@ -39,6 +95,15 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         window.center()
         window.isReleasedWhenClosed = false
         window.level = .floating
+        // Closing the window with its close button counts as done: it must not come back at
+        // every launch (UI-P3-14).
+        window.delegate = self
+        // An accessory app starts in the background, so the window would open inactive (grey
+        // title bar) and the first click would only activate the app (UI-P3-2). Plain
+        // `activate()` is cooperative on macOS 14 and later and was not honoured while another
+        // app was in front (QA, macOS 26); `ignoringOtherApps: true` is, and this window is the
+        // direct result of the user starting the app for the first time.
+        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
 
         onboardingWindow = window
@@ -48,10 +113,13 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusBarItem?.button {
-            button.title = "↓ 0.0 ↑ 0.0 Mbps"
-            button.action = #selector(togglePopover)
+            button.action = #selector(statusItemClicked)
             button.target = self
+            // The right button opens a small menu (UI-P3-12): the way to quit when the item is
+            // the only part of the app a user can reach.
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
+        updateStatusBarTitle()
 
         // Update status bar text when speed changes using observation tracking loop
         observeSpeedChanges()
@@ -59,7 +127,9 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
 
     private func observeSpeedChanges() {
         withObservationTracking {
-            _ = viewModel.currentSpeed
+            // The title reads the speed, the display mode, the unit and the alert level, so a
+            // change to any of them comes through here.
+            _ = viewModel.menuBarTitle
         } onChange: { [weak self] in
             Task { @MainActor in
                 self?.updateStatusBarTitle()
@@ -70,13 +140,12 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
 
     private func setupPopover() {
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 350, height: 600)
+        // The size `PopoverView` lays itself out at.
+        popover?.contentSize = NSSize(width: 580, height: 700)
         popover?.behavior = .transient
         popover?.animates = true
         popover?.delegate = self
-        popover?.contentViewController = NSHostingController(
-            rootView: PopoverView(viewModel: viewModel)
-        )
+        // The content is built on show and dropped on close (PERF-03).
     }
 
     private func setupPinStateObserver() {
@@ -99,56 +168,62 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         }
     }
 
-    private func openSettings() {
-        // Show popover first if not shown
-        if let popover = popover, !popover.isShown {
+    /// The status item's action: a left click toggles the panel, a right click (or a control
+    /// click) opens the menu.
+    @objc private func statusItemClicked() {
+        let event = NSApp.currentEvent
+        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
+            showContextMenu()
+        } else {
+            togglePopover()
+        }
+    }
+
+    private func showContextMenu() {
+        guard let statusItem = statusBarItem, let button = statusItem.button else { return }
+        if popover?.isShown == true {
+            closePopover()
+        }
+
+        let menu = NSMenu()
+        let open = NSMenuItem(title: L10n.menuBarMenuOpen, action: #selector(openFromMenu), keyEquivalent: "")
+        open.target = self
+        menu.addItem(open)
+        menu.addItem(.separator())
+        let quit = NSMenuItem(title: L10n.menuBarMenuQuit, action: #selector(quitFromMenu), keyEquivalent: "")
+        quit.target = self
+        menu.addItem(quit)
+
+        // With a menu on the item the click shows the menu instead of calling the action; the
+        // menu is taken off again so a left click goes back to the popover.
+        isShowingContextMenu = true
+        statusItem.menu = menu
+        button.performClick(nil)
+        statusItem.menu = nil
+        isShowingContextMenu = false
+    }
+
+    @objc private func openFromMenu() {
+        if viewModel.preferences.isPinned {
+            showFloatingPanel()
+        } else {
             showPopover()
         }
-
-        // Open settings view
-        let settingsView = SettingsView(viewModel: viewModel)
-        let hostingController = NSHostingController(rootView: settingsView)
-
-        let window = NSWindow(contentViewController: hostingController)
-        window.styleMask = [.titled, .closable, .resizable]
-        window.title = L10n.settingsTitle
-        window.center()
-        window.makeKeyAndOrderFront(nil)
     }
 
-    private func handleResetPeaks() {
-        viewModel.resetPeaks()
-        sendNotification(title: L10n.notificationPeaksReset, body: L10n.notificationPeaksResetBody)
+    @objc private func quitFromMenu() {
+        NSApp.terminate(nil)
     }
 
-    private func handleExportData() {
-        viewModel.exportDataWithSavePanel(format: .fullHistory) { success in
-            if success {
-                Task { @MainActor in
-                    self.sendNotification(title: L10n.exportSuccess, body: L10n.notificationExportSuccessBody)
-                }
-            }
-        }
-    }
-
-    private func handleOptimizeMemory() {
-        viewModel.optimizeMemory()
-        sendNotification(title: L10n.notificationMemoryOptimized, body: L10n.notificationMemoryOptimizedBody)
-    }
-
-    private func sendNotification(title: String, body: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: nil
-        )
-
-        UNUserNotificationCenter.current().add(request)
+    /// The app was opened again while it was running (from Finder, Spotlight or the Dock). When
+    /// the menu bar is full the status item can be hidden, and this is then the only way to bring
+    /// the panel back. It opens as the pinned panel, which does not depend on the status item.
+    public func showPanelFromReopen() {
+        viewModel.preferences.isPinned = true
+        showFloatingPanel()
+        // The user just started the app; it must come to the front even if it was hidden after
+        // the popover closed (QA: otherwise the panel opened behind the frontmost app).
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func togglePopover() {
@@ -173,6 +248,7 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
     }
 
     private func showFloatingPanel() {
+        if NSApp.isHidden { NSApp.unhide(nil) }
         // Close popover if it's showing
         if popover?.isShown == true {
             closePopover()
@@ -240,15 +316,19 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         floatingPanel?.makeKeyAndOrderFront(nil)
     }
 
+    /// The saved panel frame, if it can still be reached on the connected displays. A frame left
+    /// on a display that was unplugged is ignored (UI-P3-10).
     private func getSavedPanelFrame() -> NSRect? {
-        guard let dict = UserDefaults.standard.dictionary(forKey: "floatingPanelFrame"),
+        guard let dict = viewModel.defaults.dictionary(forKey: "floatingPanelFrame"),
               let x = dict["x"] as? CGFloat,
               let y = dict["y"] as? CGFloat,
               let width = dict["width"] as? CGFloat,
               let height = dict["height"] as? CGFloat else {
             return nil
         }
-        return NSRect(x: x, y: y, width: width, height: height)
+        let frame = NSRect(x: x, y: y, width: width, height: height)
+        let screens = NSScreen.screens.map(\.visibleFrame)
+        return PanelFrameValidator.isVisible(frame, screens: screens) ? frame : nil
     }
 
     private func savePanelFrame(_ frame: NSRect) {
@@ -258,7 +338,7 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
             "width": frame.size.width,
             "height": frame.size.height
         ]
-        UserDefaults.standard.set(dict, forKey: "floatingPanelFrame")
+        viewModel.defaults.set(dict, forKey: "floatingPanelFrame")
     }
 
     private func closeFloatingPanel() {
@@ -270,8 +350,21 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
 
     private func showPopover() {
         guard let popover = popover, let button = statusBarItem?.button else { return }
+        // Handing the focus back hides the app (`handBackFocusIfIdle`); a hidden app does not show
+        // its windows.
+        if NSApp.isHidden { NSApp.unhide(nil) }
 
+        if popover.contentViewController == nil {
+            popover.contentViewController = NSHostingController(rootView: PopoverView(viewModel: viewModel))
+        }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        // An accessory app is not active when its popover opens. Active, the popover window is
+        // key, so Esc reaches it and closes it; no global key monitor is needed (PERF-16.8).
+        // Plain `activate()` is cooperative on macOS 14 and later: with another app in front it
+        // was not honoured (QA, macOS 26: the other app stayed in front, the popover was not key,
+        // and Esc did nothing). Opening the popover is the user's own click on our item, so the
+        // forceful form is right here, as it is for the onboarding window.
+        NSApp.activate(ignoringOtherApps: true)
         setupEventMonitor()
     }
 
@@ -280,23 +373,16 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         removeEventMonitor()
     }
 
+    /// Closes the popover on a click anywhere else. Mouse events only: a key monitor would be
+    /// handed every key press in every app, would need the Input Monitoring permission, and
+    /// closed the popover when someone typed elsewhere while the pointer was outside it.
     private func setupEventMonitor() {
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
-            if let popover = self?.popover, popover.isShown {
-                // Check if the click is outside the popover
-                if let popoverWindow = popover.contentViewController?.view.window {
-                    let windowFrame = popoverWindow.frame
-                    let screenClickLocation = NSEvent.mouseLocation
-
-                    if !windowFrame.contains(screenClickLocation) {
-                        self?.closePopover()
-                    }
-                }
-
-                // Close on Escape key
-                if event.type == .keyDown && event.keyCode == 53 { // Escape key
-                    self?.closePopover()
-                }
+        removeEventMonitor()
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            guard let popover = self?.popover, popover.isShown,
+                  let popoverWindow = popover.contentViewController?.view.window else { return }
+            if !popoverWindow.frame.contains(NSEvent.mouseLocation) {
+                self?.closePopover()
             }
         }
     }
@@ -309,12 +395,38 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
     }
 
     private func updateStatusBarTitle() {
-        statusBarItem?.button?.title = viewModel.menuBarText
+        let title = viewModel.menuBarTitle
+        // "Increase contrast" turns the colour off; the prefix stays.
+        let useColor = !NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+        guard titleGate.shouldApply(title: title, useColor: useColor) else { return }
+        guard let button = statusBarItem?.button else { return }
+
+        // Digits of equal width, so the item does not change width with every new number.
+        var attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        ]
+        if useColor, let color = Self.color(for: title.level) {
+            attributes[.foregroundColor] = color
+        }
+        button.attributedTitle = NSAttributedString(string: title.text, attributes: attributes)
+        button.setAccessibilityValue(title.accessibilityValue)
+    }
+
+    /// Orange from the notification threshold, red from the plan. `nil` keeps the system's own
+    /// menu bar text colour.
+    private static func color(for level: MenuBarAlertLevel) -> NSColor? {
+        switch level {
+        case .normal: return nil
+        case .warning: return .systemOrange
+        case .critical: return .systemRed
+        }
     }
 
     public func cleanUp() {
         removeEventMonitor()
         viewModel.stopMonitoring()
+        viewModel.flushPersistence()
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
         statusBarItem = nil
     }
 
@@ -326,6 +438,34 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
 
     public func popoverDidClose(_ notification: Notification) {
         removeEventMonitor()
+        // Skipped if the popover was shown again before this notification arrived.
+        guard popover?.isShown != true else { return }
+        let popoverWindow = popover?.contentViewController?.view.window
+        // A hidden hosting controller keeps laying out and rendering the chart every second
+        // (PERF-03). Dropping it releases the view graph; `showPopover()` builds a new one.
+        popover?.contentViewController = nil
+        handBackFocusIfIdle(ignoring: popoverWindow)
+    }
+
+    /// `showPopover()` made the app active so that Esc works. Left active, the app would stay in
+    /// front after the popover is gone, and the next ⌘Q meant for the user's own app would quit
+    /// this one. So when nothing of ours is left on screen, give the focus back.
+    private func handBackFocusIfIdle(ignoring popoverWindow: NSWindow?) {
+        // An ordinary window is a titled one: a save panel, an alert, onboarding, the pinned
+        // panel. The popover, the status item and menus are not.
+        let hasOtherWindow = isShowingContextMenu || NSApp.windows.contains {
+            $0 !== popoverWindow && $0.isVisible && $0.styleMask.contains(.titled)
+        }
+        guard PopoverFocusPolicy.shouldHandBackFocus(
+            activationPolicy: NSApp.activationPolicy(),
+            isAppActive: NSApp.isActive,
+            isPinnedPanelVisible: floatingPanel?.isVisible == true,
+            hasOtherWindow: hasOtherWindow
+        ) else { return }
+        // `NSApp.deactivate()` was tried first and left this app in front (QA, macOS 26). Hiding
+        // an app makes the system bring up the one the user was in; `showPopover()` and
+        // `showFloatingPanel()` unhide it again.
+        NSApp.hide(nil)
     }
 
     public func popoverShouldDetach(_ popover: NSPopover) -> Bool {
@@ -335,6 +475,11 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
     // MARK: - NSWindowDelegate
 
     public func windowWillClose(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === onboardingWindow {
+            viewModel.defaults.set(true, forKey: "hasCompletedOnboarding")
+            onboardingWindow = nil
+            return
+        }
         // When user closes the panel via close button, unpin it
         if let window = notification.object as? NSWindow, window === floatingPanel {
             // Save position before closing
@@ -355,5 +500,23 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         if let window = notification.object as? NSWindow, window === floatingPanel {
             savePanelFrame(window.frame)
         }
+    }
+}
+
+/// Whether the app should give the focus back when its popover closes.
+///
+/// Only an app that has no Dock icon (`.accessory`) does: its popover is a transient thing, like
+/// a menu, and the user was in another app a moment ago. An app that shows in the Dock is a
+/// normal app that may stay in front. Nothing is handed back while the app is not the active one
+/// (the user clicked into another app and that app already has the focus), while the pinned
+/// panel is on screen, or while another window of ours is open (save panel, alert, onboarding).
+enum PopoverFocusPolicy {
+    static func shouldHandBackFocus(
+        activationPolicy: NSApplication.ActivationPolicy,
+        isAppActive: Bool,
+        isPinnedPanelVisible: Bool,
+        hasOtherWindow: Bool
+    ) -> Bool {
+        activationPolicy == .accessory && isAppActive && !isPinnedPanelVisible && !hasOtherWindow
     }
 }

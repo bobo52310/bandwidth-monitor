@@ -5,13 +5,12 @@ import BandwidthECGFeature
 struct BandwidthECGApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    init() {
-        ErrorHandler.migrateDataFromLegacyPath()
-    }
-
     var body: some Scene {
         Settings {
-            SettingsView()
+            EmptyView()
+        }
+        .commands {
+            CommandGroup(replacing: .appSettings) {}
         }
     }
 }

@@ -1,110 +1,167 @@
 import Foundation
 import Observation
 
-/// Detects network anomalies such as connection drops and unusual speed fluctuations
+/// Detects network anomalies: finished connection drops, speed drops while the connection is
+/// failing, and a dead link that reads zero.
+///
+/// The connection state comes from `updateConnectivity` (the network path and the latency
+/// probe), never from the timing of the samples (CORE-10). A sleep or a stalled timer is not
+/// an outage, and ordinary traffic (a download ending, chunked streaming, an idle link) is not
+/// an anomaly (CORE-22).
 @MainActor
 @Observable
 public class NetworkAnomalyDetector {
+    /// A speed drop lasts this many samples in a row before it can count.
+    static let dropSamples = 5
+    /// Zero speed with the path down lasts this many samples in a row before it counts.
+    static let zeroSpeedSamples = 30
+    /// Samples further apart than this are not "in a row", as for the sustained peak (R14).
+    static let maxSampleGapSeconds: TimeInterval = 2.5
+
     public var recentAnomalies: [NetworkAnomaly] = []
-    public var isConnectionStable: Bool = true
+    /// The path is up and the latency probe has not failed twice in a row.
+    public private(set) var isConnectionStable: Bool = true
     public var isDetectionEnabled: Bool {
         didSet {
-            UserDefaults.standard.set(isDetectionEnabled, forKey: "anomalyDetectionEnabled")
+            defaults.set(isDetectionEnabled, forKey: "anomalyDetectionEnabled")
         }
     }
 
+    private let defaults: UserDefaults
+    private let clock: AppClock
+
     // Configuration
     private let maxAnomalyHistory = 50
-    private let connectionDropThreshold: TimeInterval = 5.0 // 5 seconds without data
-    private let speedFluctuationThreshold: Double = 0.7 // 70% drop from average
+    private let speedFluctuationThreshold: Double = 0.7 // below 70% of the recent average
     private let minSamplesForAnalysis = 5
-
-    // Analysis state
-    private var lastDataTimestamp: Date?
-    private var recentSpeeds: [(download: Double, upload: Double)] = []
     private let speedHistoryLimit = 10
 
-    public init() {
-        self.isDetectionEnabled = UserDefaults.standard.object(forKey: "anomalyDetectionEnabled") as? Bool ?? true
+    // Analysis state
+    @ObservationIgnored private var isPathSatisfied = true
+    @ObservationIgnored private var recentSpeeds: [(download: Double, upload: Double)] = []
+    @ObservationIgnored private var lastSampleTime: TimeInterval?
+    @ObservationIgnored private var downloadDrop = DropStreak()
+    @ObservationIgnored private var uploadDrop = DropStreak()
+    @ObservationIgnored private var zeroSpeedStreak = 0
+
+    /// Samples in a row below the threshold in one direction.
+    private struct DropStreak {
+        var samples = 0
+        /// The average the drop is measured from: the one before its first sample.
+        var fromMbps: Double = 0
+        var isRecorded = false
+    }
+
+    public init(defaults: UserDefaults = .standard, clock: AppClock = .live) {
+        self.defaults = defaults
+        self.clock = clock
+        self.isDetectionEnabled = defaults.object(forKey: "anomalyDetectionEnabled") as? Bool ?? true
+    }
+
+    /// The connection state behind "stable" and behind the zero-speed and drop checks.
+    public func updateConnectivity(pathSatisfied: Bool, probeFailures: Int) {
+        isPathSatisfied = pathSatisfied
+        let stable = pathSatisfied && probeFailures < DisconnectTracker.probeFailuresForOutage
+        if stable != isConnectionStable {
+            isConnectionStable = stable
+        }
+    }
+
+    /// A finished outage reported by `DisconnectTracker`. Each one is recorded, even two
+    /// within a minute, so the count matches the disconnect record.
+    public func recordConnectionDrop(duration: TimeInterval) {
+        guard isDetectionEnabled else { return }
+        recordAnomaly(.connectionDrop(duration: duration))
     }
 
     /// Analyze network speed for anomalies
     public func analyzeSpeed(_ speed: NetworkSpeed) {
         guard isDetectionEnabled else { return }
 
-        let now = Date()
+        // After a gap (sleep, a stalled timer) the samples before it say nothing about now.
+        let now = clock.monotonic()
+        if let lastSampleTime, now - lastSampleTime > Self.maxSampleGapSeconds {
+            recentSpeeds.removeAll()
+            downloadDrop = DropStreak()
+            uploadDrop = DropStreak()
+            zeroSpeedStreak = 0
+        }
+        lastSampleTime = now
 
-        // Check for connection drop
-        if let lastTimestamp = lastDataTimestamp {
-            let timeSinceLastData = now.timeIntervalSince(lastTimestamp)
-            if timeSinceLastData > connectionDropThreshold {
-                recordAnomaly(.connectionDrop(duration: timeSinceLastData))
-                isConnectionStable = false
-            } else {
-                isConnectionStable = true
+        checkZeroSpeed(speed)
+
+        if recentSpeeds.count >= minSamplesForAnalysis {
+            let count = Double(recentSpeeds.count)
+            let downloadAverage = recentSpeeds.map { $0.download }.reduce(0, +) / count
+            let uploadAverage = recentSpeeds.map { $0.upload }.reduce(0, +) / count
+            if let drop = advance(&downloadDrop, speed: speed.downloadMbps, average: downloadAverage) {
+                recordSpeedDrop(.download, from: drop.from, to: drop.to)
+            }
+            if let drop = advance(&uploadDrop, speed: speed.uploadMbps, average: uploadAverage) {
+                recordSpeedDrop(.upload, from: drop.from, to: drop.to)
             }
         }
 
-        lastDataTimestamp = now
-
-        // Add to recent speeds
         recentSpeeds.append((download: speed.downloadMbps, upload: speed.uploadMbps))
         if recentSpeeds.count > speedHistoryLimit {
             recentSpeeds.removeFirst()
         }
+    }
 
-        // Analyze speed fluctuations
-        if recentSpeeds.count >= minSamplesForAnalysis {
-            analyzeSpeedFluctuations(currentSpeed: speed)
+    /// Zero both ways is only a dead link when the path is down too: an idle Mac reads exactly
+    /// zero in many seconds.
+    private func checkZeroSpeed(_ speed: NetworkSpeed) {
+        guard !isPathSatisfied, speed.downloadMbps == 0, speed.uploadMbps == 0 else {
+            zeroSpeedStreak = 0
+            return
         }
-
-        // Check for zero speed (possible disconnection)
-        if speed.downloadMbps == 0 && speed.uploadMbps == 0 {
+        zeroSpeedStreak += 1
+        if zeroSpeedStreak == Self.zeroSpeedSamples {
             recordAnomaly(.zeroSpeed)
         }
     }
 
-    /// Analyze speed fluctuations
-    private func analyzeSpeedFluctuations(currentSpeed: NetworkSpeed) {
-        let recentDownloadAvg = recentSpeeds.map { $0.download }.reduce(0, +) / Double(recentSpeeds.count)
-        let recentUploadAvg = recentSpeeds.map { $0.upload }.reduce(0, +) / Double(recentSpeeds.count)
-
-        // Skip if average is too low (not enough activity to detect anomaly)
-        guard recentDownloadAvg > 1.0 || recentUploadAvg > 1.0 else { return }
-
-        // Check for significant download drop
-        if recentDownloadAvg > 1.0 && currentSpeed.downloadMbps < recentDownloadAvg * speedFluctuationThreshold {
-            let dropPercentage = ((recentDownloadAvg - currentSpeed.downloadMbps) / recentDownloadAvg) * 100
-            recordAnomaly(.speedDrop(
-                direction: .download,
-                fromSpeed: recentDownloadAvg,
-                toSpeed: currentSpeed.downloadMbps,
-                dropPercentage: dropPercentage
-            ))
+    /// Moves one direction's streak on by a sample and returns the drop to record, if any.
+    /// A drop needs `dropSamples` in a row below the threshold while the connection is failing;
+    /// with the connection fine it is just traffic ending.
+    private func advance(_ streak: inout DropStreak, speed: Double, average: Double) -> (from: Double, to: Double)? {
+        // Skip if the average is too low (not enough activity to detect a drop)
+        guard average > 1.0, speed < average * speedFluctuationThreshold else {
+            streak = DropStreak()
+            return nil
         }
-
-        // Check for significant upload drop
-        if recentUploadAvg > 1.0 && currentSpeed.uploadMbps < recentUploadAvg * speedFluctuationThreshold {
-            let dropPercentage = ((recentUploadAvg - currentSpeed.uploadMbps) / recentUploadAvg) * 100
-            recordAnomaly(.speedDrop(
-                direction: .upload,
-                fromSpeed: recentUploadAvg,
-                toSpeed: currentSpeed.uploadMbps,
-                dropPercentage: dropPercentage
-            ))
+        if streak.samples == 0 {
+            streak.fromMbps = average
         }
+        streak.samples += 1
+        guard streak.samples >= Self.dropSamples, !isConnectionStable, !streak.isRecorded else {
+            return nil
+        }
+        streak.isRecorded = true
+        return (streak.fromMbps, speed)
+    }
+
+    private func recordSpeedDrop(_ direction: NetworkAnomaly.AnomalyType.Direction, from: Double, to: Double) {
+        recordAnomaly(.speedDrop(
+            direction: direction,
+            fromSpeed: from,
+            toSpeed: to,
+            dropPercentage: (from - to) / from * 100
+        ))
     }
 
     /// Record an anomaly
     private func recordAnomaly(_ type: NetworkAnomaly.AnomalyType) {
-        // Check if we already have a recent similar anomaly (avoid duplicates)
-        let now = Date()
-        let recentSimilarAnomaly = recentAnomalies.first { anomaly in
-            anomaly.type.isSimilar(to: type) &&
-            now.timeIntervalSince(anomaly.timestamp) < 60 // Within last minute
+        let now = clock.now()
+        // A speed or zero-speed anomaly like one in the last minute is the same episode.
+        // Connection drops are finished outages and always count.
+        if case .connectionDrop = type {} else {
+            let recentSimilarAnomaly = recentAnomalies.first { anomaly in
+                anomaly.type.isSimilar(to: type) &&
+                now.timeIntervalSince(anomaly.timestamp) < 60 // Within last minute
+            }
+            guard recentSimilarAnomaly == nil else { return }
         }
-
-        guard recentSimilarAnomaly == nil else { return }
 
         let anomaly = NetworkAnomaly(type: type, timestamp: now)
         recentAnomalies.insert(anomaly, at: 0)
@@ -120,29 +177,9 @@ public class NetworkAnomalyDetector {
         recentAnomalies.removeAll()
     }
 
-    /// Prune old anomalies to optimize memory
-    public func pruneOldAnomalies() {
-        let now = Date()
-        let maxAge: TimeInterval = 7 * 24 * 3600 // 7 days
-
-        let beforeCount = recentAnomalies.count
-
-        // Remove anomalies older than max age
-        recentAnomalies = recentAnomalies.filter { now.timeIntervalSince($0.timestamp) < maxAge }
-
-        // Ensure we don't exceed max count
-        if recentAnomalies.count > maxAnomalyHistory {
-            recentAnomalies = Array(recentAnomalies.prefix(maxAnomalyHistory))
-        }
-
-        if beforeCount != recentAnomalies.count {
-            print("Pruned \(beforeCount - recentAnomalies.count) old anomalies")
-        }
-    }
-
     /// Get formatted anomaly summary
     public func getAnomalySummary(for period: TimeInterval = 3600) -> AnomalySummary {
-        let cutoffTime = Date().addingTimeInterval(-period)
+        let cutoffTime = clock.now().addingTimeInterval(-period)
         let periodAnomalies = recentAnomalies.filter { $0.timestamp > cutoffTime }
 
         return AnomalySummary(

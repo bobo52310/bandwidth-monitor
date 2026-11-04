@@ -1,379 +1,346 @@
 import Foundation
 import Observation
+import OSLog
 
+/// The chart history: one point per 10 seconds for the last 24 hours, and every sample of the
+/// last 15 minutes.
+///
+/// The 10-second points are saved to `history-10s.json` at most every `writeIntervalSeconds`
+/// and whenever `flush()` is called (before sleep and on quit), so a relaunch still shows the
+/// last 24 hours (D7). The per-second samples are not saved.
 @MainActor
 @Observable
 public class NetworkHistoryRecorder {
+    /// One point per 10 seconds, each the average and maximum of its window, up to 24 hours.
+    /// The name is older than the 24-hour history.
     public private(set) var oneHourData: [NetworkDataPoint] = []
-    public private(set) var twentyFourHourData: [HourlyDataPoint] = []
+    /// Moves on with every new 10-second point and when the history is cleared. A chart can
+    /// redraw on it; unlike `oneHourData.count` it keeps moving once the history is full (R4).
+    public private(set) var revision = 0
+    /// Every sample of the last `recentSampleCapacity` seconds, oldest first.
+    public private(set) var recentSamples: [NetworkDataPoint] = []
 
-    private let userDefaults = UserDefaults.standard
+    static let fileName = "history-10s.json"
+    /// Where a `UserDefaults` history that cannot be decoded is kept.
+    static let legacyBackupFileName = "history-legacy.corrupt"
+    /// A full file is about 0.7 MB, so it is not rewritten with every point (CORE-19).
+    static let writeIntervalSeconds: TimeInterval = 600
+    static let retentionSeconds: TimeInterval = 24 * 3600
+    static let maxPoints = 8640 // 24 hours of 10-second points
+    static let recentSampleCapacity = 900 // 15 minutes at one sample per second
+    private static let pointInterval: TimeInterval = 10
+    private static let schemaVersion = 1
 
-    // Store data points every 10 seconds for extended view (up to 24 hours)
-    private let oneHourInterval: TimeInterval = 10.0
-    private let maxOneHourPoints = 8640 // 24 hours = 86400 seconds / 10 seconds
-
-    // Store hourly aggregates for 24-hour view (24 points max)
-    private let maxTwentyFourHourPoints = 24
-
-    private var lastRecordTime: Date?
-    private var currentHourData: [NetworkDataPoint] = []
-
-    public init() {
-        loadStoredData()
-        createInitialHourlyAggregates()
-
-        // Immediately initialize current hour data for 24-hour chart display
-        checkForHourlyAggregation()
-
-        startHourlyAggregation()
+    /// Where versions before the file kept the history. Moved to the file once, then removed.
+    enum LegacyKey {
+        static let points = "networkHistory_oneHour"
+        static let hourlyAggregates = "networkHistory_twentyFourHour"
+        static let lastRecordTime = "networkHistory_lastRecordTime"
+        static let all = [points, hourlyAggregates, lastRecordTime]
     }
 
+    private let defaults: UserDefaults
+    private let clock: AppClock
+    private let store: any BlobStore
+    private let logger = Logger(subsystem: "com.bandwidthecg", category: "History")
+
+    /// The 10-second point being collected.
+    @ObservationIgnored private var window: PointWindow?
+    /// Points in memory that have not reached the file. Stays set when a write fails.
+    @ObservationIgnored private var isDirty = false
+    @ObservationIgnored private var lastWriteAttempt: TimeInterval
+    /// The live file could not be read or moved aside. Nothing may be written over it.
+    @ObservationIgnored private var hasBadFile = false
+    /// The old `UserDefaults` keys still hold the only saved copy; they go once the file is written.
+    @ObservationIgnored private var legacyKeysAwaitFile = false
+
+    public init(
+        defaults: UserDefaults = .standard,
+        clock: AppClock = .live,
+        store: any BlobStore = AppSupportBlobStore()
+    ) {
+        self.defaults = defaults
+        self.clock = clock
+        self.store = store
+        self.lastWriteAttempt = clock.monotonic()
+        load()
+    }
+
+    // MARK: - Recording
+
     public func recordSpeed(_ speed: NetworkSpeed) {
-        let now = Date()
-        let dataPoint = NetworkDataPoint(
+        let now = clock.now()
+        let monotonic = clock.monotonic()
+
+        recentSamples.append(NetworkDataPoint(
             timestamp: now,
             downloadSpeed: speed.downloadSpeed,
             uploadSpeed: speed.uploadSpeed
-        )
-
-        // Check if we should record a new 10-second data point
-        if shouldRecordNewDataPoint(at: now) {
-            // Add to one hour data
-            oneHourData.append(dataPoint)
-
-            // Keep only last 24 hours of data
-            let twentyFourHoursAgo = now.addingTimeInterval(-24 * 3600)
-            oneHourData = oneHourData.filter { $0.timestamp > twentyFourHoursAgo }
-
-            // Limit to max points
-            if oneHourData.count > maxOneHourPoints {
-                oneHourData.removeFirst(oneHourData.count - maxOneHourPoints)
-            }
-
-            // Add to current hour accumulator
-            currentHourData.append(dataPoint)
-
-            lastRecordTime = now
-            saveOneHourData()
+        ))
+        if recentSamples.count > Self.recentSampleCapacity {
+            recentSamples.removeFirst(recentSamples.count - Self.recentSampleCapacity)
         }
 
-        // Always add to current hour data for accurate hourly aggregation
-        if !currentHourData.contains(where: { abs($0.timestamp.timeIntervalSince(now)) < 1.0 }) {
-            currentHourData.append(dataPoint)
+        // A sample 10 s or more after the window opened starts the next one. Elapsed time is
+        // monotonic, so setting the wall clock back does not stall the points and a sleep
+        // closes the window before the gap.
+        if let open = window, monotonic - open.startMonotonic >= Self.pointInterval {
+            appendPoint(open.point, now: now)
+            window = nil
         }
+        if window == nil {
+            window = PointWindow(start: now, startMonotonic: monotonic)
+        }
+        window?.add(speed)
 
-        // Trigger immediate update of current hour aggregate for 24-hour chart responsiveness
-        let calendar = Calendar.current
-        let currentHour = calendar.dateInterval(of: .hour, for: now)?.start ?? now
-        let currentHourData = oneHourData.filter { point in
-            guard let hourInterval = calendar.dateInterval(of: .hour, for: currentHour) else { return false }
-            return hourInterval.contains(point.timestamp)
-        }
-        if !currentHourData.isEmpty {
-            updateCurrentHourAggregate(for: currentHour, with: currentHourData)
-        }
+        writeIfDue(at: monotonic)
     }
 
-    private func shouldRecordNewDataPoint(at date: Date) -> Bool {
-        guard let lastTime = lastRecordTime else { return true }
-        return date.timeIntervalSince(lastTime) >= oneHourInterval
+    private func appendPoint(_ point: NetworkDataPoint, now: Date) {
+        oneHourData.append(point)
+        let cutoff = now.addingTimeInterval(-Self.retentionSeconds)
+        oneHourData.removeAll { $0.timestamp <= cutoff }
+        if oneHourData.count > Self.maxPoints {
+            oneHourData.removeFirst(oneHourData.count - Self.maxPoints)
+        }
+        revision += 1
+        isDirty = true
     }
 
-    private func createInitialHourlyAggregates() {
-        guard !oneHourData.isEmpty else { return }
-
-        let calendar = Calendar.current
-        let now = Date()
-
-        // Group existing one-hour data by hour
-        let hourGroups = Dictionary(grouping: oneHourData) { dataPoint in
-            calendar.dateInterval(of: .hour, for: dataPoint.timestamp)?.start ?? dataPoint.timestamp
-        }
-
-        // Create hourly aggregates for each hour that has data
-        for (hourStart, hourData) in hourGroups {
-            // Skip if we already have an aggregate for this hour
-            if twentyFourHourData.contains(where: { calendar.isDate($0.timestamp, equalTo: hourStart, toGranularity: .hour) }) {
-                continue
-            }
-
-            let avgDownload = hourData.map { $0.downloadSpeed }.reduce(0, +) / Double(hourData.count)
-            let avgUpload = hourData.map { $0.uploadSpeed }.reduce(0, +) / Double(hourData.count)
-            let maxDownload = hourData.map { $0.downloadSpeed }.max() ?? 0
-            let maxUpload = hourData.map { $0.uploadSpeed }.max() ?? 0
-
-            let hourlyPoint = HourlyDataPoint(
-                timestamp: hourStart,
-                avgDownloadSpeed: avgDownload,
-                avgUploadSpeed: avgUpload,
-                maxDownloadSpeed: maxDownload,
-                maxUploadSpeed: maxUpload
-            )
-
-            twentyFourHourData.append(hourlyPoint)
-        }
-
-        // Sort by timestamp and keep only last 24 hours
-        twentyFourHourData.sort { $0.timestamp < $1.timestamp }
-        let twentyFourHoursAgo = now.addingTimeInterval(-24 * 3600)
-        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
-
-        if twentyFourHourData.count > maxTwentyFourHourPoints {
-            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
-        }
-
-        saveTwentyFourHourData()
+    /// Chart data from `cutoff` on: 10-second points up to where the per-second samples begin,
+    /// then the samples. A point is stamped with its window's start, so the point whose window
+    /// holds the oldest samples still counts and no sample at the seam is lost.
+    /// Arrival order, which is time order unless the wall clock was set back.
+    public func points(since cutoff: Date) -> [NetworkDataPoint] {
+        let samplesStart = recentSamples.first?.timestamp ?? .distantFuture
+        var points = oneHourData.filter { $0.timestamp >= cutoff && $0.timestamp < samplesStart }
+        points.append(contentsOf: recentSamples.lazy.filter { $0.timestamp >= cutoff })
+        return points
     }
 
-    private func startHourlyAggregation() {
-        // Check every 10 seconds to update current hour aggregate for better 24-hour chart responsiveness
-        Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.checkForHourlyAggregation()
-            }
-        }
-    }
-
-    private func checkForHourlyAggregation() {
-        let now = Date()
-        let calendar = Calendar.current
-        let currentHour = calendar.dateInterval(of: .hour, for: now)?.start ?? now
-
-        // Group all one-hour data by hour
-        let hourGroups = Dictionary(grouping: oneHourData) { dataPoint in
-            calendar.dateInterval(of: .hour, for: dataPoint.timestamp)?.start ?? dataPoint.timestamp
-        }
-
-        // Process each hour that has data
-        for (hourStart, hourData) in hourGroups {
-            // Check if this is a completed hour (not current hour) that hasn't been aggregated yet
-            let isCompletedHour = hourStart < currentHour
-            let alreadyExists = twentyFourHourData.contains { calendar.isDate($0.timestamp, equalTo: hourStart, toGranularity: .hour) }
-
-            if isCompletedHour && !alreadyExists {
-                // Aggregate completed hour
-                aggregateHourlyData(for: hourStart, with: hourData)
-            } else if hourStart == currentHour && !hourData.isEmpty {
-                // Always update current hour aggregate (partial data) for immediate 24-hour chart display
-                updateCurrentHourAggregate(for: hourStart, with: hourData)
-            }
-        }
-
-        // If no data exists for current hour yet, create an initial aggregate to show in 24-hour chart
-        if !hourGroups.keys.contains(currentHour) && !twentyFourHourData.contains(where: { calendar.isDate($0.timestamp, equalTo: currentHour, toGranularity: .hour) }) {
-            // Create initial zero-value aggregate for current hour
-            let initialHourlyPoint = HourlyDataPoint(
-                timestamp: currentHour,
-                avgDownloadSpeed: 0.0,
-                avgUploadSpeed: 0.0,
-                maxDownloadSpeed: 0.0,
-                maxUploadSpeed: 0.0
-            )
-            twentyFourHourData.append(initialHourlyPoint)
-            saveTwentyFourHourData()
-        }
-
-        // Also handle legacy currentHourData if it exists
-        if !currentHourData.isEmpty {
-            let oldestData = currentHourData.min(by: { $0.timestamp < $1.timestamp })?.timestamp ?? now
-            let dataHour = calendar.dateInterval(of: .hour, for: oldestData)?.start ?? oldestData
-
-            // If the data is from a previous hour, aggregate it
-            if dataHour < currentHour {
-                aggregateHourlyData(for: dataHour)
-            }
-        }
-    }
-
-    private func aggregateHourlyData(for hour: Date) {
-        let calendar = Calendar.current
-        let hourInterval = calendar.dateInterval(of: .hour, for: hour)!
-
-        let hourData = currentHourData.filter { hourInterval.contains($0.timestamp) }
-        guard !hourData.isEmpty else { return }
-
-        let avgDownload = hourData.map { $0.downloadSpeed }.reduce(0, +) / Double(hourData.count)
-        let avgUpload = hourData.map { $0.uploadSpeed }.reduce(0, +) / Double(hourData.count)
-        let maxDownload = hourData.map { $0.downloadSpeed }.max() ?? 0
-        let maxUpload = hourData.map { $0.uploadSpeed }.max() ?? 0
-
-        let hourlyPoint = HourlyDataPoint(
-            timestamp: hour,
-            avgDownloadSpeed: avgDownload,
-            avgUploadSpeed: avgUpload,
-            maxDownloadSpeed: maxDownload,
-            maxUploadSpeed: maxUpload
-        )
-
-        // Add to 24-hour data
-        twentyFourHourData.append(hourlyPoint)
-
-        // Keep only last 24 hours
-        let twentyFourHoursAgo = Date().addingTimeInterval(-24 * 3600)
-        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
-
-        // Limit to max points
-        if twentyFourHourData.count > maxTwentyFourHourPoints {
-            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
-        }
-
-        // Remove aggregated data from current hour accumulator
-        currentHourData = currentHourData.filter { !hourInterval.contains($0.timestamp) }
-
-        saveTwentyFourHourData()
-    }
-
-    private func aggregateHourlyData(for hour: Date, with hourData: [NetworkDataPoint]) {
-        guard !hourData.isEmpty else { return }
-
-        let avgDownload = hourData.map { $0.downloadSpeed }.reduce(0, +) / Double(hourData.count)
-        let avgUpload = hourData.map { $0.uploadSpeed }.reduce(0, +) / Double(hourData.count)
-        let maxDownload = hourData.map { $0.downloadSpeed }.max() ?? 0
-        let maxUpload = hourData.map { $0.uploadSpeed }.max() ?? 0
-
-        let hourlyPoint = HourlyDataPoint(
-            timestamp: hour,
-            avgDownloadSpeed: avgDownload,
-            avgUploadSpeed: avgUpload,
-            maxDownloadSpeed: maxDownload,
-            maxUploadSpeed: maxUpload
-        )
-
-        // Add to 24-hour data
-        twentyFourHourData.append(hourlyPoint)
-
-        // Keep only last 24 hours
-        let twentyFourHoursAgo = Date().addingTimeInterval(-24 * 3600)
-        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
-
-        // Sort by timestamp
-        twentyFourHourData.sort { $0.timestamp < $1.timestamp }
-
-        // Limit to max points
-        if twentyFourHourData.count > maxTwentyFourHourPoints {
-            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
-        }
-
-        saveTwentyFourHourData()
-    }
-
-    private func updateCurrentHourAggregate(for hour: Date, with hourData: [NetworkDataPoint]) {
-        guard !hourData.isEmpty else { return }
-
-        let calendar = Calendar.current
-
-        // Remove existing aggregate for this hour
-        twentyFourHourData.removeAll { calendar.isDate($0.timestamp, equalTo: hour, toGranularity: .hour) }
-
-        let avgDownload = hourData.map { $0.downloadSpeed }.reduce(0, +) / Double(hourData.count)
-        let avgUpload = hourData.map { $0.uploadSpeed }.reduce(0, +) / Double(hourData.count)
-        let maxDownload = hourData.map { $0.downloadSpeed }.max() ?? 0
-        let maxUpload = hourData.map { $0.uploadSpeed }.max() ?? 0
-
-        let hourlyPoint = HourlyDataPoint(
-            timestamp: hour,
-            avgDownloadSpeed: avgDownload,
-            avgUploadSpeed: avgUpload,
-            maxDownloadSpeed: maxDownload,
-            maxUploadSpeed: maxUpload
-        )
-
-        // Add updated aggregate to 24-hour data
-        twentyFourHourData.append(hourlyPoint)
-
-        // Keep only last 24 hours
-        let twentyFourHoursAgo = Date().addingTimeInterval(-24 * 3600)
-        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
-
-        // Sort by timestamp
-        twentyFourHourData.sort { $0.timestamp < $1.timestamp }
-
-        // Limit to max points
-        if twentyFourHourData.count > maxTwentyFourHourPoints {
-            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
-        }
-
-        saveTwentyFourHourData()
-    }
-
+    /// Empties the history in memory and on disk at once, so it does not return after a relaunch.
     public func clearHistory() {
         oneHourData.removeAll()
-        twentyFourHourData.removeAll()
-        currentHourData.removeAll()
-        lastRecordTime = nil
-
-        userDefaults.removeObject(forKey: "networkHistory_oneHour")
-        userDefaults.removeObject(forKey: "networkHistory_twentyFourHour")
-        userDefaults.removeObject(forKey: "networkHistory_lastRecordTime")
-    }
-
-    /// Manually prune old data to optimize memory
-    public func pruneOldData() {
-        let now = Date()
-
-        // Prune one-hour data
-        let oneHourAgo = now.addingTimeInterval(-3600)
-        let beforeCount = oneHourData.count
-        oneHourData = oneHourData.filter { $0.timestamp > oneHourAgo }
-
-        // Limit to max points
-        if oneHourData.count > maxOneHourPoints {
-            oneHourData.removeFirst(oneHourData.count - maxOneHourPoints)
-        }
-
-        // Prune twenty-four hour data
-        let twentyFourHoursAgo = now.addingTimeInterval(-24 * 3600)
-        twentyFourHourData = twentyFourHourData.filter { $0.timestamp > twentyFourHoursAgo }
-
-        // Limit to max points
-        if twentyFourHourData.count > maxTwentyFourHourPoints {
-            twentyFourHourData.removeFirst(twentyFourHourData.count - maxTwentyFourHourPoints)
-        }
-
-        // Prune current hour data
-        currentHourData = currentHourData.filter { $0.timestamp > oneHourAgo }
-
-        // Save if data was pruned
-        if beforeCount != oneHourData.count {
-            saveOneHourData()
-            saveTwentyFourHourData()
-        }
+        recentSamples.removeAll()
+        window = nil
+        revision += 1
+        removeLegacyKeys()
+        isDirty = true
+        flush()
     }
 
     // MARK: - Persistence
 
-    private func saveOneHourData() {
-        if let encoded = try? JSONEncoder().encode(oneHourData) {
-            userDefaults.set(encoded, forKey: "networkHistory_oneHour")
+    /// Writes the points if they changed since the last write. Called before sleep and on quit;
+    /// otherwise the recorder writes by itself at most every `writeIntervalSeconds`.
+    public func flush() {
+        guard isDirty else { return }
+
+        lastWriteAttempt = clock.monotonic()
+        if hasBadFile {
+            quarantineFile()
         }
-        userDefaults.set(lastRecordTime, forKey: "networkHistory_lastRecordTime")
+        guard !hasBadFile else { return }
+
+        do {
+            let file = File(schemaVersion: Self.schemaVersion, points: oneHourData.map(StoredPoint.init))
+            try store.write(try JSONEncoder().encode(file), named: Self.fileName)
+            isDirty = false
+            if legacyKeysAwaitFile {
+                removeLegacyKeys()
+            }
+        } catch {
+            logger.error("Could not write \(Self.fileName, privacy: .public): \(String(describing: error), privacy: .public)")
+        }
     }
 
-    private func saveTwentyFourHourData() {
-        if let encoded = try? JSONEncoder().encode(twentyFourHourData) {
-            userDefaults.set(encoded, forKey: "networkHistory_twentyFourHour")
+    /// Counts from the last attempt, so a failing disk is retried at the normal pace.
+    private func writeIfDue(at monotonic: TimeInterval) {
+        guard isDirty, monotonic - lastWriteAttempt >= Self.writeIntervalSeconds else { return }
+        flush()
+    }
+
+    private func load() {
+        guard let saved = loadFile() else {
+            migrateLegacyHistory()
+            return
+        }
+        oneHourData = retained(saved)
+        // Only an older version, run after this one, writes the old keys again. The file wins.
+        if hasLegacyKeys {
+            logger.notice("Removed the UserDefaults history: \(Self.fileName, privacy: .public) replaces it")
+            removeLegacyKeys()
         }
     }
 
-    private func loadStoredData() {
-        // Load one hour data
-        if let data = userDefaults.data(forKey: "networkHistory_oneHour"),
-           let decoded = try? JSONDecoder().decode([NetworkDataPoint].self, from: data) {
-            // Filter out old data (older than 1 hour)
-            let oneHourAgo = Date().addingTimeInterval(-3600)
-            oneHourData = decoded.filter { $0.timestamp > oneHourAgo }
+    /// The saved points, or `nil` when there is no usable file. A file that cannot be read or
+    /// decoded is moved aside, never written over.
+    private func loadFile() -> [NetworkDataPoint]? {
+        do {
+            guard let data = try store.read(Self.fileName) else { return nil }
+            let header = try JSONDecoder().decode(FileHeader.self, from: data)
+            guard header.schemaVersion == Self.schemaVersion else {
+                throw LoadError.unsupportedSchema(header.schemaVersion)
+            }
+            return try JSONDecoder().decode(File.self, from: data).points.map(\.dataPoint)
+        } catch {
+            logger.error("Could not load \(Self.fileName, privacy: .public): \(String(describing: error), privacy: .public)")
+            quarantineFile()
+            return nil
+        }
+    }
+
+    /// Moves the unusable file aside. While that fails it is still the live file, so `flush`
+    /// keeps the new points in memory and tries again rather than replacing it.
+    private func quarantineFile() {
+        do {
+            try store.quarantine(Self.fileName)
+            hasBadFile = false
+        } catch {
+            hasBadFile = true
+            logger.error("Could not quarantine \(Self.fileName, privacy: .public): \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// Earlier versions rewrote the whole history into the preferences plist every 10 seconds
+    /// (PERF-08). Its points move to the file. The hourly aggregates were computed from the
+    /// same points, so they are dropped with the keys.
+    private func migrateLegacyHistory() {
+        guard let data = defaults.data(forKey: LegacyKey.points) else {
+            if hasLegacyKeys {
+                removeLegacyKeys()
+            }
+            return
         }
 
-        // Load twenty-four hour data
-        if let data = userDefaults.data(forKey: "networkHistory_twentyFourHour"),
-           let decoded = try? JSONDecoder().decode([HourlyDataPoint].self, from: data) {
-            // Filter out old data (older than 24 hours)
-            let twentyFourHoursAgo = Date().addingTimeInterval(-24 * 3600)
-            twentyFourHourData = decoded.filter { $0.timestamp > twentyFourHoursAgo }
+        let points: [NetworkDataPoint]
+        do {
+            points = try JSONDecoder().decode([NetworkDataPoint].self, from: data)
+        } catch {
+            backUpUndecodableLegacyHistory(data, error: error)
+            return
         }
 
-        // Load last record time
-        lastRecordTime = userDefaults.object(forKey: "networkHistory_lastRecordTime") as? Date
+        oneHourData = retained(points)
+        legacyKeysAwaitFile = true
+        isDirty = true
+        flush()
+        let moved = oneHourData.count
+        logger.notice("Moved \(moved) history points from UserDefaults to \(Self.fileName, privacy: .public)")
+    }
+
+    /// Keeps the bytes in a file, then removes the keys, so this happens once. Without a backup
+    /// the blob is the only copy and stays for the next launch.
+    private func backUpUndecodableLegacyHistory(_ data: Data, error: Error) {
+        do {
+            try store.write(data, named: Self.legacyBackupFileName)
+            removeLegacyKeys()
+            logger.error("Could not decode the UserDefaults history, moved it to \(Self.legacyBackupFileName, privacy: .public): \(String(describing: error), privacy: .public)")
+        } catch let backupError {
+            logger.error("Could not decode the UserDefaults history or back it up, left it in place: \(String(describing: backupError), privacy: .public)")
+        }
+    }
+
+    private var hasLegacyKeys: Bool {
+        LegacyKey.all.contains { defaults.object(forKey: $0) != nil }
+    }
+
+    private func removeLegacyKeys() {
+        for key in LegacyKey.all {
+            defaults.removeObject(forKey: key)
+        }
+        legacyKeysAwaitFile = false
+    }
+
+    /// The last 24 hours of `points`, at most `maxPoints` of them, in their order.
+    private func retained(_ points: [NetworkDataPoint]) -> [NetworkDataPoint] {
+        let cutoff = clock.now().addingTimeInterval(-Self.retentionSeconds)
+        return Array(points.filter { $0.timestamp > cutoff }.suffix(Self.maxPoints))
+    }
+}
+
+// MARK: - File format
+
+private struct FileHeader: Decodable {
+    let schemaVersion: Int
+}
+
+private struct File: Codable {
+    let schemaVersion: Int
+    let points: [StoredPoint]
+}
+
+private enum LoadError: Error {
+    case unsupportedSchema(Int)
+}
+
+/// One point as saved. Short keys and rounded values keep a full day under 1 MB even at the
+/// 10 Gbps cap: speeds to whole bytes per second, the time (seconds since 2001, as `Date`
+/// encodes it) to the millisecond.
+private struct StoredPoint: Codable {
+    let time: Double
+    let download: Double
+    let upload: Double
+    let maxDownload: Double
+    let maxUpload: Double
+
+    private enum CodingKeys: String, CodingKey {
+        case time = "t"
+        case download = "d"
+        case upload = "u"
+        case maxDownload = "dm"
+        case maxUpload = "um"
+    }
+
+    init(_ point: NetworkDataPoint) {
+        time = (point.timestamp.timeIntervalSinceReferenceDate * 1000).rounded() / 1000
+        download = point.downloadSpeed.rounded()
+        upload = point.uploadSpeed.rounded()
+        maxDownload = point.maxDownloadSpeed.rounded()
+        maxUpload = point.maxUploadSpeed.rounded()
+    }
+
+    var dataPoint: NetworkDataPoint {
+        NetworkDataPoint(
+            timestamp: Date(timeIntervalSinceReferenceDate: time),
+            downloadSpeed: download,
+            uploadSpeed: upload,
+            maxDownloadSpeed: maxDownload,
+            maxUploadSpeed: maxUpload
+        )
+    }
+}
+
+/// Running average and maximum of the samples in one 10-second window.
+private struct PointWindow {
+    let start: Date
+    let startMonotonic: TimeInterval
+    private var count = 0
+    private var downloadSum = 0.0
+    private var uploadSum = 0.0
+    private var downloadMax = 0.0
+    private var uploadMax = 0.0
+
+    init(start: Date, startMonotonic: TimeInterval) {
+        self.start = start
+        self.startMonotonic = startMonotonic
+    }
+
+    mutating func add(_ speed: NetworkSpeed) {
+        count += 1
+        downloadSum += speed.downloadSpeed
+        uploadSum += speed.uploadSpeed
+        downloadMax = max(downloadMax, speed.downloadSpeed)
+        uploadMax = max(uploadMax, speed.uploadSpeed)
+    }
+
+    var point: NetworkDataPoint {
+        NetworkDataPoint(
+            timestamp: start,
+            downloadSpeed: downloadSum / Double(count),
+            uploadSpeed: uploadSum / Double(count),
+            maxDownloadSpeed: downloadMax,
+            maxUploadSpeed: uploadMax
+        )
     }
 }

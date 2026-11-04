@@ -1,6 +1,5 @@
 import Foundation
 import Observation
-import SystemConfiguration
 
 @MainActor
 @Observable
@@ -11,23 +10,30 @@ public class NetworkMonitor {
     /// Callback fired on each speed update, allowing the ViewModel to react without Combine.
     public var onSpeedUpdate: ((NetworkSpeed) -> Void)?
 
-    private var timer: Timer?
-    private var lastUploadBytes: UInt64 = 0
-    private var lastDownloadBytes: UInt64 = 0
-    private var lastUpdateTime: Date = Date()
+    private let source: any CounterSource
+    private let clock: AppClock
 
-    public init() {}
+    private var timer: Timer?
+    /// Counters at the last sample. An interface missing from here contributes nothing until
+    /// the following tick, so one that appears or returns never reads as a jump.
+    private var baseline: [String: InterfaceCounters] = [:]
+    /// Monotonic time of `baseline`, so changes to the wall clock cannot affect the speed.
+    private var baselineTime: TimeInterval
+
+    public init(source: any CounterSource = SystemCounterSource(), clock: AppClock = .live) {
+        self.source = source
+        self.clock = clock
+        self.baselineTime = clock.monotonic()
+    }
 
     public func startMonitoring() {
         guard !isMonitoring else { return }
 
         isMonitoring = true
-        updateInitialValues()
+        takeBaseline()
 
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.updateNetworkSpeed()
-            }
+        timer = RepeatingTimer.schedule(interval: 1.0, tolerance: 0.2) { [weak self] in
+            self?.tick()
         }
     }
 
@@ -37,63 +43,37 @@ public class NetworkMonitor {
         timer = nil
     }
 
-    private func updateInitialValues() {
-        let (upload, download) = getCurrentNetworkBytes()
-        lastUploadBytes = upload
-        lastDownloadBytes = download
-        lastUpdateTime = Date()
+    private func takeBaseline() {
+        baseline = source.read() ?? [:]
+        baselineTime = clock.monotonic()
     }
 
-    private func updateNetworkSpeed() {
-        let currentTime = Date()
-        let (currentUpload, currentDownload) = getCurrentNetworkBytes()
+    /// One sampling step, driven by the 1 second timer. Internal so tests can drive it directly.
+    func tick() {
+        // A failed read leaves the baseline untouched instead of treating it as zero bytes.
+        guard let counters = source.read() else { return }
 
-        let timeInterval = currentTime.timeIntervalSince(lastUpdateTime)
-        guard timeInterval > 0 else { return }
+        let now = clock.monotonic()
+        let elapsed = now - baselineTime
+        guard elapsed >= SampleGuard.minSampleInterval else { return }
 
-        let uploadDiff = currentUpload > lastUploadBytes ? currentUpload - lastUploadBytes : 0
-        let downloadDiff = currentDownload > lastDownloadBytes ? currentDownload - lastDownloadBytes : 0
-
-        let uploadSpeed = Double(uploadDiff) / timeInterval
-        let downloadSpeed = Double(downloadDiff) / timeInterval
+        var uploadBytes: UInt64 = 0
+        var downloadBytes: UInt64 = 0
+        for (name, current) in counters {
+            guard let previous = baseline[name] else { continue }
+            uploadBytes += SampleGuard.delta(previous: previous.tx, current: current.tx, elapsed: elapsed)
+            downloadBytes += SampleGuard.delta(previous: previous.rx, current: current.rx, elapsed: elapsed)
+        }
+        baseline = counters
+        baselineTime = now
 
         let newSpeed = NetworkSpeed(
-            uploadSpeed: uploadSpeed,
-            downloadSpeed: downloadSpeed
+            uploadSpeed: Double(uploadBytes) / elapsed,
+            downloadSpeed: Double(downloadBytes) / elapsed,
+            timestamp: clock.now()
         )
         self.currentSpeed = newSpeed
         self.onSpeedUpdate?(newSpeed)
-
-        lastUploadBytes = currentUpload
-        lastDownloadBytes = currentDownload
-        lastUpdateTime = currentTime
-    }
-
-    private func getCurrentNetworkBytes() -> (upload: UInt64, download: UInt64) {
-        var uploadBytes: UInt64 = 0
-        var downloadBytes: UInt64 = 0
-
-        var ifaddrs: UnsafeMutablePointer<ifaddrs>?
-        if getifaddrs(&ifaddrs) == 0 {
-            var ptr = ifaddrs
-            while ptr != nil {
-                defer { ptr = ptr?.pointee.ifa_next }
-
-                guard let interface = ptr?.pointee else { continue }
-                let name = String(cString: interface.ifa_name)
-
-                // Only count active network interfaces (exclude loopback)
-                if name.hasPrefix("en") || name.hasPrefix("wi") {
-                    if let data = interface.ifa_data?.assumingMemoryBound(to: if_data.self) {
-                        uploadBytes += UInt64(data.pointee.ifi_obytes)
-                        downloadBytes += UInt64(data.pointee.ifi_ibytes)
-                    }
-                }
-            }
-            freeifaddrs(ifaddrs)
-        }
-
-        return (uploadBytes, downloadBytes)
     }
 
     deinit {

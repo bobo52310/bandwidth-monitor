@@ -96,10 +96,28 @@ extension Color {
             .green.opacity(0.3)
         }
 
-        /// Warning/Orange color for concerning peaks
+        /// Warning/Orange color for concerning peaks. In light mode plain orange on the pale
+        /// orange tint behind it is about 2:1; the deep orange `#9A3412` is above 4.5:1 there.
+        /// Dark mode keeps system orange.
         static var warning: Color {
+            #if os(macOS)
+            Color(nsColor: warningNSColor)
+            #else
             .orange
+            #endif
         }
+
+        #if os(macOS)
+        /// The dynamic colour behind `warning`, separate so a test can resolve it per appearance.
+        static var warningNSColor: NSColor {
+            NSColor(name: nil) { appearance in
+                let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                return isDark
+                    ? NSColor.systemOrange
+                    : NSColor(srgbRed: 154.0 / 255, green: 52.0 / 255, blue: 18.0 / 255, alpha: 1) // #9A3412
+            }
+        }
+        #endif
 
         /// Error/Red color for critical alerts
         static var error: Color {

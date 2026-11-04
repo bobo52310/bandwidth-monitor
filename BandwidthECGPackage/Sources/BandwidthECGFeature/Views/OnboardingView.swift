@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 public struct OnboardingView: View {
     @Bindable var viewModel: NetworkMonitorViewModel
@@ -68,15 +69,17 @@ public struct OnboardingView: View {
             }
             .padding(.top, 20)
 
-            // Content
-            TabView(selection: $currentPage) {
-                ForEach(0..<pages.count, id: \.self) { index in
+            // Content. A plain switch: a macOS `TabView` draws its own empty tab strip (UI-P3-1).
+            Group {
+                switch currentPage {
+                case 0..<pages.count:
                     OnboardingPageView(
-                        page: pages[index],
-                        isLastPage: index == pages.count - 1,
+                        page: pages[currentPage],
+                        isLastPage: currentPage == pages.count - 1,
                         viewModel: viewModel
                     )
-                    .tag(index)
+                default:
+                    EmptyView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -115,7 +118,10 @@ public struct OnboardingView: View {
     }
 
     private func completeOnboarding() {
-        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        // Pressing a button doesn't take focus from a text field, so end any edit first: a plan
+        // speed typed but not confirmed is committed (and not lost with the window).
+        NSApp.keyWindow?.makeFirstResponder(nil)
+        viewModel.defaults.set(true, forKey: "hasCompletedOnboarding")
         dismiss()
     }
 }
@@ -172,23 +178,25 @@ struct OnboardingPageView: View {
             } else if isLastPage {
                 // Settings form for last page
                 VStack(spacing: 16) {
-                    HStack {
-                        Text(L10n.settingsDownloadLimit)
-                            .frame(width: 120, alignment: .leading)
-                        TextField("300", value: $viewModel.preferences.downloadPlanSpeed, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 100)
-                        Text("Mbps")
-                    }
+                    PlanSpeedField(
+                        title: L10n.settingsDownloadLimit,
+                        value: $viewModel.preferences.downloadPlanSpeed,
+                        labelMinWidth: 120,
+                        fieldWidth: 100
+                    )
 
-                    HStack {
-                        Text(L10n.settingsUploadLimit)
-                            .frame(width: 120, alignment: .leading)
-                        TextField("300", value: $viewModel.preferences.uploadPlanSpeed, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 100)
-                        Text("Mbps")
-                    }
+                    PlanSpeedField(
+                        title: L10n.settingsUploadLimit,
+                        value: $viewModel.preferences.uploadPlanSpeed,
+                        labelMinWidth: 120,
+                        fieldWidth: 100
+                    )
+
+                    Text(L10n.onboardingPlanHint)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Toggle(L10n.settingsEnablePeakNotification, isOn: $viewModel.notificationService.isEnabled)
                         .padding(.top, 10)

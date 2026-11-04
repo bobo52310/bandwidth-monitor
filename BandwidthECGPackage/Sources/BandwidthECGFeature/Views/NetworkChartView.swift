@@ -8,9 +8,16 @@ public struct NetworkChartView: View {
     var historyRecorder: NetworkHistoryRecorder
     var preferences: UserPreferences
     let currentSpeed: NetworkSpeed  // Real-time current speed
-    @State private var selectedTimeRange: TimeRange = .oneHour
+    @Binding var timeRange: TimeRange
     @Binding var showUpload: Bool
     @Binding var showDownload: Bool
+    @Binding var bannerDismissed: Bool
+    /// From this share of the plan a speed counts as concerning: the notification threshold the
+    /// user chose, the same one the menu bar and the peak rows use.
+    let warningRatio: Double
+
+    /// What the chart draws. Rebuilt when the history or the choices change, never in `body`.
+    @State private var snapshot = ChartSnapshot.empty(range: .oneHour)
 
     // Hover tracking state
     @State private var selectedDate: Date?
@@ -72,27 +79,53 @@ public struct NetworkChartView: View {
         var isExtended: Bool {
             Self.extendedRanges.contains(self)
         }
+
+        /// The segment to highlight for this range. The control only has the standard ranges, so
+        /// an extended range highlights none (UI-P2-2).
+        var segmentedSelection: TimeRange? {
+            isStandard ? self : nil
+        }
+
+        /// Below 3 hours an area shows each bucket's average under the peak line. From 3 hours
+        /// up the line alone is drawn: there the average area would only be visual noise.
+        var drawsAverageArea: Bool {
+            seconds < 3 * 60 * 60
+        }
+
+        /// Up to 15 minutes the chart follows every sample; longer ranges move per 10-second point.
+        var followsEverySample: Bool {
+            seconds <= 15 * 60
+        }
     }
 
-    public init(historyRecorder: NetworkHistoryRecorder, preferences: UserPreferences, currentSpeed: NetworkSpeed, showUpload: Binding<Bool>, showDownload: Binding<Bool>) {
+    public init(
+        historyRecorder: NetworkHistoryRecorder,
+        preferences: UserPreferences,
+        currentSpeed: NetworkSpeed,
+        timeRange: Binding<TimeRange>,
+        showUpload: Binding<Bool>,
+        showDownload: Binding<Bool>,
+        bannerDismissed: Binding<Bool>,
+        warningRatio: Double
+    ) {
         self.historyRecorder = historyRecorder
         self.preferences = preferences
         self.currentSpeed = currentSpeed
+        self._timeRange = timeRange
         self._showUpload = showUpload
         self._showDownload = showDownload
+        self._bannerDismissed = bannerDismissed
+        self.warningRatio = warningRatio
     }
 
-    // Computed binding for segmented control to handle extended ranges
-    private var segmentedControlBinding: Binding<TimeRange> {
+    /// Binding for the segmented control. With an extended range chosen nothing is highlighted
+    /// (`nil`), so a click on any segment, 1 hour included, is a change and reaches `set`.
+    private var segmentedControlBinding: Binding<TimeRange?> {
         Binding(
-            get: {
-                // If extended range is selected, default to oneHour for segmented control display
-                selectedTimeRange.isStandard ? selectedTimeRange : .oneHour
-            },
+            get: { timeRange.segmentedSelection },
             set: { newValue in
-                // Only update if a standard range is selected
-                if newValue.isStandard {
-                    selectedTimeRange = newValue
+                if let newValue {
+                    timeRange = newValue
                 }
             }
         )
@@ -101,11 +134,11 @@ public struct NetworkChartView: View {
     // Y-Axis mode button label
     private var yAxisModeButtonLabel: String {
         if preferences.chartYAxisMode == .auto {
-            let currentMax = getMaxYValueShortTerm()
+            let currentMax = getMaxYValue()
             return "0-\(formatAxisValue(currentMax))"
         } else {
             let planMax = max(preferences.downloadPlanSpeed, preferences.uploadPlanSpeed)
-            return L10n.chartYAxisFixedLabel(Int(planMax))
+            return L10n.chartYAxisFixedLabel(ChartScale.planText(planMax, unit: preferences.displayUnit))
         }
     }
 
@@ -125,7 +158,7 @@ public struct NetworkChartView: View {
                 // Standard ranges (quick access segmented control)
                 Picker("Time Range", selection: segmentedControlBinding) {
                     ForEach(TimeRange.standardRanges, id: \.self) { range in
-                        Text(range.displayName).tag(range)
+                        Text(range.displayName).tag(Optional(range))
                     }
                 }
                 .pickerStyle(.segmented)
@@ -135,11 +168,11 @@ public struct NetworkChartView: View {
                 Menu {
                     ForEach(TimeRange.extendedRanges, id: \.self) { range in
                         Button(action: {
-                            selectedTimeRange = range
+                            timeRange = range
                         }) {
                             HStack {
                                 Text(range.displayName)
-                                if selectedTimeRange == range {
+                                if timeRange == range {
                                     Spacer()
                                     Image(systemName: "checkmark")
                                 }
@@ -148,8 +181,8 @@ public struct NetworkChartView: View {
                     }
                 } label: {
                     HStack(spacing: 4) {
-                        if selectedTimeRange.isExtended {
-                            Text(selectedTimeRange.displayName)
+                        if timeRange.isExtended {
+                            Text(timeRange.displayName)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                         } else {
@@ -158,15 +191,18 @@ public struct NetworkChartView: View {
                         }
                         Image(systemName: "chevron.down")
                             .font(.caption)
+                            .accessibilityHidden(true)
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
-                    .background(selectedTimeRange.isExtended ? Color.blue.opacity(0.15) : Color.secondary.opacity(0.1))
-                    .foregroundColor(selectedTimeRange.isExtended ? .blue : .secondary)
+                    .background(timeRange.isExtended ? Color.blue.opacity(0.15) : Color.secondary.opacity(0.1))
+                    .foregroundColor(timeRange.isExtended ? .blue : .secondary)
                     .cornerRadius(6)
                 }
                 .buttonStyle(.plain)
                 .help(L10n.chartHelpExtendedRanges)
+                .accessibilityLabel(L10n.chartHelpExtendedRanges)
+                .accessibilityValue(timeRange.isExtended ? timeRange.displayName : "")
                 .fixedSize()
 
                 // Y-Axis Mode Toggle Button
@@ -178,6 +214,7 @@ public struct NetworkChartView: View {
                     HStack(spacing: 4) {
                         Image(systemName: preferences.chartYAxisMode.icon)
                             .font(.subheadline)
+                            .accessibilityHidden(true)
                         Text(yAxisModeButtonLabel)
                             .font(.caption)
                             .fontWeight(.medium)
@@ -190,32 +227,39 @@ public struct NetworkChartView: View {
                 }
                 .buttonStyle(.plain)
                 .help(yAxisModeTooltip)
+                // The visible label is a number such as "0-70"; say what the button is.
+                .accessibilityLabel(L10n.chartYAxisAccessibility)
+                .accessibilityValue("\(preferences.chartYAxisMode.displayName), \(yAxisModeButtonLabel)")
                 .fixedSize()
             }
 
             // Data collection banner (show when insufficient data)
             DataCollectionBanner(
-                availability: dataAvailability,
-                coverageInfo: dataCoverageInfo
+                availability: snapshot.availability,
+                coverageInfo: coverageInfo,
+                isDismissed: $bannerDismissed
             )
 
             // Statistics Card
             StatisticsCardView(
-                data: filteredData,
+                peakDownloadSpeed: snapshot.peakDownloadMbps,
+                peakUploadSpeed: snapshot.peakUploadMbps,
+                averageDownloadSpeed: snapshot.averageDownloadMbps,
+                averageUploadSpeed: snapshot.averageUploadMbps,
                 showDownload: showDownload,
                 showUpload: showUpload,
                 unit: preferences.displayUnit,
-                timeRange: selectedTimeRange,
+                timeRange: timeRange,
                 currentDownloadSpeed: currentSpeed.downloadMbps,
                 currentUploadSpeed: currentSpeed.uploadMbps,
-                dataAvailability: dataAvailability,
+                dataAvailability: snapshot.availability,
                 onToggleDownload: { showDownload.toggle() },
                 onToggleUpload: { showUpload.toggle() }
             )
 
             // Partial data indicator (show when 50-99% coverage)
-            if dataAvailability == .partial {
-                PartialDataIndicator(coverageInfo: dataCoverageInfo)
+            if snapshot.availability == .partial {
+                PartialDataIndicator(coverageInfo: coverageInfo)
             }
 
             // Chart - show different content based on data availability
@@ -223,18 +267,39 @@ public struct NetworkChartView: View {
                 .frame(height: 200)
 
             // Legend (only show when data is available)
-            if dataAvailability != .empty {
+            if snapshot.availability != .empty {
                 legendView
             }
         }
         .padding()
         .animation(.easeInOut(duration: 0.3), value: preferences.chartYAxisMode)
+        .onAppear { refreshSnapshot() }
+        .onChange(of: historyRecorder.revision) { refreshSnapshot() }
+        .onChange(of: latestSampleTime) { refreshSnapshot() }
+        .onChange(of: timeRange) { refreshSnapshot() }
+        .onChange(of: showDownload) { refreshSnapshot() }
+        .onChange(of: showUpload) { refreshSnapshot() }
+    }
+
+    /// The newest sample, for ranges that follow every sample. `nil` for longer ranges, so
+    /// they do not depend on the per-second samples at all.
+    private var latestSampleTime: Date? {
+        timeRange.followsEverySample ? historyRecorder.recentSamples.last?.timestamp : nil
+    }
+
+    private func refreshSnapshot() {
+        let now = Date()
+        snapshot = ChartSnapshot.make(
+            source: historyRecorder.points(since: now.addingTimeInterval(-timeRange.seconds)),
+            range: timeRange,
+            now: now
+        )
     }
 
     // Chart content view based on data availability
     @ViewBuilder
     private var chartContentView: some View {
-        switch dataAvailability {
+        switch snapshot.availability {
         case .empty:
             EmptyStateView()
         case .insufficient, .partial, .complete:
@@ -244,15 +309,8 @@ public struct NetworkChartView: View {
 
     @ViewBuilder
     private var chartView: some View {
-        // All time ranges now use short-term chart with filtered data
+        // All time ranges use the same chart, fed by the down-sampled snapshot
         shortTermChart
-    }
-
-    // Filter data based on selected time range
-    private var filteredData: [NetworkDataPoint] {
-        let now = Date()
-        let cutoffTime = now.addingTimeInterval(-selectedTimeRange.seconds)
-        return historyRecorder.oneHourData.filter { $0.timestamp > cutoffTime }
     }
 
     // Data availability status
@@ -272,114 +330,80 @@ public struct NetworkChartView: View {
         }
     }
 
-    // Calculate data availability for current time range
-    private var dataAvailability: DataAvailability {
-        guard !filteredData.isEmpty else {
-            return .empty
-        }
-
-        // For short time ranges (< 5 minutes), consider data complete if we have any data
-        if selectedTimeRange.seconds < 300 {
-            return .complete
-        }
-
-        // Calculate actual data coverage
-        let now = Date()
-        let oldestData = filteredData.min(by: { $0.timestamp < $1.timestamp })?.timestamp ?? now
-        let actualCoverage = now.timeIntervalSince(oldestData)
-        let requiredCoverage = selectedTimeRange.seconds
-        let coverageRatio = actualCoverage / requiredCoverage
-
-        if coverageRatio >= 1.0 {
-            return .complete
-        } else if coverageRatio >= 0.5 {
-            return .partial
-        } else {
-            return .insufficient
-        }
-    }
-
-    // Get formatted data coverage info
-    private var dataCoverageInfo: (actual: TimeInterval, required: TimeInterval, percentage: Double) {
-        guard !filteredData.isEmpty else {
-            return (actual: 0, required: selectedTimeRange.seconds, percentage: 0)
-        }
-
-        let now = Date()
-        let oldestData = filteredData.min(by: { $0.timestamp < $1.timestamp })?.timestamp ?? now
-        let actualCoverage = now.timeIntervalSince(oldestData)
-        let requiredCoverage = selectedTimeRange.seconds
-        let percentage = min(actualCoverage / requiredCoverage * 100, 100)
-
-        return (actual: actualCoverage, required: requiredCoverage, percentage: percentage)
+    // Formatted data coverage info for the banner and the partial-data indicator
+    private var coverageInfo: (actual: TimeInterval, required: TimeInterval, percentage: Double) {
+        (actual: snapshot.coverageActual, required: snapshot.coverageRequired, percentage: snapshot.coveragePercentage)
     }
 
     private var shortTermChart: some View {
         shortTermChartWithSelection
     }
 
-
     private var shortTermChartWithSelection: some View {
         Chart {
-            // Upload speed (both area and line)
+            // Upload speed (average area below 3 hours, peak line always)
             if showUpload {
-                ForEach(filteredData) { dataPoint in
-                    // Upload area (gradient fill)
-                    AreaMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.uploadMbps)),
-                        series: .value("Type", "上傳")
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.green.opacity(0.2), .green.opacity(0.03)]),
-                            startPoint: .top,
-                            endPoint: .bottom
+                ForEach(snapshot.points) { point in
+                    if timeRange.drawsAverageArea {
+                        // Upload area (gradient fill)
+                        AreaMark(
+                            x: .value("Time", point.timestamp),
+                            yStart: .value("Min", 0),
+                            yEnd: .value("Speed", convertSpeed(point.avgUploadMbps)),
+                            series: .value("Type", "上傳")
                         )
-                    )
-                    .interpolationMethod(.catmullRom)
+                        .foregroundStyle(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.green.opacity(0.2), .green.opacity(0.03)]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .interpolationMethod(.monotone)
+                    }
 
                     // Upload line
                     LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps)),
+                        x: .value("Time", point.timestamp),
+                        y: .value("Speed", convertSpeed(point.lineUploadMbps)),
                         series: .value("Type", "上傳")
                     )
                     .foregroundStyle(.green)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.catmullRom)
+                    .interpolationMethod(.monotone)
                 }
             }
 
-            // Download speed (both area and line)
+            // Download speed (average area below 3 hours, peak line always)
             if showDownload {
-                ForEach(filteredData) { dataPoint in
-                    // Download area (gradient fill)
-                    AreaMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.downloadMbps)),
-                        series: .value("Type", "下載")
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.blue.opacity(0.2), .blue.opacity(0.03)]),
-                            startPoint: .top,
-                            endPoint: .bottom
+                ForEach(snapshot.points) { point in
+                    if timeRange.drawsAverageArea {
+                        // Download area (gradient fill)
+                        AreaMark(
+                            x: .value("Time", point.timestamp),
+                            yStart: .value("Min", 0),
+                            yEnd: .value("Speed", convertSpeed(point.avgDownloadMbps)),
+                            series: .value("Type", "下載")
                         )
-                    )
-                    .interpolationMethod(.catmullRom)
+                        .foregroundStyle(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.blue.opacity(0.2), .blue.opacity(0.03)]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .interpolationMethod(.monotone)
+                    }
 
                     // Download line
                     LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.downloadMbps)),
+                        x: .value("Time", point.timestamp),
+                        y: .value("Speed", convertSpeed(point.lineDownloadMbps)),
                         series: .value("Type", "下載")
                     )
                     .foregroundStyle(.blue)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.catmullRom)
+                    .interpolationMethod(.monotone)
                 }
             }
 
@@ -390,21 +414,22 @@ public struct NetworkChartView: View {
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
             }
 
-            // Plan speed reference lines
-            if showDownload && preferences.downloadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.downloadPlanSpeed)))
+            // Plan speed reference lines. A plan above the top of the axis is not drawn; the
+            // legend says so instead (UI-P2-1).
+            if let line = planLines.first(where: { $0.isDownload }), line.isDrawn {
+                RuleMark(y: .value("Plan", convertSpeed(line.planMbps)))
                     .foregroundStyle(.blue.opacity(0.4))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
             }
 
-            if showUpload && preferences.uploadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
+            if let line = planLines.first(where: { !$0.isDownload }), line.isDrawn {
+                RuleMark(y: .value("Plan", convertSpeed(line.planMbps)))
                     .foregroundStyle(.green.opacity(0.4))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
             }
         }
         .chartXSelection(value: $selectedDate)
-        .chartYScale(domain: 0...getMaxYValueShortTerm())
+        .chartYScale(domain: 0...getMaxYValue())
         .chartXAxis {
             xAxisMarks
         }
@@ -423,344 +448,19 @@ public struct NetworkChartView: View {
         }
         .overlay(alignment: .topLeading) {
             if let selectedDate = selectedDate,
-               let dataPoint = findNearestDataPoint(for: selectedDate, in: filteredData) {
+               let point = findNearestPoint(for: selectedDate) {
                 ChartTooltipView(
-                    timestamp: dataPoint.timestamp,
-                    downloadSpeed: showDownload ? dataPoint.downloadMbps : nil,
-                    uploadSpeed: showUpload ? dataPoint.uploadMbps : nil,
+                    timestamp: point.timestamp,
+                    downloadSpeed: showDownload ? point.avgDownloadMbps : nil,
+                    uploadSpeed: showUpload ? point.avgUploadMbps : nil,
+                    peakDownloadSpeed: showDownload ? point.tooltipPeakDownloadMbps : nil,
+                    peakUploadSpeed: showUpload ? point.tooltipPeakUploadMbps : nil,
                     unit: preferences.displayUnit,
-                    preferences: preferences
+                    preferences: preferences,
+                    warningRatio: warningRatio
                 )
                 .offset(x: 10, y: 10)
             }
-        }
-    }
-
-    private var shortTermChartBasic: some View {
-        Chart {
-            // Upload speed (both area and line)
-            if showUpload {
-                ForEach(filteredData) { dataPoint in
-                    // Upload area (gradient fill)
-                    AreaMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.uploadMbps)),
-                        series: .value("Type", "上傳")
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.green.opacity(0.2), .green.opacity(0.03)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .interpolationMethod(.catmullRom)
-
-                    // Upload line
-                    LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.uploadMbps)),
-                        series: .value("Type", "上傳")
-                    )
-                    .foregroundStyle(.green)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Download speed (both area and line)
-            if showDownload {
-                ForEach(filteredData) { dataPoint in
-                    // Download area (gradient fill)
-                    AreaMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.downloadMbps)),
-                        series: .value("Type", "下載")
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.blue.opacity(0.2), .blue.opacity(0.03)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .interpolationMethod(.catmullRom)
-
-                    // Download line
-                    LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.downloadMbps)),
-                        series: .value("Type", "下載")
-                    )
-                    .foregroundStyle(.blue)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Plan speed reference lines
-            if showDownload && preferences.downloadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.downloadPlanSpeed)))
-                    .foregroundStyle(.blue.opacity(0.4))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-            }
-
-            if showUpload && preferences.uploadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
-                    .foregroundStyle(.green.opacity(0.4))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-            }
-        }
-        .chartYScale(domain: 0...getMaxYValueShortTerm())
-        .chartXAxis {
-            xAxisMarks
-        }
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel {
-                    Text("\(formatAxisValue(value.as(Double.self) ?? 0)) \(preferences.displayUnit.displayName)")
-                        .font(.caption)
-                }
-            }
-        }
-        .chartPlotStyle { plotArea in
-            plotArea.background(.clear)
-        }
-    }
-
-    private var twentyFourHourChart: some View {
-        twentyFourHourChartWithSelection
-    }
-
-
-    private var twentyFourHourChartWithSelection: some View {
-        Chart {
-            // Average download speed area (gradient fill)
-            if showDownload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    AreaMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.avgDownloadMbps))
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.blue.opacity(0.3), .blue.opacity(0.05)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Average download speed line (on top of area)
-            if showDownload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.avgDownloadMbps))
-                    )
-                    .foregroundStyle(.blue)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Average upload speed area (gradient fill)
-            if showUpload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    AreaMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.avgUploadMbps))
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.green.opacity(0.3), .green.opacity(0.05)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Average upload speed line (on top of area)
-            if showUpload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.avgUploadMbps))
-                    )
-                    .foregroundStyle(.green)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Visual crosshair at hover position
-            if let selectedDate = selectedDate {
-                RuleMark(x: .value("Selected", selectedDate))
-                    .foregroundStyle(.gray.opacity(0.5))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
-            }
-
-            // Plan speed reference lines
-            if showDownload && preferences.downloadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.downloadPlanSpeed)))
-                    .foregroundStyle(.blue.opacity(0.4))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-            }
-
-            if showUpload && preferences.uploadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
-                    .foregroundStyle(.green.opacity(0.4))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-            }
-        }
-        .chartXSelection(value: $selectedDate)
-        .chartYScale(domain: 0...getMaxYValue24Hour())
-        .chartXAxis {
-            AxisMarks(values: .stride(by: .hour, count: 4)) { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel(format: .dateTime.hour(), centered: false)
-            }
-        }
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel {
-                    Text("\(formatAxisValue(value.as(Double.self) ?? 0)) \(preferences.displayUnit.displayName)")
-                        .font(.caption)
-                }
-            }
-        }
-        .chartPlotStyle { plotArea in
-            plotArea.background(.clear)
-        }
-        .overlay(alignment: .topLeading) {
-            if let selectedDate = selectedDate,
-               let dataPoint = findNearestHourlyDataPoint(for: selectedDate, in: historyRecorder.twentyFourHourData) {
-                ChartTooltipView24Hour(
-                    timestamp: dataPoint.timestamp,
-                    avgDownloadSpeed: showDownload ? dataPoint.avgDownloadMbps : nil,
-                    avgUploadSpeed: showUpload ? dataPoint.avgUploadMbps : nil,
-                    maxDownloadSpeed: showDownload ? dataPoint.maxDownloadMbps : nil,
-                    maxUploadSpeed: showUpload ? dataPoint.maxUploadMbps : nil,
-                    unit: preferences.displayUnit,
-                    preferences: preferences
-                )
-                .offset(x: 10, y: 10)
-            }
-        }
-    }
-
-    private var twentyFourHourChartBasic: some View {
-        Chart {
-            // Average download speed area (gradient fill)
-            if showDownload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    AreaMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.avgDownloadMbps))
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.blue.opacity(0.3), .blue.opacity(0.05)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Average download speed line (on top of area)
-            if showDownload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.avgDownloadMbps))
-                    )
-                    .foregroundStyle(.blue)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Average upload speed area (gradient fill)
-            if showUpload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    AreaMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        yStart: .value("Min", 0),
-                        yEnd: .value("Speed", convertSpeed(dataPoint.avgUploadMbps))
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.green.opacity(0.3), .green.opacity(0.05)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Average upload speed line (on top of area)
-            if showUpload {
-                ForEach(historyRecorder.twentyFourHourData) { dataPoint in
-                    LineMark(
-                        x: .value("Time", dataPoint.timestamp),
-                        y: .value("Speed", convertSpeed(dataPoint.avgUploadMbps))
-                    )
-                    .foregroundStyle(.green)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.catmullRom)
-                }
-            }
-
-            // Plan speed reference lines
-            if showDownload && preferences.downloadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.downloadPlanSpeed)))
-                    .foregroundStyle(.blue.opacity(0.4))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-            }
-
-            if showUpload && preferences.uploadPlanSpeed > 0 {
-                RuleMark(y: .value("Plan", convertSpeed(preferences.uploadPlanSpeed)))
-                    .foregroundStyle(.green.opacity(0.4))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-            }
-        }
-        .chartYScale(domain: 0...getMaxYValue24Hour())
-        .chartXAxis {
-            AxisMarks(values: .stride(by: .hour, count: 4)) { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel(format: .dateTime.hour(), centered: false)
-            }
-        }
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel {
-                    Text("\(formatAxisValue(value.as(Double.self) ?? 0)) \(preferences.displayUnit.displayName)")
-                        .font(.caption)
-                }
-            }
-        }
-        .chartPlotStyle { plotArea in
-            plotArea.background(.clear)
         }
     }
 
@@ -768,7 +468,7 @@ public struct NetworkChartView: View {
 
     @AxisContentBuilder
     private var xAxisMarks: some AxisContent {
-        switch selectedTimeRange {
+        switch timeRange {
         case .oneMinute:
             // Every 10 seconds for 1-minute view (HH:MM:SS for precision)
             AxisMarks(values: .stride(by: .second, count: 10)) { value in
@@ -836,83 +536,144 @@ public struct NetworkChartView: View {
     }
 
     private var legendView: some View {
-        HStack(spacing: 20) {
-            // Interactive Download legend button
-            Button(action: { showDownload.toggle() }) {
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(showDownload ? .blue : .gray.opacity(0.4))
-                        .frame(width: 8, height: 8)
-                    Text(L10n.chartLegendDownload)
-                        .font(.subheadline)
-                        .foregroundColor(showDownload ? .primary : .secondary)
-                        .fontWeight(showDownload ? .medium : .regular)
-                }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(showDownload ? Color.blue.opacity(0.1) : Color.clear)
-                .cornerRadius(4)
-            }
-            .buttonStyle(.plain)
-            .pointerCursor()
-            .help(L10n.chartHelpToggleData(L10n.chartLegendDownload))
+        let lines = planLines
+        let hasDrawnLine = lines.contains { $0.isDrawn }
+        let offscale = offscaleNotes(lines)
 
-            // Interactive Upload legend button
-            Button(action: { showUpload.toggle() }) {
-                HStack(spacing: 4) {
-                    Rectangle()
-                        .fill(showUpload ? .green : .gray.opacity(0.4))
-                        .frame(width: 8, height: 8)
-                    Text(L10n.chartLegendUpload)
-                        .font(.subheadline)
-                        .foregroundColor(showUpload ? .primary : .secondary)
-                        .fontWeight(showUpload ? .medium : .regular)
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 20) {
+                // Interactive Download legend button
+                Button(action: { showDownload.toggle() }) {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(showDownload ? .blue : .gray.opacity(0.4))
+                            .frame(width: 8, height: 8)
+                            .accessibilityHidden(true)
+                        Text(L10n.chartLegendDownload)
+                            .font(.subheadline)
+                            .foregroundColor(showDownload ? .primary : .secondary)
+                            .fontWeight(showDownload ? .medium : .regular)
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(showDownload ? Color.blue.opacity(0.1) : Color.clear)
+                    .cornerRadius(4)
                 }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(showUpload ? Color.green.opacity(0.1) : Color.clear)
-                .cornerRadius(4)
-            }
-            .buttonStyle(.plain)
-            .pointerCursor()
-            .help(L10n.chartHelpToggleData(L10n.chartLegendUpload))
+                .buttonStyle(.plain)
+                .pointerCursor()
+                .help(L10n.chartHelpToggleData(L10n.chartLegendDownload))
+                // On or off is the whole point of this button, and the dot only says it in colour.
+                .accessibilityValue(showDownload ? L10n.accessibilityStateOn : L10n.accessibilityStateOff)
 
-            // Plan speed legend (non-interactive)
-            if (showDownload && preferences.downloadPlanSpeed > 0) || (showUpload && preferences.uploadPlanSpeed > 0) {
-                HStack(spacing: 4) {
-                    Rectangle()
-                        .fill(.gray.opacity(0.5))
-                        .frame(width: 12, height: 1)
-                        .overlay(
-                            Rectangle()
-                                .fill(.clear)
-                                .frame(width: 12, height: 1)
-                                .background(
-                                    LinearGradient(
-                                        colors: [.gray.opacity(0.5), .clear, .gray.opacity(0.5), .clear],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
+                // Interactive Upload legend button
+                Button(action: { showUpload.toggle() }) {
+                    HStack(spacing: 4) {
+                        Rectangle()
+                            .fill(showUpload ? .green : .gray.opacity(0.4))
+                            .frame(width: 8, height: 8)
+                            .accessibilityHidden(true)
+                        Text(L10n.chartLegendUpload)
+                            .font(.subheadline)
+                            .foregroundColor(showUpload ? .primary : .secondary)
+                            .fontWeight(showUpload ? .medium : .regular)
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(showUpload ? Color.green.opacity(0.1) : Color.clear)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .pointerCursor()
+                .help(L10n.chartHelpToggleData(L10n.chartLegendUpload))
+                .accessibilityValue(showUpload ? L10n.accessibilityStateOn : L10n.accessibilityStateOff)
+
+                // Plan speed legend (non-interactive): only when a plan line is on the chart.
+                if hasDrawnLine {
+                    HStack(spacing: 4) {
+                        Rectangle()
+                            .fill(.gray.opacity(0.5))
+                            .frame(width: 12, height: 1)
+                            .overlay(
+                                Rectangle()
+                                    .fill(.clear)
+                                    .frame(width: 12, height: 1)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [.gray.opacity(0.5), .clear, .gray.opacity(0.5), .clear],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
                                     )
-                                )
-                        )
-                    Text(L10n.chartLegendPlanSpeed)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                            )
+                            .accessibilityHidden(true)
+                        Text(L10n.chartLegendPlanSpeed)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
+
+                Spacer()
             }
 
-            Spacer()
+            // A plan that does not fit the axis has no line; say where it is instead.
+            ForEach(offscale, id: \.self) { note in
+                Text(note)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 6)
+            }
+        }
+    }
+
+    /// One plan speed on the chart: the direction it belongs to and whether it fits the axis.
+    private struct PlanLine {
+        let isDownload: Bool
+        let planMbps: Double
+        let isDrawn: Bool
+    }
+
+    /// The plan lines of the series that are shown, each checked against the current axis.
+    private var planLines: [PlanLine] {
+        let axisMax = getMaxYValue()
+        var lines: [PlanLine] = []
+        if showDownload && preferences.downloadPlanSpeed > 0 {
+            lines.append(PlanLine(
+                isDownload: true,
+                planMbps: preferences.downloadPlanSpeed,
+                isDrawn: ChartScale.isPlanVisible(
+                    planMbps: preferences.downloadPlanSpeed, unit: preferences.displayUnit, axisMax: axisMax
+                )
+            ))
+        }
+        if showUpload && preferences.uploadPlanSpeed > 0 {
+            lines.append(PlanLine(
+                isDownload: false,
+                planMbps: preferences.uploadPlanSpeed,
+                isDrawn: ChartScale.isPlanVisible(
+                    planMbps: preferences.uploadPlanSpeed, unit: preferences.displayUnit, axisMax: axisMax
+                )
+            ))
+        }
+        return lines
+    }
+
+    /// "Plan 300 Mbps (off the chart)" for each plan that is not drawn. When both directions
+    /// have the same plan one note covers them; otherwise an arrow says which is which.
+    private func offscaleNotes(_ lines: [PlanLine]) -> [String] {
+        let hidden = lines.filter { !$0.isDrawn }
+        let unit = preferences.displayUnit
+        if hidden.count == 2, hidden[0].planMbps == hidden[1].planMbps {
+            return [L10n.chartPlanOffscale(ChartScale.planText(hidden[0].planMbps, unit: unit))]
+        }
+        return hidden.map { line in
+            let arrow = line.isDownload ? "↓" : "↑"
+            return "\(arrow) " + L10n.chartPlanOffscale(ChartScale.planText(line.planMbps, unit: unit))
         }
     }
 
     // Helper functions
     private func convertSpeed(_ speedMbps: Double) -> Double {
-        switch preferences.displayUnit {
-        case .mbps:
-            return speedMbps
-        case .mbps_lower:
-            return speedMbps / 8.0 // Convert Mbps to MB/s
-        }
+        ChartScale.convert(speedMbps, unit: preferences.displayUnit)
     }
 
     private func formatAxisValue(_ value: Double) -> String {
@@ -925,148 +686,34 @@ public struct NetworkChartView: View {
         }
     }
 
-    // Find nearest data point to the selected date
-    private func findNearestDataPoint(for date: Date, in data: [NetworkDataPoint]) -> NetworkDataPoint? {
-        guard !data.isEmpty else { return nil }
-
-        return data.min(by: { abs($0.timestamp.timeIntervalSince(date)) < abs($1.timestamp.timeIntervalSince(date)) })
+    // Find the plotted point nearest to the selected date
+    private func findNearestPoint(for date: Date) -> ChartPoint? {
+        snapshot.points.min(by: { abs($0.timestamp.timeIntervalSince(date)) < abs($1.timestamp.timeIntervalSince(date)) })
     }
 
-    // Find nearest hourly data point to the selected date
-    private func findNearestHourlyDataPoint(for date: Date, in data: [HourlyDataPoint]) -> HourlyDataPoint? {
-        guard !data.isEmpty else { return nil }
-
-        return data.min(by: { abs($0.timestamp.timeIntervalSince(date)) < abs($1.timestamp.timeIntervalSince(date)) })
-    }
-
-    // Calculate smart Y-axis maximum using intelligent step-based scaling
-    private func calculateSmartYAxisMax(from data: [NetworkDataPoint]) -> Double {
-        // Find the actual maximum speed in the data
+    /// Highest value the lines reach, in Mbps, over the series that are shown.
+    private var plottedMaxMbps: Double {
         var maxSpeed: Double = 0
-
-        if showDownload {
-            let maxDownload = data.map { $0.downloadMbps }.max() ?? 0
-            maxSpeed = max(maxSpeed, maxDownload)
-        }
-
-        if showUpload {
-            let maxUpload = data.map { $0.uploadMbps }.max() ?? 0
-            maxSpeed = max(maxSpeed, maxUpload)
-        }
-
-        // Intelligent step-based scaling
-        // Choose appropriate Y-axis range based on actual usage
-        let smartMax: Double
-        switch maxSpeed {
-        case 0..<5:      smartMax = 10      // 1-5 Mbps → 10 Mbps
-        case 5..<20:     smartMax = 30      // 5-20 Mbps → 30 Mbps
-        case 20..<50:    smartMax = 70      // 20-50 Mbps → 70 Mbps
-        case 50..<100:   smartMax = 150     // 50-100 Mbps → 150 Mbps
-        case 100..<200:  smartMax = 300     // 100-200 Mbps → 300 Mbps
-        default:
-            // For higher speeds, use plan speed with buffer
-            let planMax = max(preferences.downloadPlanSpeed, preferences.uploadPlanSpeed)
-            smartMax = max(planMax * 1.1, maxSpeed * 1.2)
-        }
-
-        return convertSpeed(smartMax)
-    }
-
-    // Calculate maximum Y value for short-term charts (5min, 15min, 30min, 1hr)
-    private func getMaxYValueShortTerm() -> Double {
-        if preferences.chartYAxisMode == .auto {
-            // Auto mode: Use smart step-based scaling
-            let smartMax = calculateSmartYAxisMax(from: filteredData)
-            // Ensure minimum of 10 Mbps for better visualization
-            return max(convertSpeed(10), smartMax)
-        } else {
-            // Fixed mode: Use plan speed as maximum
-            var maxValue: Double = 100.0 // Default minimum scale
-
+        for point in snapshot.points {
             if showDownload {
-                let maxDownload = filteredData.map { convertSpeed($0.downloadMbps) }.max() ?? 0
-                maxValue = max(maxValue, maxDownload)
+                maxSpeed = max(maxSpeed, point.lineDownloadMbps)
             }
-
             if showUpload {
-                let maxUpload = filteredData.map { convertSpeed($0.uploadMbps) }.max() ?? 0
-                maxValue = max(maxValue, maxUpload)
+                maxSpeed = max(maxSpeed, point.lineUploadMbps)
             }
-
-            // Consider plan speed for better scale
-            if preferences.downloadPlanSpeed > 0 {
-                maxValue = max(maxValue, convertSpeed(preferences.downloadPlanSpeed))
-            }
-            if preferences.uploadPlanSpeed > 0 {
-                maxValue = max(maxValue, convertSpeed(preferences.uploadPlanSpeed))
-            }
-
-            // Add 10% padding for better visualization
-            return maxValue * 1.1
         }
+        return maxSpeed
     }
 
-    // Calculate smart Y-axis maximum for hourly data
-    private func calculateSmartYAxisMax24Hour(from data: [HourlyDataPoint]) -> Double {
-        var maxSpeed: Double = 0
-
-        if showDownload {
-            let maxDownload = data.map { $0.avgDownloadMbps }.max() ?? 0
-            maxSpeed = max(maxSpeed, maxDownload)
-        }
-
-        if showUpload {
-            let maxUpload = data.map { $0.avgUploadMbps }.max() ?? 0
-            maxSpeed = max(maxSpeed, maxUpload)
-        }
-
-        // Same intelligent scaling as short-term
-        let smartMax: Double
-        switch maxSpeed {
-        case 0..<5:      smartMax = 10
-        case 5..<20:     smartMax = 30
-        case 20..<50:    smartMax = 70
-        case 50..<100:   smartMax = 150
-        case 100..<200:  smartMax = 300
-        default:
-            let planMax = max(preferences.downloadPlanSpeed, preferences.uploadPlanSpeed)
-            smartMax = max(planMax * 1.1, maxSpeed * 1.2)
-        }
-
-        return convertSpeed(smartMax)
-    }
-
-    // Calculate maximum Y value for 24-hour chart
-    private func getMaxYValue24Hour() -> Double {
-        if preferences.chartYAxisMode == .auto {
-            // Auto mode: Use smart step-based scaling
-            let smartMax = calculateSmartYAxisMax24Hour(from: historyRecorder.twentyFourHourData)
-            return max(convertSpeed(10), smartMax)
-        } else {
-            // Fixed mode: Use plan speed as maximum
-            var maxValue: Double = 100.0 // Default minimum scale
-
-            if showDownload {
-                let maxDownload = historyRecorder.twentyFourHourData.map { convertSpeed($0.avgDownloadMbps) }.max() ?? 0
-                maxValue = max(maxValue, maxDownload)
-            }
-
-            if showUpload {
-                let maxUpload = historyRecorder.twentyFourHourData.map { convertSpeed($0.avgUploadMbps) }.max() ?? 0
-                maxValue = max(maxValue, maxUpload)
-            }
-
-            // Consider plan speed for better scale
-            if preferences.downloadPlanSpeed > 0 {
-                maxValue = max(maxValue, convertSpeed(preferences.downloadPlanSpeed))
-            }
-            if preferences.uploadPlanSpeed > 0 {
-                maxValue = max(maxValue, convertSpeed(preferences.uploadPlanSpeed))
-            }
-
-            // Add 10% padding for better visualization
-            return maxValue * 1.1
-        }
+    /// Top of the Y axis in the unit on screen. The rules live in `ChartScale`.
+    private func getMaxYValue() -> Double {
+        ChartScale.maxValue(
+            mode: preferences.chartYAxisMode,
+            unit: preferences.displayUnit,
+            plottedMaxMbps: plottedMaxMbps,
+            downloadPlanMbps: preferences.downloadPlanSpeed,
+            uploadPlanMbps: preferences.uploadPlanSpeed
+        )
     }
 }
 
@@ -1077,44 +724,37 @@ struct ChartTooltipView: View {
     let timestamp: Date
     let downloadSpeed: Double?
     let uploadSpeed: Double?
+    /// The bucket's peak, given when it differs from the average; the tooltip then shows both.
+    var peakDownloadSpeed: Double? = nil
+    var peakUploadSpeed: Double? = nil
     let unit: UserPreferences.SpeedUnit
     let preferences: UserPreferences
+    /// From this share of the plan a speed is shown in orange (the notification threshold).
+    let warningRatio: Double
 
-    private let dateFormatter: DateFormatter = {
+    /// One formatter for every tooltip: the tooltip is rebuilt on every hover move.
+    private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
+        formatter.timeZone = .autoupdatingCurrent
         return formatter
     }()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             // Timestamp
-            Text(dateFormatter.string(from: timestamp))
+            Text(Self.timeFormatter.string(from: timestamp))
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.secondary)
 
             // Speed information
             VStack(alignment: .leading, spacing: 2) {
                 if let downloadSpeed = downloadSpeed {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(.blue)
-                            .frame(width: 4, height: 4)
-                        Text(formatSpeed(downloadSpeed))
-                            .font(.system(size: 12))
-                            .foregroundColor(isPeakConcerning(speed: downloadSpeed, planSpeed: preferences.downloadPlanSpeed) ? .orange : .primary)
-                    }
+                    speedRows(Circle(), arrow: "↓", color: .blue, average: downloadSpeed, peak: peakDownloadSpeed, planSpeed: preferences.downloadPlanSpeed)
                 }
 
                 if let uploadSpeed = uploadSpeed {
-                    HStack(spacing: 4) {
-                        Rectangle()
-                            .fill(.green)
-                            .frame(width: 4, height: 4)
-                        Text(formatSpeed(uploadSpeed))
-                            .font(.system(size: 12))
-                            .foregroundColor(isPeakConcerning(speed: uploadSpeed, planSpeed: preferences.uploadPlanSpeed) ? .orange : .primary)
-                    }
+                    speedRows(Rectangle(), arrow: "↑", color: .green, average: uploadSpeed, peak: peakUploadSpeed, planSpeed: preferences.uploadPlanSpeed)
                 }
             }
         }
@@ -1128,6 +768,50 @@ struct ChartTooltipView: View {
             RoundedRectangle(cornerRadius: 4)
                 .stroke(.gray.opacity(0.3), lineWidth: 0.5)
         )
+    }
+
+    /// The direction in words rather than in colour or shape alone (UI-P3-8).
+    private func directionArrow(_ arrow: String, color: Color) -> some View {
+        Text(arrow)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(color)
+            .accessibilityHidden(true)
+    }
+
+    /// One row with the value, or a peak row and an average row when there is a peak. Every row
+    /// starts with the direction arrow.
+    @ViewBuilder
+    private func speedRows<Marker: Shape>(_ marker: Marker, arrow: String, color: Color, average: Double, peak: Double?, planSpeed: Double) -> some View {
+        if let peak {
+            HStack(spacing: 4) {
+                directionArrow(arrow, color: color)
+                marker
+                    .fill(color)
+                    .frame(width: 4, height: 4)
+                Text(L10n.chartTooltipPeak(formatSpeed(peak)))
+                    .font(.system(size: 12))
+                    .foregroundColor(isPeakConcerning(speed: peak, planSpeed: planSpeed) ? .orange : .primary)
+            }
+            HStack(spacing: 4) {
+                directionArrow(arrow, color: color)
+                marker
+                    .fill(color.opacity(0.5))
+                    .frame(width: 4, height: 4)
+                Text(L10n.chartTooltipAverage(formatSpeed(average)))
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
+        } else {
+            HStack(spacing: 4) {
+                directionArrow(arrow, color: color)
+                marker
+                    .fill(color)
+                    .frame(width: 4, height: 4)
+                Text(formatSpeed(average))
+                    .font(.system(size: 12))
+                    .foregroundColor(isPeakConcerning(speed: average, planSpeed: planSpeed) ? .orange : .primary)
+            }
+        }
     }
 
     private func formatSpeed(_ speedMbps: Double) -> String {
@@ -1145,110 +829,8 @@ struct ChartTooltipView: View {
     }
 
     private func isPeakConcerning(speed: Double, planSpeed: Double) -> Bool {
-        guard planSpeed > 0 else { return false }
-        return speed >= planSpeed * 0.9
-    }
-}
-
-
-struct ChartTooltipView24Hour: View {
-    let timestamp: Date
-    let avgDownloadSpeed: Double?
-    let avgUploadSpeed: Double?
-    let maxDownloadSpeed: Double?
-    let maxUploadSpeed: Double?
-    let unit: UserPreferences.SpeedUnit
-    let preferences: UserPreferences
-
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        return formatter
-    }()
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // Timestamp
-            Text(dateFormatter.string(from: timestamp))
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.secondary)
-
-            // Speed information
-            VStack(alignment: .leading, spacing: 2) {
-                if let avgDownloadSpeed = avgDownloadSpeed {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(.blue)
-                            .frame(width: 4, height: 4)
-                        Text(L10n.chartTooltipAverage(formatSpeed(avgDownloadSpeed)))
-                            .font(.system(size: 12))
-                            .foregroundColor(isPeakConcerning(speed: avgDownloadSpeed, planSpeed: preferences.downloadPlanSpeed) ? .orange : .primary)
-                    }
-
-                    if let maxDownloadSpeed = maxDownloadSpeed, maxDownloadSpeed != avgDownloadSpeed {
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(.blue.opacity(0.5))
-                                .frame(width: 4, height: 4)
-                            Text(L10n.chartTooltipPeak(formatSpeed(maxDownloadSpeed)))
-                                .font(.system(size: 11))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-
-                if let avgUploadSpeed = avgUploadSpeed {
-                    HStack(spacing: 4) {
-                        Rectangle()
-                            .fill(.green)
-                            .frame(width: 4, height: 4)
-                        Text(L10n.chartTooltipAverage(formatSpeed(avgUploadSpeed)))
-                            .font(.system(size: 12))
-                            .foregroundColor(isPeakConcerning(speed: avgUploadSpeed, planSpeed: preferences.uploadPlanSpeed) ? .orange : .primary)
-                    }
-
-                    if let maxUploadSpeed = maxUploadSpeed, maxUploadSpeed != avgUploadSpeed {
-                        HStack(spacing: 4) {
-                            Rectangle()
-                                .fill(.green.opacity(0.5))
-                                .frame(width: 4, height: 4)
-                            Text(L10n.chartTooltipPeak(formatSpeed(maxUploadSpeed)))
-                                .font(.system(size: 11))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
-        }
-        .padding(6)
-        .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(.background)
-                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 1)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 4)
-                .stroke(.gray.opacity(0.3), lineWidth: 0.5)
-        )
-    }
-
-    private func formatSpeed(_ speedMbps: Double) -> String {
-        let convertedSpeed = convertSpeed(speedMbps)
-        return String(format: "%.1f %@", convertedSpeed, unit.displayName)
-    }
-
-    private func convertSpeed(_ speedMbps: Double) -> Double {
-        switch unit {
-        case .mbps:
-            return speedMbps
-        case .mbps_lower:
-            return speedMbps / 8.0
-        }
-    }
-
-    private func isPeakConcerning(speed: Double, planSpeed: Double) -> Bool {
-        guard planSpeed > 0 else { return false }
-        return speed >= planSpeed * 0.9
+        guard planSpeed.isFinite, planSpeed > 0 else { return false }
+        return speed / planSpeed >= warningRatio
     }
 }
 
@@ -1256,7 +838,10 @@ struct ChartTooltipView24Hour: View {
 
 
 struct StatisticsCardView: View {
-    let data: [NetworkDataPoint]
+    let peakDownloadSpeed: Double
+    let peakUploadSpeed: Double
+    let averageDownloadSpeed: Double
+    let averageUploadSpeed: Double
     let showDownload: Bool
     let showUpload: Bool
     let unit: UserPreferences.SpeedUnit
@@ -1308,28 +893,6 @@ struct StatisticsCardView: View {
         .background(Color.secondary.opacity(0.05))
         .cornerRadius(6)
     }
-
-    // Calculate peak speed
-    private var peakDownloadSpeed: Double {
-        data.map { $0.downloadMbps }.max() ?? 0
-    }
-
-    private var peakUploadSpeed: Double {
-        data.map { $0.uploadMbps }.max() ?? 0
-    }
-
-    // Calculate average speed
-    private var averageDownloadSpeed: Double {
-        guard !data.isEmpty else { return 0 }
-        let sum = data.map { $0.downloadMbps }.reduce(0, +)
-        return sum / Double(data.count)
-    }
-
-    private var averageUploadSpeed: Double {
-        guard !data.isEmpty else { return 0 }
-        let sum = data.map { $0.uploadMbps }.reduce(0, +)
-        return sum / Double(data.count)
-    }
 }
 
 
@@ -1351,6 +914,7 @@ struct StatColumnView: View {
                 Circle()
                     .fill(isActive ? color : color.opacity(0.3))
                     .frame(width: 6, height: 6)
+                    .accessibilityHidden(true)
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -1459,6 +1023,7 @@ struct EmptyStateView: View {
             Image(systemName: "chart.xyaxis.line")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary.opacity(0.5))
+                .accessibilityHidden(true)
 
             // Text content
             VStack(spacing: 8) {
@@ -1482,7 +1047,7 @@ struct EmptyStateView: View {
 struct DataCollectionBanner: View {
     let availability: NetworkChartView.DataAvailability
     let coverageInfo: (actual: TimeInterval, required: TimeInterval, percentage: Double)
-    @State private var isDismissed = false
+    @Binding var isDismissed: Bool
 
     var body: some View {
         if !isDismissed && availability.needsWarning {
@@ -1491,6 +1056,7 @@ struct DataCollectionBanner: View {
                 Image(systemName: availability == .empty ? "clock" : "exclamationmark.triangle")
                     .foregroundColor(bannerColor)
                     .font(.subheadline)
+                    .accessibilityHidden(true)
 
                 // Message
                 VStack(alignment: .leading, spacing: 4) {
@@ -1516,6 +1082,7 @@ struct DataCollectionBanner: View {
                 }
                 .buttonStyle(.plain)
                 .help(L10n.chartHelpDismissBanner)
+                .accessibilityLabel(L10n.chartHelpDismissBanner)
             }
             .padding(12)
             .background(bannerBackgroundColor)
@@ -1578,6 +1145,7 @@ struct PartialDataIndicator: View {
             Image(systemName: "info.circle.fill")
                 .font(.caption)
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
 
             Text(message)
                 .font(.caption)
@@ -1617,15 +1185,38 @@ struct PartialDataIndicator: View {
 private extension View {
     func pointerCursor() -> some View {
 #if os(macOS)
-        return self.onHover { hovering in
-            if hovering {
-                NSCursor.pointingHand.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
+        return modifier(PointerCursor())
 #else
         return self
 #endif
     }
 }
+
+#if os(macOS)
+/// Pushes the pointing hand while the pointer is over the view, and pops it when the pointer
+/// leaves. If the view goes away while the pointer is still over it (a range change rebuilds
+/// the chart, a popover closes) there is no "leave" event, so the pop happens on disappear
+/// (UI-P3-13). Otherwise the hand would stay on the stack and the cursor would stick.
+private struct PointerCursor: ViewModifier {
+    @State private var isHovering = false
+
+    func body(content: Content) -> some View {
+        content
+            .onHover { hovering in
+                guard hovering != isHovering else { return }
+                isHovering = hovering
+                if hovering {
+                    NSCursor.pointingHand.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+            .onDisappear {
+                if isHovering {
+                    isHovering = false
+                    NSCursor.pop()
+                }
+            }
+    }
+}
+#endif

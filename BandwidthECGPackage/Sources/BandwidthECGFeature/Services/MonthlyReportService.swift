@@ -1,108 +1,51 @@
 import Foundation
-import Observation
 
-/// Service that accumulates daily network data snapshots and generates monthly summaries.
-///
-/// Call `recordDailySnapshot(...)` once per day (or on app launch) to feed in that day's
-/// aggregated metrics. When the calendar month changes, the service automatically finalizes
-/// the previous month's summary and begins accumulating for the new month.
-///
-/// Accumulators are persisted to UserDefaults so that in-progress month data survives
-/// app restarts and crashes.
+/// Derives monthly reports from the daily records, so there is nothing to keep up to date and
+/// nothing to lose: a report always reflects the samples recorded so far, today's included.
+/// Months from before the daily records existed are shown from what older versions stored.
 @MainActor
-@Observable
 public class MonthlyReportService {
+    private let dailyStore: DailyRecordStore
+    private let clock: AppClock
+    private let legacySummaries: [String: MonthlySummary]
 
-    // MARK: - Properties
-
-    public var currentMonthSummary: MonthlySummary?
-    public var pastSummaries: [MonthlySummary] = []
-
-    // MARK: - Configuration
-
-    private let userDefaults: UserDefaults
-    private let storageKey = "monthlySummaries"
-    private let accumulatorKey = "monthlyReportAccumulators"
-    private let maxMonths = 12
-
-    // MARK: - Accumulators for Current Month
-
-    private var dailyPeakDownloads: [Double] = []
-    private var dailyPeakUploads: [Double] = []
-    private var dailyAvgDownloads: [Double] = []
-    private var dailyAvgUploads: [Double] = []
-    private var monthlyPeakApproachCount: Int = 0
-    private var monthlyDisconnectCount: Int = 0
-    private var monthlyTotalDowntime: Double = 0
-    private var dailyLatencies: [Double] = []
-    private var dailyJitters: [Double] = []
-    private var currentMonthStart: Date?
-    private var daysRecorded: Int = 0
-
-    // MARK: - Initialization
-
-    public init(userDefaults: UserDefaults = .standard) {
-        self.userDefaults = userDefaults
-        loadSummaries()
-        loadAccumulators()
+    public init(userDefaults: UserDefaults = .standard, dailyStore: DailyRecordStore, clock: AppClock = .live) {
+        self.dailyStore = dailyStore
+        self.clock = clock
+        // Stored summaries come first, so they win over accumulators for the same month.
+        self.legacySummaries = Dictionary(
+            LegacyMonthlyImporter.load(defaults: userDefaults).map { ($0.monthKey, $0) }
+        ) { first, _ in first }
     }
 
     // MARK: - Public API
 
-    /// Record daily snapshot data. Call once per day or on app launch with the day's aggregated metrics.
-    ///
-    /// If the current date is in a different calendar month from the previous recording,
-    /// the previous month is finalized and added to `pastSummaries` before accumulating
-    /// the new data.
-    public func recordDailySnapshot(
-        peakDownload: Double,
-        peakUpload: Double,
-        avgDownload: Double,
-        avgUpload: Double,
-        peakApproachCount: Int,
-        disconnectCount: Int,
-        totalDowntime: Double,
-        avgLatency: Double,
-        avgJitter: Double,
-        planDownload: Double,
-        planUpload: Double
-    ) {
-        let calendar = Calendar.current
-        let now = Date()
+    public var currentMonthKey: String {
+        DayKey.month(for: clock.now(), calendar: clock.calendar)
+    }
 
-        // Check if we crossed into a new month
-        if let monthStart = currentMonthStart,
-           !calendar.isDate(monthStart, equalTo: now, toGranularity: .month) {
-            finalizeMonthlySummary(planDownload: planDownload, planUpload: planUpload)
-        }
+    /// Every month that has a report, newest first.
+    public var availableMonths: [String] {
+        Set(dailyStore.monthKeys).union(legacySummaries.keys).sorted(by: >)
+    }
 
-        // Set current month start if not set or if month changed
-        if currentMonthStart == nil ||
-            !calendar.isDate(currentMonthStart!, equalTo: now, toGranularity: .month) {
-            currentMonthStart = calendar.dateInterval(of: .month, for: now)?.start
-            resetAccumulators()
-        }
+    /// The month a report opens on: the current one, or the newest with data if it has none.
+    public var defaultMonthKey: String? {
+        let months = availableMonths
+        return months.contains(currentMonthKey) ? currentMonthKey : months.first
+    }
 
-        // Accumulate daily data
-        dailyPeakDownloads.append(peakDownload)
-        dailyPeakUploads.append(peakUpload)
-        dailyAvgDownloads.append(avgDownload)
-        dailyAvgUploads.append(avgUpload)
-        monthlyPeakApproachCount += peakApproachCount
-        monthlyDisconnectCount += disconnectCount
-        monthlyTotalDowntime += totalDowntime
-        if avgLatency > 0 { dailyLatencies.append(avgLatency) }
-        if avgJitter > 0 { dailyJitters.append(avgJitter) }
-        daysRecorded += 1
-
-        updateCurrentMonthSummary(planDownload: planDownload, planUpload: planUpload)
-        saveAccumulators()
+    public func summary(for monthKey: String) -> MonthlySummary? {
+        let days = dailyStore.records(inMonth: monthKey)
+        guard !days.isEmpty else { return legacySummaries[monthKey] }
+        return MonthlySummary.make(monthKey: monthKey, month: firstInstant(of: monthKey), days: days)
     }
 
     /// Generate a CSV string export of the given monthly summary.
     public func exportToCSV(_ summary: MonthlySummary) -> String {
         var csv = "Metric,Value\n"
         csv += "Month,\(summary.formattedMonth)\n"
+        csv += "Scope,This Mac only; includes LAN traffic\n"
         csv += "Days Monitored,\(summary.daysMonitored)\n"
         csv += "Peak Download (Mbps),\(String(format: "%.1f", summary.peakDownloadMbps))\n"
         csv += "Peak Upload (Mbps),\(String(format: "%.1f", summary.peakUploadMbps))\n"
@@ -115,134 +58,26 @@ public class MonthlyReportService {
         csv += "Peak Approach Count,\(summary.peakApproachCount)\n"
         csv += "Disconnect Count,\(summary.disconnectCount)\n"
         csv += "Total Downtime (seconds),\(String(format: "%.0f", summary.totalDowntimeSeconds))\n"
-        csv += "Avg Latency (ms),\(String(format: "%.1f", summary.avgLatencyMs))\n"
-        csv += "Avg Jitter (ms),\(String(format: "%.1f", summary.avgJitterMs))\n"
+        // A month without a successful probe has no latency: the cells stay empty rather than
+        // reading 0.0, which no real round trip can be and a spreadsheet would average in.
+        let hasLatency = summary.avgLatencyMs > 0
+        let hasJitter = hasLatency && summary.avgJitterMs > 0
+        csv += "Avg Latency (ms),\(hasLatency ? String(format: "%.1f", summary.avgLatencyMs) : "")\n"
+        csv += "Avg Jitter (ms),\(hasJitter ? String(format: "%.1f", summary.avgJitterMs) : "")\n"
+        csv += "Latency Probe Failures,\(summary.latencyFailureCount.map(String.init) ?? "N/A")\n"
         csv += "Recommendation,\(summary.recommendation.csvValue)\n"
         return csv
     }
 
-    // MARK: - Internal Logic
-
-    private func updateCurrentMonthSummary(planDownload: Double, planUpload: Double) {
-        guard let monthStart = currentMonthStart else { return }
-
-        currentMonthSummary = MonthlySummary(
-            month: monthStart,
-            peakDownloadMbps: dailyPeakDownloads.max() ?? 0,
-            peakUploadMbps: dailyPeakUploads.max() ?? 0,
-            avgDownloadMbps: dailyAvgDownloads.isEmpty
-                ? 0
-                : dailyAvgDownloads.reduce(0, +) / Double(dailyAvgDownloads.count),
-            avgUploadMbps: dailyAvgUploads.isEmpty
-                ? 0
-                : dailyAvgUploads.reduce(0, +) / Double(dailyAvgUploads.count),
-            planDownloadMbps: planDownload,
-            planUploadMbps: planUpload,
-            peakApproachCount: monthlyPeakApproachCount,
-            disconnectCount: monthlyDisconnectCount,
-            totalDowntimeSeconds: monthlyTotalDowntime,
-            avgLatencyMs: dailyLatencies.isEmpty
-                ? 0
-                : dailyLatencies.reduce(0, +) / Double(dailyLatencies.count),
-            avgJitterMs: dailyJitters.isEmpty
-                ? 0
-                : dailyJitters.reduce(0, +) / Double(dailyJitters.count),
-            daysMonitored: daysRecorded
-        )
-    }
-
-    private func finalizeMonthlySummary(planDownload: Double, planUpload: Double) {
-        guard let monthStart = currentMonthStart, daysRecorded > 0 else { return }
-
-        let summary = MonthlySummary(
-            month: monthStart,
-            peakDownloadMbps: dailyPeakDownloads.max() ?? 0,
-            peakUploadMbps: dailyPeakUploads.max() ?? 0,
-            avgDownloadMbps: dailyAvgDownloads.reduce(0, +) / Double(dailyAvgDownloads.count),
-            avgUploadMbps: dailyAvgUploads.reduce(0, +) / Double(dailyAvgUploads.count),
-            planDownloadMbps: planDownload,
-            planUploadMbps: planUpload,
-            peakApproachCount: monthlyPeakApproachCount,
-            disconnectCount: monthlyDisconnectCount,
-            totalDowntimeSeconds: monthlyTotalDowntime,
-            avgLatencyMs: dailyLatencies.isEmpty
-                ? 0
-                : dailyLatencies.reduce(0, +) / Double(dailyLatencies.count),
-            avgJitterMs: dailyJitters.isEmpty
-                ? 0
-                : dailyJitters.reduce(0, +) / Double(dailyJitters.count),
-            daysMonitored: daysRecorded
-        )
-
-        pastSummaries.insert(summary, at: 0)
-        if pastSummaries.count > maxMonths {
-            pastSummaries = Array(pastSummaries.prefix(maxMonths))
+    /// Start of a "yyyy-MM" month in the current time zone. Month keys are always Gregorian.
+    private func firstInstant(of monthKey: String) -> Date {
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = clock.calendar.timeZone
+        let parts = monthKey.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 2,
+              let start = gregorian.date(from: DateComponents(year: parts[0], month: parts[1], day: 1)) else {
+            return clock.now()
         }
-
-        saveSummaries()
-    }
-
-    private func resetAccumulators() {
-        dailyPeakDownloads = []
-        dailyPeakUploads = []
-        dailyAvgDownloads = []
-        dailyAvgUploads = []
-        monthlyPeakApproachCount = 0
-        monthlyDisconnectCount = 0
-        monthlyTotalDowntime = 0
-        dailyLatencies = []
-        dailyJitters = []
-        daysRecorded = 0
-    }
-
-    // MARK: - Persistence
-
-    private func saveSummaries() {
-        if let encoded = try? JSONEncoder().encode(pastSummaries) {
-            userDefaults.set(encoded, forKey: storageKey)
-        }
-    }
-
-    private func loadSummaries() {
-        if let data = userDefaults.data(forKey: storageKey),
-           let decoded = try? JSONDecoder().decode([MonthlySummary].self, from: data) {
-            pastSummaries = decoded
-        }
-    }
-
-    private func saveAccumulators() {
-        let accumulatorData: [String: Any] = [
-            "dailyPeakDownloads": dailyPeakDownloads,
-            "dailyPeakUploads": dailyPeakUploads,
-            "dailyAvgDownloads": dailyAvgDownloads,
-            "dailyAvgUploads": dailyAvgUploads,
-            "monthlyPeakApproachCount": monthlyPeakApproachCount,
-            "monthlyDisconnectCount": monthlyDisconnectCount,
-            "monthlyTotalDowntime": monthlyTotalDowntime,
-            "dailyLatencies": dailyLatencies,
-            "dailyJitters": dailyJitters,
-            "daysRecorded": daysRecorded,
-            "currentMonthStart": currentMonthStart?.timeIntervalSince1970 ?? 0
-        ]
-        userDefaults.set(accumulatorData, forKey: accumulatorKey)
-    }
-
-    private func loadAccumulators() {
-        guard let data = userDefaults.dictionary(forKey: accumulatorKey) else { return }
-
-        dailyPeakDownloads = data["dailyPeakDownloads"] as? [Double] ?? []
-        dailyPeakUploads = data["dailyPeakUploads"] as? [Double] ?? []
-        dailyAvgDownloads = data["dailyAvgDownloads"] as? [Double] ?? []
-        dailyAvgUploads = data["dailyAvgUploads"] as? [Double] ?? []
-        monthlyPeakApproachCount = data["monthlyPeakApproachCount"] as? Int ?? 0
-        monthlyDisconnectCount = data["monthlyDisconnectCount"] as? Int ?? 0
-        monthlyTotalDowntime = data["monthlyTotalDowntime"] as? Double ?? 0
-        dailyLatencies = data["dailyLatencies"] as? [Double] ?? []
-        dailyJitters = data["dailyJitters"] as? [Double] ?? []
-        daysRecorded = data["daysRecorded"] as? Int ?? 0
-
-        if let timestamp = data["currentMonthStart"] as? Double, timestamp > 0 {
-            currentMonthStart = Date(timeIntervalSince1970: timestamp)
-        }
+        return start
     }
 }
