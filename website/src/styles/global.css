@@ -13,7 +13,7 @@
   --color-grid-bold: #E5E7EB;
   --color-ink: #0F172A;
   --color-ink-2: #475569;
-  --color-ink-3: #94A3B8;
+  --color-ink-3: #64748B;
 
   /* Signal */
   --color-signal: #3B82F6;
@@ -21,8 +21,12 @@
   --color-signal-glow: rgba(59, 130, 246, 0.25);
 
   /* Alerts */
+  /* Fills, dots and lines. Not for text: contrast on white is 2.15:1 (amber) and 3.76:1 (red). */
   --color-amber: #F59E0B;
   --color-red: #EF4444;
+  /* Text variants: 5.02:1 and 4.83:1 on white (WCAG AA needs 4.5:1). */
+  --color-amber-text: #B45309;
+  --color-red-text: #DC2626;
 
   /* Typography */
   --font-display: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
@@ -150,166 +154,172 @@ h1, h2, h3, h4 {
 .font-mono    { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .font-ui      { font-family: var(--font-sans); }
 
-.eyebrow {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--color-ink-2);
-}
+/* Custom component classes live in `@layer components` so Tailwind utilities
+   (`text-[...]`, `font-semibold`, ...) can override them. Unlayered rules beat every
+   layer, which silently turned each label gray and 11px. Text colors below use the
+   *-text tokens; --color-red/--color-amber are for fills and lines only. */
+@layer components {
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-ink-2);
+  }
 
-.mono-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-ink-2);
-}
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-2);
+  }
 
-.readout {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-  color: var(--color-ink);
-}
+  .readout {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
 
-/* =========================================================================
-   CLINICAL CHROME — tags, chips, stamps
-   ========================================================================= */
-.chart-no {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-ink-2);
-  letter-spacing: 0.05em;
-}
+  /* =========================================================================
+     CLINICAL CHROME — tags, chips, stamps
+     ========================================================================= */
+  .chart-no {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-ink-2);
+    letter-spacing: 0.05em;
+  }
 
-.tag-normal,
-.tag-alert,
-.tag-critical {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border: 1px solid currentColor;
-  border-radius: 2px;
-  background: rgba(251, 250, 245, 0.7);
-}
+  .tag-normal,
+  .tag-alert,
+  .tag-critical {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    background: rgba(251, 250, 245, 0.7);
+  }
 
-.tag-normal   { color: var(--color-signal-dark); }
-.tag-alert    { color: var(--color-amber); }
-.tag-critical { color: var(--color-red); }
+  .tag-normal   { color: var(--color-signal-dark); }
+  .tag-alert    { color: var(--color-amber-text); }
+  .tag-critical { color: var(--color-red-text); }
 
-.tag-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: currentColor;
-}
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: currentColor;
+  }
 
-/* Horizontal rule — like a chart divider */
-.rule {
-  height: 1px;
-  background: var(--color-grid-bold);
-}
+  /* Horizontal rule — like a chart divider */
+  .rule {
+    height: 1px;
+    background: var(--color-grid-bold);
+  }
 
-.rule-dashed {
-  border-top: 1px dashed var(--color-ink-3);
-}
+  .rule-dashed {
+    border-top: 1px dashed var(--color-ink-3);
+  }
 
-/* Rubber-stamp badge */
-.stamp {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-signal-dark);
-  border: 2px dashed var(--color-signal-dark);
-  border-radius: 6px;
-  transform: rotate(-3deg);
-  background: rgba(0, 184, 107, 0.04);
-  position: relative;
-}
-.stamp::before,
-.stamp::after {
-  content: '';
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid var(--color-signal-dark);
-  border-radius: 9999px;
-}
+  /* Rubber-stamp badge */
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-signal-dark);
+    border: 2px dashed var(--color-signal-dark);
+    border-radius: 6px;
+    transform: rotate(-3deg);
+    background: rgba(0, 184, 107, 0.04);
+    position: relative;
+  }
+  .stamp::before,
+  .stamp::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid var(--color-signal-dark);
+    border-radius: 9999px;
+  }
 
-.stamp--red {
-  color: var(--color-red);
-  border-color: var(--color-red);
-  background: rgba(209, 52, 44, 0.04);
-}
-.stamp--red::before,
-.stamp--red::after {
-  border-color: var(--color-red);
-}
+  .stamp--red {
+    color: var(--color-red-text);
+    border-color: var(--color-red-text);
+    background: rgba(209, 52, 44, 0.04);
+  }
+  .stamp--red::before,
+  .stamp--red::after {
+    border-color: var(--color-red-text);
+  }
 
-/* Clinical CTA buttons */
-.btn-signal {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px 22px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-paper);
-  background: var(--color-ink);
-  border: 1px solid var(--color-ink);
-  border-radius: 3px;
-  transition: all 0.15s ease;
-  box-shadow: 3px 3px 0 0 var(--color-signal-dark);
-}
-.btn-signal:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 0 var(--color-signal-dark);
-}
-.btn-signal:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 0 var(--color-signal-dark);
-}
+  /* Clinical CTA buttons */
+  .btn-signal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 22px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-paper);
+    background: var(--color-ink);
+    border: 1px solid var(--color-ink);
+    border-radius: 3px;
+    transition: all 0.15s ease;
+    box-shadow: 3px 3px 0 0 var(--color-signal-dark);
+  }
+  .btn-signal:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 0 var(--color-signal-dark);
+  }
+  .btn-signal:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 0 var(--color-signal-dark);
+  }
 
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px 22px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-ink);
-  background: transparent;
-  border: 1px solid var(--color-ink);
-  border-radius: 3px;
-  transition: all 0.15s ease;
-}
-.btn-ghost:hover {
-  background: var(--color-ink);
-  color: var(--color-paper);
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 22px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    background: transparent;
+    border: 1px solid var(--color-ink);
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+  .btn-ghost:hover {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
 }
 
 /* =========================================================================
@@ -403,6 +413,7 @@ section.clinic {
 
 /* Prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   .ecg-trace,
   .ecg-cursor,
   .live-dot,

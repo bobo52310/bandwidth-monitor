@@ -29,10 +29,10 @@ const currentYear = new Date().getFullYear()
         <p class="text-[14px] leading-[1.7] text-[var(--color-ink-2)] max-w-[420px]">
           {t('meta.description')}
         </p>
-        <p class="mt-4 mono-label text-[10px] text-[var(--color-ink-3)]">
+        <p class="mt-4 mono-label text-[11px] text-[var(--color-ink-3)]">
           {t('footer.disclaimer')}
         </p>
-        <p class="mt-3 mono-label text-[10px] text-[var(--color-ink-3)]">
+        <p class="mt-3 mono-label text-[11px] text-[var(--color-ink-3)]">
           BUILT BY &middot; <a href="https://bobochen.dev" target="_blank" rel="noopener" class="text-[var(--color-ink-2)] hover:text-[var(--color-ink)] underline decoration-dotted underline-offset-2 transition-colors">bobochen.dev</a>
         </p>
       </div>
@@ -40,20 +40,20 @@ const currentYear = new Date().getFullYear()
       <!-- Chart links -->
       <div class="grid grid-cols-2 gap-8">
         <div>
-          <h4 class="mono-label text-[var(--color-ink)] mb-3">INDEX</h4>
+          <p class="mono-label text-[var(--color-ink)] mb-3">INDEX</p>
           <ul class="space-y-2">
             <li><a href="#features" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.features')}</a></li>
             <li><a href="#how" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.howItWorks')}</a></li>
-            <li><a href="#chart" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">Live rhythm strip</a></li>
+            <li><a href="#chart" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.chart')}</a></li>
             <li><a href="#faq" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.faq')}</a></li>
           </ul>
         </div>
         <div>
-          <h4 class="mono-label text-[var(--color-ink)] mb-3">APP</h4>
+          <p class="mono-label text-[var(--color-ink)] mb-3">APP</p>
           <ul class="space-y-2">
             <li><a href="#download" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.download')}</a></li>
             <li><a href="#faq" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.faq')}</a></li>
-            <li><span class="text-[14px] text-[var(--color-ink-3)]">Coming soon</span></li>
+            <li><span class="text-[14px] text-[var(--color-ink-3)]">{t('footer.platform')}</span></li>
           </ul>
         </div>
       </div>
@@ -69,16 +69,13 @@ const currentYear = new Date().getFullYear()
 
     <!-- Bottom legal strip -->
     <div class="mt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <p class="mono-label text-[10px] text-[var(--color-ink-3)]">
+      <p class="mono-label text-[11px] text-[var(--color-ink-3)]">
         &copy; {currentYear} &middot; {t('footer.copyright')} &middot; {t('footer.madeIn')}
       </p>
-      <div class="flex items-center gap-5 mono-label text-[10px] text-[var(--color-ink-3)]">
-        <span class="flex items-center gap-2">
-          <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-signal)] live-dot"></span>
-          <span>SYSTEMS NOMINAL</span>
-        </span>
-        <span>v1.0.0</span>
-      </div>
+      <span class="flex items-center gap-2 mono-label text-[11px] text-[var(--color-ink-3)]">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-amber)] live-dot"></span>
+        <span>PRE-RELEASE</span>
+      </span>
     </div>
   </div>
 </footer>

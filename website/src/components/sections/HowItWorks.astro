@@ -9,33 +9,17 @@ interface Props {
 const { lang = defaultLang } = Astro.props
 const t = useTranslations(lang)
 
-type Step = {
-  no: string
-  label: string
-  title: string
-  description: string
-  runtime: string
-}
-
-const rawSteps = (translations[lang] as any)?.howItWorks?.steps
-  ?? (translations['zh-Hant'] as any)?.howItWorks?.steps ?? []
-const steps: Step[] = rawSteps as Step[]
+const steps = translations[lang].howItWorks.steps
 ---
 
 <section id="how" class="clinic">
   <div class="clinic-container">
-    <!-- Section header with side duration label -->
-    <div class="section-head flex flex-col md:flex-row md:items-end justify-between gap-6" style="max-width: none;">
-      <div class="max-w-[780px]">
-        <p class="eyebrow text-[var(--color-signal-dark)] mb-4">{t('howItWorks.sectionEyebrow')}</p>
-        <h2>{t('howItWorks.sectionTitleEn')}</h2>
-        <p class="zh">{t('howItWorks.sectionTitleZh')}</p>
-        <p class="sub">{t('howItWorks.sectionSubtitle')}</p>
-      </div>
-      <div class="shrink-0 flex items-center gap-3 mono-label text-[var(--color-ink-3)]">
-        <span class="w-8 h-px bg-[var(--color-ink-3)]"></span>
-        <span>~ 90 SECONDS</span>
-      </div>
+    <!-- Section header -->
+    <div class="section-head">
+      <p class="eyebrow text-[var(--color-signal-dark)] mb-4">{t('howItWorks.sectionEyebrow')}</p>
+      <h2>{t('howItWorks.sectionTitleEn')}</h2>
+      <p class="zh">{t('howItWorks.sectionTitleZh')}</p>
+      <p class="sub">{t('howItWorks.sectionSubtitle')}</p>
     </div>
 
     <!-- Procedure cards -->
@@ -51,11 +35,6 @@ const steps: Step[] = rawSteps as Step[]
 
           <h3 class="font-display text-[22px] font-[600] leading-tight text-[var(--color-ink)]">{step.title}</h3>
           <p class="mt-3 text-[14.5px] leading-[1.7] text-[var(--color-ink-2)] flex-1">{step.description}</p>
-
-          <div class="mt-5 pt-3.5 border-t border-dashed border-[var(--color-grid-bold)] flex items-center justify-between">
-            <span class="mono-label text-[10px] text-[var(--color-ink-3)]">RUNTIME</span>
-            <span class="readout text-[13px] text-[var(--color-ink)]">{step.runtime}</span>
-          </div>
         </li>
       ))}
     </ol>

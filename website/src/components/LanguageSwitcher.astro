@@ -1,7 +1,8 @@
 ---
-import { languages, getLangFromUrl, getLocalizedPath, type Lang } from '../i18n';
+import { languages, getLangFromUrl, getLocalizedPath, useTranslations, type Lang } from '../i18n';
 
 const currentLang = getLangFromUrl(Astro.url);
+const t = useTranslations(currentLang);
 const currentPath = Astro.url.pathname.replace(/^\/(en|ja|ko)/, '') || '/';
 
 const shortLabel: Record<Lang, string> = {
@@ -13,27 +14,34 @@ const shortLabel: Record<Lang, string> = {
 ---
 
 <div class="relative" data-language-switcher>
+  <!-- The accessible name starts with the visible text ("EN"), so speech-input users can say what they see (WCAG 2.5.3). -->
   <button
     type="button"
-    class="mono-label text-[11px] flex items-center gap-1.5 px-2 py-1.5 text-[var(--color-ink-2)] hover:text-[var(--color-ink)] transition-colors"
-    aria-label="Switch language"
+    class="mono-label text-[11px] flex items-center gap-1.5 px-2 py-2.5 text-[var(--color-ink-2)] hover:text-[var(--color-ink)] transition-colors"
+    aria-label={`${shortLabel[currentLang]} · ${t('header.switchLanguage')}`}
+    aria-haspopup="true"
+    aria-expanded="false"
     data-dropdown-toggle
   >
     <span>{shortLabel[currentLang]}</span>
-    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
     </svg>
   </button>
 
-  <div
+  <nav
     class="absolute right-0 mt-1 w-36 bg-[var(--color-paper)] border border-[var(--color-ink)] rounded-[3px] py-1 hidden z-50"
+    aria-label={t('header.switchLanguage')}
     data-dropdown-menu
   >
     {Object.entries(languages).map(([lang, label]) => (
       <a
         href={getLocalizedPath(lang as Lang, currentPath)}
+        lang={lang}
+        hreflang={lang}
+        aria-current={lang === currentLang ? 'true' : undefined}
         class:list={[
-          'mono-label block px-3 py-2 text-[11px] transition-colors',
+          'mono-label block px-3 py-2.5 text-[11px] transition-colors',
           lang === currentLang
             ? 'bg-[var(--color-ink)] text-[var(--color-paper)]'
             : 'text-[var(--color-ink-2)] hover:bg-[var(--color-paper-dim)] hover:text-[var(--color-ink)]'
@@ -42,31 +50,43 @@ const shortLabel: Record<Lang, string> = {
         {shortLabel[lang as Lang]} · {label}
       </a>
     ))}
-  </div>
+  </nav>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const switchers = document.querySelectorAll('[data-language-switcher]');
+  const switchers = document.querySelectorAll<HTMLElement>('[data-language-switcher]');
 
-    switchers.forEach((switcher) => {
-      const toggle = switcher.querySelector('[data-dropdown-toggle]');
-      const menu = switcher.querySelector('[data-dropdown-menu]');
+  switchers.forEach((switcher) => {
+    const toggle = switcher.querySelector<HTMLButtonElement>('[data-dropdown-toggle]');
+    const menu = switcher.querySelector<HTMLElement>('[data-dropdown-menu]');
+    if (!toggle || !menu) return;
 
-      if (toggle && menu) {
-        toggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          menu.classList.toggle('hidden');
-        });
+    const setOpen = (open: boolean) => {
+      menu.classList.toggle('hidden', !open);
+      toggle.setAttribute('aria-expanded', String(open));
+    };
 
-        document.addEventListener('click', () => {
-          menu.classList.add('hidden');
-        });
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
 
-        menu.addEventListener('click', (e) => {
-          e.stopPropagation();
-        });
+    menu.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', () => setOpen(false));
+
+    // Escape closes the menu and hands focus back to the button that opened it.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        setOpen(false);
+        toggle.focus();
       }
     });
+
+    // Keep the section (#faq, ...) when switching language. The anchor ids are the
+    // same in every language. Syncing the hrefs up front also covers "open in new tab".
+    const links = [...menu.querySelectorAll<HTMLAnchorElement>('a')].map((a) => ({ a, base: a.getAttribute('href') ?? '' }));
+    const syncHash = () => links.forEach(({ a, base }) => a.setAttribute('href', base + location.hash));
+    syncHash();
+    window.addEventListener('hashchange', syncHash);
   });
 </script>

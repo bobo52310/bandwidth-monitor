@@ -1,4 +1,7 @@
 {
+  "common": {
+    "sampleData": "示意數據"
+  },
   "meta": {
     "title": "Bandwidth ECG — 你的極簡 macOS 網路監控工具",
     "description": "常駐選單列的極簡網速監控工具。精準追蹤頻寬峰值與日常用量，用客觀數據幫你決定是否真的需要升級網路。"
@@ -7,28 +10,24 @@
     "subtitle": "MENU BAR UTILITY",
     "features": "核心功能",
     "howItWorks": "輕鬆上手",
+    "chart": "趨勢圖表",
     "faq": "常見問題",
-    "download": "免費下載",
-    "openMenu": "開啟選單",
-    "github": "GitHub"
+    "download": "即將推出",
+    "menu": "選單",
+    "skipToContent": "跳到主要內容",
+    "switchLanguage": "切換語言"
   },
   "hero": {
     "eyebrow": "MENU BAR UTILITY · for macOS",
     "titleEn": "Network speed, visualized.",
     "titleZh": "告別網路焦慮，用數據說話",
     "subtitle": "常駐選單列的極簡網速監控工具。精準追蹤頻寬峰值與日常用量，不再憑感覺猜測，用客觀數據決定你是否真的需要升級網路方案。",
-    "ctaDownload": "Download for Free",
+    "ctaDownload": "即將推出",
     "ctaLearn": "了解更多",
     "leadDown": "DOWNLOAD",
     "leadUp": "UPLOAD",
-    "live": "LIVE",
-    "acquired": "MONITORING",
-    "patient": "NETWORK",
-    "patientName": "Local Network",
-    "rhythm": "STATUS",
-    "rhythmValue": "Stable connection",
+    "live": "DEMO",
     "todayPeak": "今日最高網速",
-    "allTimePeak": "歷史峰值",
     "planUsage": "方案使用率"
   },
   "features": {
@@ -73,7 +72,7 @@
         "no": "05",
         "title": "完全注重隱私",
         "subtitle": "Privacy first",
-        "description": "所有數據皆安全地儲存在你的 Mac 本機。無需帳號、無需連線雲端，你的資料只屬於你。",
+        "description": "所有數據皆安全地儲存在你的 Mac 本機。無需帳號、不上傳至任何雲端，你的資料只屬於你。",
         "range": "100% Local data",
         "tag": "SECURE"
       },
@@ -94,25 +93,19 @@
     "sectionSubtitle": "簡單三個步驟，立即掌握你的網路健康度。",
     "steps": [
       {
-        "no": "STEP 01",
-        "label": "DOWNLOAD",
-        "title": "下載並安裝",
-        "description": "從 GitHub 下載最新版本，拖曳至應用程式檔案夾即可完成安裝，純粹無負擔。",
-        "runtime": "~ 30s"
+        "label": "GET THE APP",
+        "title": "取得 App",
+        "description": "取得 App 並開啟，它會常駐在選單列，不佔用 Dock。"
       },
       {
-        "no": "STEP 02",
         "label": "CONFIGURE",
         "title": "設定方案上限",
-        "description": "輸入你申辦的網路方案速度（例如 500 Mbps），讓系統能為你計算精準的使用率。",
-        "runtime": "~ 20s"
+        "description": "輸入你申辦的網路方案速度（例如 500 Mbps），讓系統能為你計算精準的使用率。"
       },
       {
-        "no": "STEP 03",
         "label": "MONITOR",
         "title": "開始無感監控",
-        "description": "App 將安靜地常駐於選單列，為你記錄每一刻的網路波動。從此告別憑空猜測。",
-        "runtime": "Always on"
+        "description": "App 將安靜地常駐於選單列，為你記錄每一刻的網路波動。從此告別憑空猜測。"
       }
     ]
   },
@@ -122,12 +115,9 @@
     "sectionTitleZh": "一眼看懂的趨勢圖表",
     "sectionSubtitle": "平穩的日常使用、瞬間的流量爆發，網路狀態的每一個細節都能在圖表中清晰呈現。",
     "leadDown": "DOWNLOAD",
-    "leadUp": "UPLOAD",
     "downLabel": "DOWN",
-    "upLabel": "UP",
-    "gain": "SMOOTHING ON",
-    "speed": "REAL-TIME",
-    "filter": "NO NOISE"
+    "peakEvent": "尖峰事件",
+    "returningToBaseline": "回到基線"
   },
   "faq": {
     "sectionEyebrow": "FAQ",
@@ -136,16 +126,16 @@
     "sectionSubtitle": "關於 Bandwidth ECG 的所有細節都在這裡。",
     "items": [
       {
-        "question": "這個軟體需要付費嗎？",
-        "answer": "完全免費。沒有任何訂閱制、應用內購買，也沒有廣告打擾。"
+        "question": "需要付費嗎？",
+        "answer": "價格與取得方式將在發行時公布。無論如何，App 不含廣告，也不需要註冊帳號。"
       },
       {
         "question": "我的網路使用紀錄會被上傳嗎？",
-        "answer": "不會。所有的監控數據都只儲存在你的 Mac 本機，這不是雲端服務，我們無法也無意取得你的資料。"
+        "answer": "不會。所有監控數據只儲存在你的 Mac 本機，這不是雲端服務。為了量測網路延遲，App 預設每 30 秒向 apple.com 送出一次 HEAD 請求（可在設定關閉），請求中不含任何監控數據。"
       },
       {
         "question": "支援哪些 macOS 版本？",
-        "answer": "支援 macOS 13.0 (Ventura) 及以上版本，並且原生支援 Apple Silicon (M1/M2/M3) 與 Intel 晶片。"
+        "answer": "支援 macOS 14.0 (Sonoma) 及以上版本，Apple Silicon 與 Intel 皆原生支援。"
       },
       {
         "question": "常駐執行會拖慢我的電腦效能嗎？",
@@ -153,29 +143,30 @@
       },
       {
         "question": "如果我不想用了，該怎麼完全移除？",
-        "answer": "只需將應用程式移至垃圾桶即可。若想一併清除歷史紀錄，請刪除 ~/Library/Application Support/BandwidthECG 目錄。"
+        "answer": "只需將應用程式移至垃圾桶即可。若想一併清除所有紀錄，請再刪除 ~/Library/Containers/com.bobo52310.BandwidthECG 資料夾。"
       }
     ]
   },
   "download": {
     "sectionEyebrow": "GET STARTED",
-    "sectionTitleEn": "Ready to gain insights?",
-    "sectionTitleZh": "現在就開始掌握你的網路",
-    "sectionSubtitle": "免費、本機運作、極致輕量。讓數據成為你升級網路方案的最強後盾。",
-    "ctaDownload": "Download for macOS",
-    "ctaGithub": "View on GitHub",
-    "requirements": "Requires macOS 13.0+ · Apple Silicon & Intel natively supported",
+    "sectionTitleEn": "Coming to your Mac.",
+    "sectionTitleZh": "換不換方案，交給數據。",
+    "sectionSubtitle": "本機運作、極致輕量。讓數據成為你判斷網路方案的依據。",
+    "requirements": "需要 macOS 14.0 或以上 · Apple Silicon 與 Intel",
+    "badge": "即將推出 · macOS 14+",
+    "dosage": "常駐選單列 · 本機運作",
     "stamp": "COMING SOON",
     "features": [
-      "100% Free · No ads",
-      "No data collection. Privacy first.",
-      "Ultra-low system footprint"
+      "無廣告・免註冊",
+      "App 不收集使用資料",
+      "極低系統負載"
     ]
   },
   "footer": {
     "copyright": "Bandwidth ECG. All rights reserved.",
     "stamp": "COMING SOON",
+    "platform": "適用 macOS 14+",
     "madeIn": "Designed & Engineered in Taiwan",
-    "disclaimer": "A simple tool to help you make better network decisions."
+    "disclaimer": "非醫療器材，僅用於網路狀態觀察。"
   }
 }

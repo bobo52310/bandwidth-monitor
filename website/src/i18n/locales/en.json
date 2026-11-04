@@ -1,41 +1,40 @@
 {
+  "common": {
+    "sampleData": "SAMPLE DATA"
+  },
   "meta": {
-    "title": "Bandwidth ECG — Your network, on ECG. · for macOS",
-    "description": "A real-time ECG for your home network. Track bandwidth peaks, spot latency arrhythmias, and answer the question: do I really need to upgrade?"
+    "title": "Bandwidth ECG — A minimal macOS menu bar network monitor",
+    "description": "A minimal network speed monitor that lives in your menu bar. Track bandwidth peaks and daily usage, and let real data tell you whether you need a faster plan."
   },
   "header": {
-    "subtitle": "NETWORK HEALTH MONITOR",
-    "features": "Diagnostics",
-    "howItWorks": "Check-up",
-    "faq": "Clinical Notes",
-    "download": "Download",
-    "openMenu": "Open Menu",
-    "github": "GitHub"
+    "subtitle": "MENU BAR UTILITY",
+    "features": "Features",
+    "howItWorks": "Quick start",
+    "chart": "Charts",
+    "faq": "FAQ",
+    "download": "Coming soon",
+    "menu": "Menu",
+    "skipToContent": "Skip to content",
+    "switchLanguage": "Switch language"
   },
   "hero": {
-    "eyebrow": "NETWORK HEALTH MONITOR · for macOS",
-    "titleEn": "Your network, on ECG.",
-    "titleZh": "A diagnostic monitor for your bandwidth.",
-    "subtitle": "Track bandwidth peaks, detect lag arrhythmias, and answer — with data — the one question: do I actually need to upgrade my plan?",
-    "ctaDownload": "Download · Free",
-    "ctaLearn": "Read the chart",
+    "eyebrow": "MENU BAR UTILITY · for macOS",
+    "titleEn": "Network speed, visualized.",
+    "titleZh": "No more network anxiety — let the data speak.",
+    "subtitle": "A minimal speed monitor that lives in your menu bar. Track bandwidth peaks and daily usage accurately, stop guessing, and let objective data decide whether you really need to upgrade your plan.",
+    "ctaDownload": "Coming soon",
+    "ctaLearn": "Learn more",
     "leadDown": "LEAD I · DOWN",
     "leadUp": "LEAD II · UP",
-    "live": "LIVE",
-    "acquired": "ACQUIRED",
-    "patient": "PATIENT",
-    "patientName": "Home Network · 192.168.1.1",
-    "rhythm": "RHYTHM",
-    "rhythmValue": "Normal sinus · stable",
+    "live": "DEMO",
     "todayPeak": "Today's peak",
-    "allTimePeak": "All-time peak",
     "planUsage": "Plan usage"
   },
   "features": {
     "sectionEyebrow": "CHAPTER 01",
-    "sectionTitleEn": "Diagnostic Capabilities",
-    "sectionTitleZh": "Six continuous readings",
-    "sectionSubtitle": "Six continuous measurements, from live rhythm to long-term trend. Each one reads like a report you can actually use.",
+    "sectionTitleEn": "Designed for clarity.",
+    "sectionTitleZh": "A purely focused monitoring experience",
+    "sectionSubtitle": "No fiddly setup, no distractions. Built for macOS, giving you only the core numbers you actually need.",
     "items": [
       {
         "no": "01",
@@ -57,9 +56,9 @@
         "no": "03",
         "title": "Rhythm strips",
         "subtitle": "1m → 24h windows",
-        "description": "Six time windows — 1m / 5 / 15 / 30 / 60 min / 24h — to see both micro-spikes and long-term shape.",
+        "description": "Nine time windows, from 1 minute to 24 hours, to see both micro-spikes and long-term shape.",
         "range": "Window · 1m → 24h",
-        "tag": "6 STRIPS"
+        "tag": "9 STRIPS"
       },
       {
         "no": "04",
@@ -72,8 +71,8 @@
       {
         "no": "05",
         "title": "Local chart",
-        "subtitle": "No cloud, ever",
-        "description": "Every reading stays in ~/Library. No accounts, no telemetry, no uploads. Period.",
+        "subtitle": "No cloud storage",
+        "description": "Every reading stays on your Mac. No accounts, no uploads, and the app collects no analytics.",
         "range": "Privacy · 100% local",
         "tag": "NO UPLOAD"
       },
@@ -89,63 +88,54 @@
   },
   "howItWorks": {
     "sectionEyebrow": "CHAPTER 02",
-    "sectionTitleEn": "Your First Check-up",
-    "sectionTitleZh": "Three steps, ninety seconds",
-    "sectionSubtitle": "Check in, attach the electrodes, read the report. Three steps, about 90 seconds.",
+    "sectionTitleEn": "Set up in seconds.",
+    "sectionTitleZh": "From install to running, in one smooth go",
+    "sectionSubtitle": "Three simple steps and you'll know exactly how your network is doing.",
     "steps": [
       {
-        "no": "STEP 01",
-        "label": "INTAKE",
-        "title": "Attach the electrodes",
-        "description": "Grab the DMG from GitHub and drop it in Applications. The app takes over the menu bar — no Dock clutter.",
-        "runtime": "~ 30s"
+        "label": "GET THE APP",
+        "title": "Get the app",
+        "description": "Get the app and open it. It lives in the menu bar — no Dock clutter."
       },
       {
-        "no": "STEP 02",
         "label": "CALIBRATION",
         "title": "Enter your plan's ceiling",
-        "description": "Tell it your plan's rated speed (say, 500 Mbps) so the instrument knows when to raise an alert.",
-        "runtime": "~ 20s"
+        "description": "Tell it your plan's rated speed (say, 500 Mbps) so the instrument knows when to raise an alert."
       },
       {
-        "no": "STEP 03",
         "label": "DIAGNOSIS",
         "title": "Live diagnostic readout",
-        "description": "From then on, every glance is a check-up. Upgrade decisions become data-driven — not vibes.",
-        "runtime": "continuous"
+        "description": "From then on, every glance is a check-up. Upgrade decisions become data-driven — not vibes."
       }
     ]
   },
   "chartDemo": {
     "sectionEyebrow": "CHAPTER 03",
-    "sectionTitleEn": "Live Rhythm Strip",
-    "sectionTitleZh": "A realistic bandwidth trace",
-    "sectionSubtitle": "A realistic bandwidth trace — calm baseline, sharp peaks, the occasional spike. Exactly what you want to read at a glance.",
+    "sectionTitleEn": "Data that makes sense.",
+    "sectionTitleZh": "Trend charts you can read at a glance",
+    "sectionSubtitle": "Steady everyday use, sudden bursts of traffic — every detail of your connection shows up clearly in the chart.",
     "leadDown": "LEAD I",
-    "leadUp": "LEAD II",
     "downLabel": "DOWN",
-    "upLabel": "UP",
-    "gain": "GAIN 10mm/mV",
-    "speed": "SPEED 25mm/s",
-    "filter": "FILTER 0.5-40 Hz"
+    "peakEvent": "peak event",
+    "returningToBaseline": "returning to baseline"
   },
   "faq": {
     "sectionEyebrow": "CHAPTER 04",
-    "sectionTitleEn": "Clinical Notes",
-    "sectionTitleZh": "The five questions we get most",
-    "sectionSubtitle": "The five questions we get most.",
+    "sectionTitleEn": "Common Questions.",
+    "sectionTitleZh": "Frequently asked questions",
+    "sectionSubtitle": "Everything about Bandwidth ECG, right here.",
     "items": [
       {
-        "question": "Is this really free?",
-        "answer": "Yes — 100% free. No subscription, no in-app purchase, no ads."
+        "question": "How much does it cost?",
+        "answer": "Pricing and availability will be announced at launch. Either way: no ads, no account required."
       },
       {
         "question": "Does my data leave my computer?",
-        "answer": "No. Readings are stored only in ~/Library/Application Support/BandwidthECG on your Mac. This is not a cloud service."
+        "answer": "No. Readings are stored only on your Mac — this is not a cloud service. To measure latency, the app sends a HEAD request to apple.com every 30 seconds by default (you can turn this off in Settings). It contains none of your readings."
       },
       {
         "question": "Which macOS versions work?",
-        "answer": "macOS 13.0 (Ventura) and later. Apple Silicon and Intel are both native."
+        "answer": "macOS 14.0 (Sonoma) and later. Apple Silicon and Intel are both native."
       },
       {
         "question": "Will it slow down my Mac?",
@@ -153,21 +143,21 @@
       },
       {
         "question": "How do I fully uninstall?",
-        "answer": "Drop the app in the Trash. To clear all recorded readings too, remove ~/Library/Application Support/BandwidthECG."
+        "answer": "Drop the app in the Trash. To clear all recorded readings too, also remove ~/Library/Containers/com.bobo52310.BandwidthECG."
       }
     ]
   },
   "download": {
     "sectionEyebrow": "DISCHARGE",
-    "sectionTitleEn": "Take it home.",
-    "sectionTitleZh": "Install the instrument.",
-    "sectionSubtitle": "Free. Local. Lightweight. Starting today, decide with data — not gut feel.",
-    "ctaDownload": "Download · macOS 13+",
-    "ctaGithub": "View on GitHub",
-    "requirements": "Requires macOS 13.0+ · Apple Silicon & Intel",
+    "sectionTitleEn": "Coming to your Mac.",
+    "sectionTitleZh": "Let the data settle your plan.",
+    "sectionSubtitle": "Local and lightweight. Decide with data, not gut feel.",
+    "requirements": "Requires macOS 14.0+ · Apple Silicon & Intel",
+    "badge": "Coming soon · macOS 14+",
+    "dosage": "Always on · Runs locally",
     "stamp": "COMING SOON",
     "features": [
-      "Free · No ads",
+      "No ads · No account",
       "100% local — no data uploaded",
       "CPU < 1% · RAM < 50 MB"
     ]
@@ -175,6 +165,7 @@
   "footer": {
     "copyright": "Bandwidth ECG. All vitals reserved.",
     "stamp": "COMING SOON",
+    "platform": "For macOS 14+",
     "madeIn": "Engineered in Taiwan",
     "disclaimer": "Not a medical device. For network health only."
   }

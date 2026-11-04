@@ -10,38 +10,101 @@ interface Props {
 const { lang = defaultLang } = Astro.props
 const t = useTranslations(lang)
 const homeHref = getLocalizedPath(lang, '/')
+
+// Same four anchors in the desktop bar and the mobile panel.
+const navLinks = [
+  { href: '#features', label: t('header.features') },
+  { href: '#how', label: t('header.howItWorks') },
+  { href: '#faq', label: t('header.faq') },
+]
 ---
 
-<header class="sticky top-0 z-50 bg-[var(--color-paper)]/90 backdrop-blur-[6px] border-b border-[var(--color-grid-bold)]">
-  <div class="max-w-[1200px] mx-auto px-6 h-14 flex items-center justify-between gap-6">
+<a
+  href="#main"
+  class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2.5 focus:rounded-[3px] focus:bg-[var(--color-ink)] focus:text-[var(--color-paper)] mono-label"
+>{t('header.skipToContent')}</a>
+
+<header data-site-header class="sticky top-0 z-50 bg-[var(--color-paper)]/90 backdrop-blur-[6px] border-b border-[var(--color-grid-bold)]">
+  <div class="max-w-[1200px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2 sm:gap-6">
     <!-- Brand wordmark — tight serif + monospace subtitle -->
-    <a href={homeHref} class="flex items-baseline gap-3 group">
+    <a href={homeHref} class="flex items-baseline gap-3 group min-w-0">
       <div class="flex items-center gap-2">
         <!-- ECG mini icon: tiny heartbeat path -->
-        <svg class="w-5 h-5" viewBox="0 0 24 16" fill="none" aria-hidden="true">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 16" fill="none" aria-hidden="true">
           <path d="M0 8 L5 8 L7 4 L9 12 L11 2 L13 14 L15 8 L24 8" stroke="var(--color-ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="font-display text-[18px] font-[650] tracking-tight text-[var(--color-ink)]">Bandwidth ECG</span>
+        <span class="font-display text-[18px] font-[650] tracking-tight text-[var(--color-ink)] whitespace-nowrap">Bandwidth ECG</span>
       </div>
-      <span class="hidden md:inline mono-label text-[10px] text-[var(--color-ink-3)]">{t('header.subtitle')}</span>
+      <span class="hidden md:inline mono-label text-[11px] text-[var(--color-ink-3)]">{t('header.subtitle')}</span>
     </a>
 
-    <nav class="hidden lg:flex items-center gap-7">
-      <a href="#features" class="mono-label text-[11px] text-[var(--color-ink-2)] hover:text-[var(--color-signal)] transition-colors">{t('header.features')}</a>
-      <a href="#how" class="mono-label text-[11px] text-[var(--color-ink-2)] hover:text-[var(--color-signal)] transition-colors">{t('header.howItWorks')}</a>
-      <a href="#faq" class="mono-label text-[11px] text-[var(--color-ink-2)] hover:text-[var(--color-signal)] transition-colors">{t('header.faq')}</a>
-      <span class="w-px h-4 bg-[var(--color-grid-bold)]"></span>
+    <div class="flex items-center gap-1 sm:gap-2 lg:gap-7">
+      <nav class="hidden lg:flex items-center gap-7" aria-label={t('header.menu')}>
+        {navLinks.map(({ href, label }) => (
+          <a href={href} class="mono-label text-[11px] text-[var(--color-ink-2)] hover:text-[var(--color-signal-dark)] transition-colors">{label}</a>
+        ))}
+      </nav>
+      <span class="hidden lg:block w-px h-4 bg-[var(--color-grid-bold)]" aria-hidden="true"></span>
+
+      <!-- Visible at every width: it is the only way to reach the other languages. -->
       <LanguageSwitcher />
-      <a href="#download" class="mono-label text-[11px] flex items-center gap-2 px-3.5 py-2 border border-[var(--color-ink)] rounded-[3px] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-paper)] transition-all">
+
+      <a href="#download" class="hidden lg:flex mono-label text-[11px] items-center gap-2 px-3.5 py-2 border border-[var(--color-ink)] rounded-[3px] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-paper)] transition-all">
         <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-signal)] live-dot"></span>
         {t('header.download')}
       </a>
-    </nav>
 
-    <button class="lg:hidden p-2 text-[var(--color-ink)]" aria-label={t('header.openMenu')}>
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    </button>
+      <button
+        type="button"
+        class="lg:hidden p-2.5 text-[var(--color-ink)]"
+        aria-label={t('header.menu')}
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        data-menu-toggle
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path data-menu-icon-open stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          <path data-menu-icon-close class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    </div>
   </div>
+
+  <!-- Mobile and tablet panel: the same anchors the desktop bar shows. -->
+  <nav id="mobile-nav" class="hidden lg:hidden border-t border-[var(--color-grid-bold)]" aria-label={t('header.menu')}>
+    <ul class="max-w-[1200px] mx-auto px-4 sm:px-6 py-2">
+      {[...navLinks, { href: '#download', label: t('header.download') }].map(({ href, label }) => (
+        <li>
+          <a href={href} class="mono-label text-[11px] flex items-center min-h-11 text-[var(--color-ink)]">{label}</a>
+        </li>
+      ))}
+    </ul>
+  </nav>
 </header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]')
+  const panel = document.getElementById('mobile-nav')
+  const iconOpen = document.querySelector('[data-menu-icon-open]')
+  const iconClose = document.querySelector('[data-menu-icon-close]')
+
+  if (toggle && panel) {
+    const setOpen = (open: boolean) => {
+      panel.classList.toggle('hidden', !open)
+      toggle.setAttribute('aria-expanded', String(open))
+      iconOpen?.classList.toggle('hidden', open)
+      iconClose?.classList.toggle('hidden', !open)
+    }
+    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'))
+    // Picking a destination collapses the panel; the browser still follows the anchor.
+    panel.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) setOpen(false)
+    })
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        setOpen(false)
+        toggle.focus()
+      }
+    })
+  }
+</script>

@@ -1,150 +1,172 @@
 {
+  "common": {
+    "sampleData": "サンプルデータ"
+  },
   "meta": {
-    "title": "Bandwidth ECG - ネットワークピークモニター | エンタープライズ級ネットワーク監視ソリューション",
-    "description": "エンタープライズ級ネットワーク監視ソリューション。リアルタイム速度監視、スマートピーク追跡、データ駆動のネットワークアップグレード判断。"
+    "title": "Bandwidth ECG — macOS メニューバーのネットワーク速度モニター",
+    "description": "メニューバーに常駐するシンプルな通信速度モニター。帯域のピークと日々の使用量を記録し、回線プランのアップグレードが本当に必要かをデータで判断できます。"
   },
   "header": {
-    "subtitle": "ネットワークピークモニター",
+    "subtitle": "メニューバーユーティリティ",
     "features": "機能",
     "howItWorks": "使い方",
+    "chart": "推移グラフ",
     "faq": "よくある質問",
-    "download": "今すぐダウンロード",
-    "openMenu": "メニューを開く"
+    "download": "近日公開",
+    "menu": "メニュー",
+    "skipToContent": "メインコンテンツへ移動",
+    "switchLanguage": "言語を切り替え"
   },
   "hero": {
-    "badge1": "macOS 専用",
-    "badge2": "エンタープライズ性能",
-    "title1": "データで判断、",
-    "title2": "プランのアップグレードが必要か",
-    "subtitle": "リアルタイムで速度を監視、ピークを追跡、賢明な判断を。プロフェッショナル級 macOS ネットワーク監視ソリューション。",
-    "downloadBtn": "無料ダウンロード",
-    "learnMore": "詳しく見る",
-    "statCpu": "CPU 使用率",
-    "statMemory": "メモリ使用量",
-    "statHistory": "履歴追跡",
-    "download": "ダウンロード",
-    "upload": "アップロード",
-    "monitoring": "監視中",
-    "todayPeak": "今日のピーク",
-    "allTimePeak": "過去最高",
-    "planUsage": "プラン使用率",
-    "freeToUse": "無料で使用"
+    "eyebrow": "MENU BAR UTILITY · for macOS",
+    "titleEn": "Network speed, visualized.",
+    "titleZh": "ネットワークの不安に、データで答えを",
+    "subtitle": "メニューバーに常駐するシンプルな通信速度モニター。帯域のピークと日々の使用量を正確に記録し、勘に頼らず、客観的なデータで回線プランのアップグレードが本当に必要かを判断できます。",
+    "ctaDownload": "近日公開",
+    "ctaLearn": "詳しく見る",
+    "leadDown": "DOWNLOAD",
+    "leadUp": "UPLOAD",
+    "live": "DEMO",
+    "todayPeak": "今日の最高速度",
+    "planUsage": "プラン使用率"
   },
   "features": {
-    "sectionBadge": "機能紹介",
-    "sectionTitle": "プロフェッショナル級ネットワーク監視機能",
-    "sectionSubtitle": "macOS パワーユーザーのための包括的なネットワーク監視ソリューション",
+    "sectionEyebrow": "FEATURES",
+    "sectionTitleEn": "Designed for clarity.",
+    "sectionTitleZh": "シンプルで、まっすぐな監視体験",
+    "sectionSubtitle": "面倒な設定も、余計な邪魔もありません。macOS のために作られ、本当に必要な主要データだけを届けます。",
     "items": [
       {
-        "title": "リアルタイム速度監視",
-        "description": "メニューバーにアップロード/ダウンロード速度をリアルタイム表示。ウィンドウを開かずにネットワーク状態を把握。",
-        "badge": "コア機能"
+        "no": "01",
+        "title": "リアルタイム速度表示",
+        "subtitle": "Real-time monitoring",
+        "description": "メニューバーにアップロードとダウンロードの速度をリアルタイムで表示。ウィンドウを開かなくても、ネットワークの状態がひと目でわかります。",
+        "range": "Update rate · 1Hz",
+        "tag": "ALWAYS ON"
       },
       {
-        "title": "スマートピーク追跡",
-        "description": "毎日および過去最高のピーク速度を自動記録。データ分析でプランが十分かを評価。",
-        "badge": "データ分析"
+        "no": "02",
+        "title": "ピークを自動記録",
+        "subtitle": "Peak tracking",
+        "description": "毎日の最高速度と過去最高のピークを自動で記録。現在の回線プランが実際にどれだけ役立っているかを手軽に評価できます。",
+        "range": "Smart logging",
+        "tag": "AUTO-LOG"
       },
       {
-        "title": "インタラクティブチャート",
-        "description": "1分から24時間まで複数の時間範囲をサポート。ネットワーク使用トレンドを視覚化。",
-        "badge": "視覚化"
+        "no": "03",
+        "title": "多彩な履歴グラフ",
+        "subtitle": "History charts",
+        "description": "1 分から 24 時間までの複数の時間範囲に対応。ネットワークの短期的な変動と長期的な傾向を観察できます。",
+        "range": "Timeframes · 1m → 24h",
+        "tag": "INSIGHTS"
       },
       {
-        "title": "ワンクリック速度テスト",
-        "description": "Speedtest by Ookla CLI を統合。プロフェッショナル級の速度テストとレイテンシ分析。",
-        "badge": "速度テスト"
+        "no": "04",
+        "title": "プラン上限アラート",
+        "subtitle": "Usage alerts",
+        "description": "回線プランの上限を設定しておくと、速度が上限に近づいたときに色が自動で変わり、回線が混み合っていることを直感的に知らせます。",
+        "range": "Customizable limits",
+        "tag": "SMART ALERT"
       },
       {
-        "title": "コミュニティランキング",
-        "description": "グローバル、国、ISP の3つの次元で速度ランキング。あなたのネットワーク性能を確認。",
-        "badge": "コミュニティ"
+        "no": "05",
+        "title": "プライバシー最優先",
+        "subtitle": "Privacy first",
+        "description": "すべてのデータは Mac のローカルに安全に保存されます。アカウントは不要で、クラウドへのアップロードもありません。あなたのデータは、あなただけのものです。",
+        "range": "100% Local data",
+        "tag": "SECURE"
       },
       {
-        "title": "異常検出",
-        "description": "スマート接続監視。切断や異常な速度低下を即座にアラート。",
-        "badge": "スマートアラート"
-      },
-      {
-        "title": "軽量高効率",
-        "description": "CPU使用率1%未満、メモリ50MB未満。システム性能に影響なし。",
-        "badge": "最適化"
+        "no": "06",
+        "title": "システム負荷が極めて低い",
+        "subtitle": "Ultra lightweight",
+        "description": "macOS ネイティブ API で開発。CPU 使用率は 1% 未満、メモリ使用量もごくわずかで、パフォーマンスにはほとんど影響しません。",
+        "range": "Native performance",
+        "tag": "OPTIMIZED"
       }
     ]
   },
   "howItWorks": {
-    "sectionBadge": "使い方",
-    "sectionTitle": "3ステップで開始",
-    "sectionSubtitle": "簡単セットアップ、すぐにネットワーク性能の監視を開始",
+    "sectionEyebrow": "WORKFLOW",
+    "sectionTitleEn": "Set up in seconds.",
+    "sectionTitleZh": "インストールから起動まで、ひと息で",
+    "sectionSubtitle": "たった 3 ステップで、ネットワークの状態をすぐ把握できます。",
     "steps": [
       {
-        "title": "ダウンロード＆インストール",
-        "description": "ウェブサイトからDMGファイルをダウンロード。アプリケーションフォルダにドラッグしてインストール完了。"
+        "label": "GET THE APP",
+        "title": "アプリを入手",
+        "description": "アプリを入手して起動するだけ。メニューバーに常駐し、Dock は使いません。"
       },
       {
-        "title": "プランを設定",
-        "description": "ネットワークプランの速度上限を入力。システムが自動的に使用率を計算しアラートを送信。"
+        "label": "CONFIGURE",
+        "title": "プランの上限を設定",
+        "description": "契約している回線プランの速度（例: 500 Mbps）を入力すると、正確な使用率を計算できます。"
       },
       {
-        "title": "監視開始",
-        "description": "アプリがメニューバーにリアルタイム速度を表示。クリックで詳細なチャートと統計を確認。"
+        "label": "MONITOR",
+        "title": "静かに監視をスタート",
+        "description": "アプリは静かにメニューバーに常駐し、ネットワークの変動をそのつど記録します。もう当てずっぽうで判断する必要はありません。"
       }
     ]
   },
-  "speedTest": {
-    "sectionBadge": "速度テスト",
-    "sectionTitle": "プロフェッショナル級速度テスト",
-    "sectionSubtitle": "Speedtest by Ookla CLI を統合し、正確なネットワーク速度測定を提供",
-    "downloadSpeed": "ダウンロード速度",
-    "uploadSpeed": "アップロード速度",
-    "ping": "レイテンシ",
-    "server": "テストサーバー",
-    "startTest": "テスト開始",
-    "testing": "テスト中..."
+  "chartDemo": {
+    "sectionEyebrow": "DEMO",
+    "sectionTitleEn": "Data that makes sense.",
+    "sectionTitleZh": "ひと目でわかる推移グラフ",
+    "sectionSubtitle": "穏やかな普段使いも、一瞬のトラフィックの急増も、ネットワークの状態の細部までチャートにくっきり映し出します。",
+    "leadDown": "DOWNLOAD",
+    "downLabel": "DOWN",
+    "peakEvent": "ピークイベント",
+    "returningToBaseline": "ベースラインに戻る"
   },
   "faq": {
-    "sectionBadge": "よくある質問",
-    "sectionTitle": "よくある質問",
-    "sectionSubtitle": "Bandwidth ECG に関するよくある質問への回答",
+    "sectionEyebrow": "FAQ",
+    "sectionTitleEn": "Common Questions.",
+    "sectionTitleZh": "よくある質問",
+    "sectionSubtitle": "Bandwidth ECG について知りたいことは、すべてここに。",
     "items": [
       {
-        "question": "Bandwidth ECG は無料ですか？",
-        "answer": "はい、Bandwidth ECG は完全無料で使用でき、隠れた料金や機能制限はありません。"
+        "question": "料金はかかりますか？",
+        "answer": "価格と入手方法は公開時にお知らせします。いずれの場合も、広告はなく、アカウント登録も不要です。"
       },
       {
-        "question": "対応している macOS バージョンは？",
-        "answer": "Bandwidth ECG は macOS 13.0 (Ventura) 以降をサポートしています。"
+        "question": "ネットワークの使用記録はアップロードされますか？",
+        "answer": "いいえ。監視データはすべてお使いの Mac のローカルにのみ保存され、クラウドサービスではありません。遅延を測るため、既定で 30 秒ごとに apple.com へ HEAD リクエストを送信します（設定でオフにできます）。監視データは含まれません。"
       },
       {
-        "question": "システム性能に影響しますか？",
-        "answer": "いいえ。アプリは最適化されており、CPU使用率1%未満、メモリ50MB未満です。"
+        "question": "対応している macOS のバージョンは？",
+        "answer": "macOS 14.0 (Sonoma) 以降をサポートしています。Apple Silicon と Intel の両方にネイティブ対応しています。"
       },
       {
-        "question": "データはサーバーにアップロードされますか？",
-        "answer": "いいえ。すべての監視データはローカルに保存されます。ユーザーデータの収集やアップロードは行いません。"
+        "question": "常駐しているとパソコンの動作が重くなりませんか？",
+        "answer": "いいえ。ネイティブで極限まで軽量に作られており、CPU 使用率は通常 1% 未満、メモリもごくわずかなので、普段の作業に影響しません。"
       },
       {
-        "question": "アンインストール方法は？",
-        "answer": "アプリケーションフォルダからアプリをゴミ箱に移動するだけです。すべてのデータを削除するには、~/Library/Application Support/BandwidthECG フォルダも削除してください。"
+        "question": "使わなくなったら、完全に削除するには？",
+        "answer": "アプリをゴミ箱に移動するだけです。記録もすべて削除するには、~/Library/Containers/com.bobo52310.BandwidthECG フォルダも削除してください。"
       }
     ]
   },
   "download": {
-    "sectionBadge": "今すぐダウンロード",
-    "sectionTitle": "ネットワーク監視を始めよう",
-    "sectionSubtitle": "無料ダウンロード、登録不要、すぐに使用開始",
-    "downloadBtn": "macOS 版をダウンロード",
-    "version": "バージョン",
-    "requirements": "macOS 13.0 以降が必要",
+    "sectionEyebrow": "GET STARTED",
+    "sectionTitleEn": "Coming to your Mac.",
+    "sectionTitleZh": "回線プランの判断は、データで。",
+    "sectionSubtitle": "ローカルで動作し、とても軽量。回線プランを見直す判断を、データで支えます。",
+    "requirements": "macOS 14.0 以降が必要 · Apple Silicon / Intel",
+    "badge": "近日公開 · macOS 14+",
+    "dosage": "常駐 · ローカル動作",
+    "stamp": "COMING SOON",
     "features": [
-      "無料で使用、広告なし",
-      "プライバシー優先、データはローカルに保存",
-      "軽量、システム性能に影響なし"
+      "広告なし・登録不要",
+      "アプリは使用データを収集しません",
+      "システム負荷が極めて低い"
     ]
   },
   "footer": {
     "copyright": "Bandwidth ECG. All rights reserved.",
-    "madeWith": "",
-    "madeIn": "台湾で製作"
+    "stamp": "COMING SOON",
+    "platform": "macOS 14 以降に対応",
+    "madeIn": "台湾で設計・開発",
+    "disclaimer": "医療機器ではありません。ネットワークの状態確認のみを目的としています。"
   }
 }

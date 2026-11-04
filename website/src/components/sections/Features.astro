@@ -9,19 +9,8 @@ interface Props {
 const { lang = defaultLang } = Astro.props
 const t = useTranslations(lang)
 
-type Item = {
-  no: string
-  title: string
-  subtitle: string
-  description: string
-  range: string
-  tag: string
-}
-
-// Pull items from translations — fall back to zh-Hant
-const rawItems = (translations[lang] as any)?.features?.items
-  ?? (translations['zh-Hant'] as any)?.features?.items ?? []
-const items: Item[] = rawItems as Item[]
+// Items come straight from the locale file; the Messages type guarantees the shape.
+const items = translations[lang].features.items
 
 // Icon mapping per feature (minimal line SVGs — no emojis)
 const icons = [

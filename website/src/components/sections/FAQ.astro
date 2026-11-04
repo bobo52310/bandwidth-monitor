@@ -9,10 +9,7 @@ interface Props {
 const { lang = defaultLang } = Astro.props
 const t = useTranslations(lang)
 
-type Item = { question: string; answer: string }
-const rawItems = (translations[lang] as any)?.faq?.items
-  ?? (translations['zh-Hant'] as any)?.faq?.items ?? []
-const items: Item[] = rawItems as Item[]
+const items = translations[lang].faq.items
 ---
 
 <section id="faq" class="clinic border-t border-[var(--color-grid-bold)]">
@@ -35,21 +32,22 @@ const items: Item[] = rawItems as Item[]
               <span class="shrink-0 w-9 h-9 rounded-full border-2 border-[var(--color-ink)] flex items-center justify-center font-display text-[13px] font-[700] text-[var(--color-ink)]">{no}</span>
               <div class="flex-1 min-w-0">
                 <div class="flex items-baseline gap-2 mb-1">
-                  <span class="mono-label text-[10px] text-[var(--color-signal-dark)]">Q:</span>
+                  <span class="mono-label text-[11px] text-[var(--color-signal-dark)]">Q:</span>
                 </div>
                 <h3 class="font-display text-[18px] sm:text-[20px] font-[600] text-[var(--color-ink)] leading-snug">
                   {item.question}
                 </h3>
               </div>
-              <span class="shrink-0 mt-1 mono-label text-[11px] text-[var(--color-ink-3)] group-open:text-[var(--color-signal)]">
+              <span class="shrink-0 mt-1 mono-label text-[11px] text-[var(--color-ink-3)] group-open:text-[var(--color-signal-dark)]">
                 <span class="group-open:hidden">[ + ]</span>
                 <span class="hidden group-open:inline">[ &ndash; ]</span>
               </span>
             </summary>
-            <div class="px-6 pb-6 pl-[80px]">
+            <div class="px-6 pb-6 pl-[56px] sm:pl-[80px]">
               <div class="flex items-start gap-2">
-                <span class="mono-label text-[10px] text-[var(--color-signal-dark)] mt-1 shrink-0">A:</span>
-                <p class="text-[15px] leading-[1.75] text-[var(--color-ink-2)]">
+                <span class="mono-label text-[11px] text-[var(--color-signal-dark)] mt-1 shrink-0">A:</span>
+                <!-- min-w-0 + overflow-wrap:anywhere: the uninstall answer contains an unbreakable ~/Library/Containers/... path that otherwise pushes the page wider than a phone. -->
+                <p class="min-w-0 [overflow-wrap:anywhere] text-[15px] leading-[1.75] text-[var(--color-ink-2)]">
                   {item.answer}
                 </p>
               </div>
@@ -62,13 +60,13 @@ const items: Item[] = rawItems as Item[]
     <!-- Signature line -->
     <div class="mt-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
       <div>
-        <div class="mono-label text-[10px] text-[var(--color-ink-3)] mb-2">SIGNED</div>
+        <div class="mono-label text-[11px] text-[var(--color-ink-3)] mb-2">SIGNED</div>
         <div class="flex items-end gap-3">
           <span class="font-display italic text-[26px] text-[var(--color-ink)]">Dr. Bandwidth</span>
           <span class="h-px w-40 bg-[var(--color-ink)] mb-2"></span>
         </div>
       </div>
-      <div class="mono-label text-[10px] text-[var(--color-ink-3)]">
+      <div class="mono-label text-[11px] text-[var(--color-ink-3)]">
         Document ID · BWECG-FAQ-2026-04
       </div>
     </div>

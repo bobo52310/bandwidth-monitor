@@ -6,15 +6,23 @@ interface Props {
   title: string
   description?: string
   lang?: Lang
+  /** Keep the page out of search results: robots noindex, no canonical, no hreflang. */
+  noindex?: boolean
 }
 
 const {
   title,
-  description = '為你的網路做即時心電圖診斷。追蹤頻寬峰值、識別卡頓節律，用醫療級儀表盤回答那個問題：我該不該升級？',
-  lang = defaultLang
+  description = '常駐選單列的極簡網速監控工具。精準追蹤頻寬峰值與日常用量，用客觀數據幫你決定是否真的需要升級網路。',
+  lang = defaultLang,
+  noindex = false
 } = Astro.props
 
-const alternateLinks = getAlternateLinks(Astro.url.pathname)
+// hreflang needs absolute URLs; relative ones are ignored by search engines.
+const alternateLinks = getAlternateLinks(Astro.url.pathname).map(({ lang: altLang, href }) => ({
+  lang: altLang,
+  href: new URL(href, Astro.site).href
+}))
+const defaultHref = new URL('/', Astro.site).href
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 const ogImageURL = new URL('/og-default.png', Astro.site)
@@ -25,6 +33,8 @@ const localeMap: Record<Lang, string> = {
   'ja': 'ja_JP',
   'ko': 'ko_KR'
 }
+
+const otherLocales = (Object.keys(localeMap) as Lang[]).filter((l) => l !== lang)
 
 const htmlLangMap: Record<Lang, string> = {
   'zh-Hant': 'zh-Hant',
@@ -41,7 +51,11 @@ const htmlLangMap: Record<Lang, string> = {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#FFFFFF" />
-    <link rel="canonical" href={canonicalURL} />
+    {noindex ? (
+      <meta name="robots" content="noindex" />
+    ) : (
+      <link rel="canonical" href={canonicalURL} />
+    )}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -56,19 +70,23 @@ const htmlLangMap: Record<Lang, string> = {
       rel="stylesheet"
     />
 
-    <!-- Alternate language links -->
-    {alternateLinks.map(({ lang: altLang, href }) => (
+    <!-- Alternate language links (x-default stays on the zh-Hant root) -->
+    {!noindex && alternateLinks.map(({ lang: altLang, href }) => (
       <link rel="alternate" hreflang={htmlLangMap[altLang]} href={href} />
     ))}
-    <link rel="alternate" hreflang="x-default" href="/" />
+    {!noindex && <link rel="alternate" hreflang="x-default" href={defaultHref} />}
 
     <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content={localeMap[lang]} />
-    <meta property="og:url" content={canonicalURL} />
+    {otherLocales.map((l) => <meta property="og:locale:alternate" content={localeMap[l]} />)}
+    {!noindex && <meta property="og:url" content={canonicalURL} />}
     <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="Bandwidth ECG" />
 
     <!-- Twitter -->
@@ -76,6 +94,7 @@ const htmlLangMap: Record<Lang, string> = {
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageURL} />
+    <meta name="twitter:image:alt" content={title} />
 
     <!-- Cloudflare Web Analytics (manual beacon) -->
     <script

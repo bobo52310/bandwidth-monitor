@@ -2,10 +2,10 @@
 import Layout from '../layouts/Layout.astro'
 ---
 
-<Layout title="404 · Bandwidth ECG" description="Signal lost — the page you requested could not be found.">
+<Layout title="404 · Bandwidth ECG" description="Signal lost — the page you requested could not be found." noindex>
   <main class="ecg-paper min-h-screen flex items-center justify-center px-6">
     <div class="clinic-container max-w-[560px] text-center">
-      <p class="eyebrow mb-6 text-[var(--color-red)]">Flatline · 404</p>
+      <p class="eyebrow mb-6 text-[var(--color-red-text)]">Flatline · 404</p>
 
       <div class="readout num-tick text-[72px] sm:text-[96px] leading-none text-[var(--color-ink)]">
         404
@@ -20,8 +20,15 @@ import Layout from '../layouts/Layout.astro'
       </p>
 
       <div class="mt-10">
-        <a href="/" class="btn-signal">← 回到首頁 / Back to home</a>
+        <a href="/" id="home-link" class="btn-signal">← 回到首頁 / Back to home</a>
       </div>
     </div>
   </main>
 </Layout>
+
+<script>
+  // Cloudflare Pages serves this one file for every missing URL, so the build cannot know
+  // which language the visitor was in. Read it from the address instead (default: zh-Hant root).
+  const locale = location.pathname.match(/^\/(en|ja|ko)(\/|$)/)
+  if (locale) document.getElementById('home-link')?.setAttribute('href', `/${locale[1]}/`)
+</script>

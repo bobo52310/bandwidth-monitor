@@ -79,12 +79,12 @@ const uploadPath = [
 
     <!-- Top strip: simplified session header, 2 columns -->
     <div class="flex items-center justify-between gap-5 mb-14 pb-3.5 border-b border-[var(--color-grid-bold)]">
-      <span class="mono-label text-[10px] text-[var(--color-ink-3)]">
+      <span class="mono-label text-[11px] text-[var(--color-ink-3)]">
         BANDWIDTH ECG &middot; SESSION &middot; <span id="acq-time">14:32:07</span>
       </span>
       <span class="flex items-center gap-2">
         <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-red)] live-dot"></span>
-        <span class="mono-label text-[10px] text-[var(--color-red)] font-semibold">{t('hero.live')}</span>
+        <span class="mono-label text-[11px] text-[var(--color-red-text)] font-semibold">{t('hero.live')}</span>
       </span>
     </div>
 
@@ -132,7 +132,7 @@ const uploadPath = [
           </div>
           <div class="border-l-2 border-[var(--color-signal)] pl-4">
             <div class="mono-label text-[var(--color-ink-3)]">macOS</div>
-            <div class="readout text-[24px]">13<span class="text-[13px] text-[var(--color-ink-3)] ml-1">+</span></div>
+            <div class="readout text-[24px]">14<span class="text-[13px] text-[var(--color-ink-3)] ml-1">+</span></div>
           </div>
         </div>
       </div>
@@ -140,11 +140,14 @@ const uploadPath = [
       <!-- RIGHT: Monitor mockup with two animated ECG traces -->
       <div class="relative">
         <!-- Monitor "hardware" label -->
-        <div class="flex items-center justify-between mb-2 px-1">
-          <span class="mono-label text-[10px] text-[var(--color-ink-3)]">MONITOR · BandwidthECG.app</span>
-          <span class="mono-label text-[10px] text-[var(--color-signal-dark)] flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-signal)] live-dot"></span>
-            RECORDING
+        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-2 px-1">
+          <span class="mono-label text-[11px] text-[var(--color-ink-3)]">MONITOR · BandwidthECG.app</span>
+          <span class="flex items-center gap-3">
+            <span class="mono-label text-[11px] text-[var(--color-ink-2)] border border-[var(--color-grid-bold)] rounded-[2px] px-1.5 py-0.5 whitespace-nowrap">{t('common.sampleData')}</span>
+            <span class="mono-label text-[11px] text-[var(--color-signal-dark)] flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-signal)] live-dot"></span>
+              RECORDING
+            </span>
           </span>
         </div>
 
@@ -157,7 +160,7 @@ const uploadPath = [
               <span class="w-2.5 h-2.5 rounded-full bg-[var(--color-grid-bold)]"></span>
             </div>
             <div class="flex items-center gap-3">
-              <span class="mono-label text-[10px] text-[var(--color-ink-2)] flex items-center gap-1.5">
+              <span class="mono-label text-[11px] text-[var(--color-ink-2)] flex items-center gap-1.5">
                 <svg width="12" height="8" viewBox="0 0 24 16" aria-hidden="true"><path d="M0 8 L5 8 L7 4 L9 12 L11 2 L13 14 L15 8 L24 8" stroke="var(--color-signal)" stroke-width="2" fill="none"/></svg>
                 <span class="readout text-[11px]">318.4</span>
                 <span>&darr;</span>
@@ -213,12 +216,12 @@ const uploadPath = [
             <!-- Bottom readings strip — reduced to 2 most meaningful stats -->
             <div class="mt-5 pt-4 border-t border-dashed border-[var(--color-grid-bold)] grid grid-cols-2 gap-3">
               <div>
-                <div class="mono-label text-[var(--color-ink-3)] text-[9px]">{t('hero.todayPeak')}</div>
-                <div class="readout text-[15px] text-[var(--color-ink)]">471.8 <span class="text-[var(--color-ink-3)] text-[10px]">Mbps</span></div>
+                <div class="mono-label text-[var(--color-ink-3)] text-[11px]">{t('hero.todayPeak')}</div>
+                <div class="readout text-[15px] text-[var(--color-ink)]">471.8 <span class="text-[var(--color-ink-3)] text-[11px]">Mbps</span></div>
               </div>
               <div>
-                <div class="mono-label text-[var(--color-ink-3)] text-[9px]">{t('hero.planUsage')}</div>
-                <div class="readout text-[15px] text-[var(--color-signal-dark)]">63 <span class="text-[var(--color-ink-3)] text-[10px]">% · 500 Mbps</span></div>
+                <div class="mono-label text-[var(--color-ink-3)] text-[11px]">{t('hero.planUsage')}</div>
+                <div class="readout text-[15px] text-[var(--color-signal-dark)]">63 <span class="text-[var(--color-ink-3)] text-[11px]">% · 500 Mbps</span></div>
               </div>
             </div>
           </div>
@@ -231,6 +234,8 @@ const uploadPath = [
     (() => {
       const el = document.getElementById('acq-time');
       if (!el) return;
+      // A clock that keeps changing is motion too: hold it still for reduced-motion users.
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const start = new Date();
       start.setHours(14, 32, 7);
       setInterval(() => {

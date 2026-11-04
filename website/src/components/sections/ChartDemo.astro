@@ -9,44 +9,78 @@ interface Props {
 const { lang = defaultLang } = Astro.props
 const t = useTranslations(lang)
 
-// A richer, more varied "realistic" waveform — with a sustained burst in the middle
-// simulating a peak event, then returning to baseline.
-const richPath = [
-  'M 0 80',
-  // calm baseline with gentle variance
-  'L 40 80', 'L 60 78', 'L 80 82', 'L 100 80',
-  // first small beat
-  'L 120 80', 'L 130 72', 'L 140 80',
-  'L 160 80', 'L 170 85', 'L 172 40', 'L 178 115', 'L 184 80',
-  'L 210 80', 'L 220 76', 'L 240 80',
-  // quiet zone
-  'L 280 80', 'L 300 82', 'L 320 80',
-  // burst / sustained peak (network congestion)
-  'L 340 80', 'L 346 50', 'L 352 110', 'L 358 55', 'L 366 105', 'L 372 60',
-  'L 380 95', 'L 388 70', 'L 396 90', 'L 404 60', 'L 412 95', 'L 420 75',
-  'L 430 80',
-  // settle
-  'L 470 80', 'L 485 78', 'L 500 80',
-  // second beat
-  'L 530 80', 'L 540 85', 'L 544 35', 'L 550 120', 'L 556 80',
-  'L 580 80', 'L 590 76', 'L 610 80',
+// Sample trace for the demo. Every position on the plot (trace, Y-axis ticks, plan-ceiling
+// and approach lines) comes from yPct() below, so they cannot drift apart.
+// Percentages are measured from the top of the plot area.
+const PLAN_MBPS = 500      // sample plan ceiling
+const APPROACH_MBPS = 400  // 80% of the plan: the app's "approaching" event threshold
+const Y_AT_ZERO = 92       // 0 Mbps sits near the bottom
+const Y_AT_PLAN = 24       // the plan ceiling leaves headroom above it
+const VIEW_H = 160         // SVG viewBox height; the SVG is stretched to the plot area
+
+const yPct = (mbps: number) => Y_AT_ZERO - (mbps / PLAN_MBPS) * (Y_AT_ZERO - Y_AT_PLAN)
+
+// [x on the 1600-unit canvas, Mbps]. The readings in the footer strip match this series:
+//   AVG 182.6 · PEAK 471.8 · DIP 18.2 · NEAR-PEAK HITS 3 (peaks above the 400 Mbps approach line).
+// Shape: calm baseline, a sustained burst (~14:29), then single beats and a micro spike.
+const B = 177.9
+const samples: [number, number][] = [
+  [0, B], [40, B], [60, 195], [80, 170], [100, B], [120, B], [130, 230], [140, B], [160, B],
+  // first beat stays under the approach line
+  [170, 160], [172, 370], [178, 40], [184, B], [210, B], [220, 205], [240, B],
   // quiet
-  'L 650 80', 'L 680 82', 'L 710 80',
-  // micro spike
-  'L 740 80', 'L 748 60', 'L 754 100', 'L 762 80',
-  'L 790 80', 'L 810 78', 'L 830 80',
+  [280, B], [300, 170], [320, B],
+  // burst / sustained activity (the "peak event")
+  [340, B], [346, 375], [352, 60], [358, 340], [366, 80], [372, 310], [380, 120], [388, 245],
+  [396, 140], [404, 310], [412, 120], [420, 215], [430, B],
+  // settle, then the highest peak of the window
+  [470, B], [485, 195], [500, B], [530, B], [540, 160], [544, 471.8], [550, 18.2], [556, B],
+  [580, B], [590, 205], [610, B],
+  // quiet, micro spike
+  [650, B], [680, 170], [710, B], [740, B], [748, 310], [754, 100], [762, B], [790, B], [810, 195], [830, B],
   // third beat
-  'L 860 80', 'L 870 85', 'L 874 40', 'L 880 115', 'L 886 80',
-  'L 910 80', 'L 920 76', 'L 940 80',
-  'L 980 80', 'L 1000 78', 'L 1020 80',
+  [860, B], [870, 160], [874, 440], [880, 40], [886, B], [910, B], [920, 205], [940, B],
+  [980, B], [1000, 195], [1020, B],
   // small cluster
-  'L 1040 80', 'L 1048 70', 'L 1056 90', 'L 1064 75', 'L 1072 85', 'L 1080 80',
-  'L 1120 80', 'L 1140 78', 'L 1160 80',
+  [1040, B], [1048, 245], [1056, 140], [1064, 215], [1072, 160], [1080, B], [1120, B], [1140, 195], [1160, B],
   // fourth beat
-  'L 1180 80', 'L 1190 85', 'L 1194 35', 'L 1200 120', 'L 1206 80',
-  'L 1230 80', 'L 1240 76', 'L 1260 80',
-  'L 1600 80'
-].join(' ')
+  [1180, B], [1190, 160], [1194, 455], [1200, 40], [1206, B], [1230, B], [1240, 205], [1260, B],
+  [1600, B],
+]
+
+// A trace that crosses the ceiling would contradict the "PLAN CEILING" line drawn over it.
+if (samples.some(([, mbps]) => mbps > PLAN_MBPS)) {
+  throw new Error('ChartDemo: sample trace must stay at or below the plan ceiling')
+}
+
+const richPath = samples
+  .map(([x, mbps], i) => `${i === 0 ? 'M' : 'L'} ${x} ${((yPct(mbps) / 100) * VIEW_H).toFixed(1)}`)
+  .join(' ')
+
+const yTicks = [
+  { mbps: PLAN_MBPS, label: String(PLAN_MBPS) },
+  { mbps: PLAN_MBPS / 2, label: String(PLAN_MBPS / 2) },
+  { mbps: 0, label: '0 Mbps' },
+]
+
+// The 15-minute window runs 14:25 to 14:40 across the whole plot (x 0 to 1600). The axis labels
+// and the peak annotation are both placed from this one mapping, so they cannot disagree.
+const X_MAX = 1600
+const WINDOW_START_MIN = 14 * 60 + 25
+const WINDOW_MINUTES = 15
+const clock = (min: number) =>
+  `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(Math.floor(min % 60)).padStart(2, '0')}`
+const xPct = (x: number) => (x / X_MAX) * 100
+const timeAt = (x: number) => clock(WINDOW_START_MIN + (x / X_MAX) * WINDOW_MINUTES)
+
+const timeLabels = [0, 1, 2, 3, 4, 5].map((i) => ({
+  pct: i * 20,
+  label: clock(WINDOW_START_MIN + (i * WINDOW_MINUTES) / 5),
+})) // 14:25, 14:28 ... 14:40
+
+// The highest point of the series: the annotation points here, and the PEAK readout shows it.
+const [peakX, peakMbps] = samples.reduce((hi, cur) => (cur[1] > hi[1] ? cur : hi))
+const approachPct = Math.round((APPROACH_MBPS / PLAN_MBPS) * 100)
 ---
 
 <section id="chart" class="clinic border-t border-[var(--color-grid-bold)]">
@@ -62,22 +96,24 @@ const richPath = [
     <!-- The "chart print-out" -->
     <div class="relative border border-[var(--color-ink)] rounded-[3px] bg-[var(--color-paper)] shadow-[8px_8px_0_0_rgba(13,13,13,0.06)] overflow-hidden">
       <!-- Printer-head header -->
-      <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--color-grid-bold)] bg-[var(--color-paper-dim)]">
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3 border-b border-[var(--color-grid-bold)] bg-[var(--color-paper-dim)]">
         <div class="flex items-center gap-3">
           <span class="w-2 h-2 rounded-full bg-[var(--color-red)] live-dot"></span>
           <span class="mono-label text-[var(--color-ink)]">RECORDING</span>
+          <span class="mono-label text-[11px] text-[var(--color-ink-2)] border border-[var(--color-grid-bold)] rounded-[2px] px-1.5 py-0.5 whitespace-nowrap">{t('common.sampleData')}</span>
           <span class="hidden sm:inline mono-label text-[var(--color-ink-3)]">|</span>
           <span class="hidden sm:inline mono-label text-[var(--color-ink-3)]">SESSION 00418</span>
           <span class="hidden sm:inline mono-label text-[var(--color-ink-3)]">|</span>
           <span class="hidden sm:inline mono-label text-[var(--color-ink-3)]">WINDOW 15m</span>
         </div>
-        <div class="flex items-center gap-3 mono-label text-[var(--color-ink-3)]">
-          <button class="px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] transition">1m</button>
-          <button class="px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] transition">5m</button>
-          <button class="px-2 py-1 bg-[var(--color-ink)] text-[var(--color-paper)] rounded-[2px]">15m</button>
-          <button class="hidden sm:inline px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] transition">30m</button>
-          <button class="hidden md:inline px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] transition">1h</button>
-          <button class="hidden md:inline px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] transition">24h</button>
+        <!-- Static illustration of the app's range picker. Not controls, so no hover and no tab stops. -->
+        <div class="flex items-center gap-3 mono-label normal-case text-[var(--color-ink-3)]">
+          <span class="px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px]">1m</span>
+          <span class="px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px]">5m</span>
+          <span class="px-2 py-1 bg-[var(--color-ink)] text-[var(--color-paper)] rounded-[2px]">15m</span>
+          <span class="hidden sm:inline px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px]">30m</span>
+          <span class="hidden md:inline px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px]">1h</span>
+          <span class="hidden md:inline px-2 py-1 border border-[var(--color-grid-bold)] rounded-[2px]">24h</span>
         </div>
       </div>
 
@@ -85,43 +121,52 @@ const richPath = [
       <div class="grid grid-cols-[56px_1fr] md:grid-cols-[80px_1fr]">
         <!-- Left gutter: lead labels + Y scale marks -->
         <aside class="border-r border-dashed border-[var(--color-grid-bold)] py-4 relative">
-          <div class="sticky top-4 flex flex-col h-full justify-between pl-2 pr-1">
-            <div>
-              <div class="mono-label text-[10px] text-[var(--color-signal-dark)]">{t('chartDemo.leadDown')}</div>
-              <div class="mono-label text-[9px] text-[var(--color-ink-3)] mt-0.5">{t('chartDemo.downLabel')}</div>
-            </div>
-            <div class="flex-1 flex flex-col justify-around py-6 mono-label text-[9px] text-[var(--color-ink-3)]">
-              <span>500</span>
-              <span>250</span>
-              <span>0 Mbps</span>
-            </div>
+          <div class="pl-2 pr-1">
+            <div class="mono-label text-[11px] text-[var(--color-signal-dark)]">{t('chartDemo.leadDown')}</div>
+            <div class="mono-label text-[11px] text-[var(--color-ink-3)] mt-0.5">{t('chartDemo.downLabel')}</div>
           </div>
+          <!-- Tick labels sit at the same percentages as the trace and threshold lines -->
+          {yTicks.map(({ mbps, label }) => (
+            <span
+              class="absolute left-2 -translate-y-1/2 mono-label text-[11px] text-[var(--color-ink-3)]"
+              style={`top: ${yPct(mbps)}%`}
+            >{label}</span>
+          ))}
         </aside>
 
         <!-- Paper area with grid and traces -->
         <div class="relative ecg-paper min-h-[320px] md:min-h-[420px]">
           <!-- Threshold line (plan ceiling) -->
-          <div class="absolute inset-x-0 top-[22%] flex items-center pointer-events-none">
-            <span class="mono-label text-[9px] text-[var(--color-red)] px-2 bg-[var(--color-paper)] ml-2">PLAN CEILING &middot; 500 Mbps</span>
+          <div class="absolute inset-x-0 -translate-y-1/2 flex items-center pointer-events-none" style={`top: ${yPct(PLAN_MBPS)}%`}>
+            <span class="mono-label text-[11px] text-[var(--color-red-text)] px-2 bg-[var(--color-paper)] ml-2">PLAN CEILING &middot; {PLAN_MBPS} Mbps</span>
             <span class="flex-1 border-t border-dashed border-[var(--color-red)]"></span>
           </div>
           <!-- Amber approach line -->
-          <div class="absolute inset-x-0 top-[35%] flex items-center pointer-events-none">
-            <span class="mono-label text-[9px] text-[var(--color-amber)] px-2 bg-[var(--color-paper)] ml-2">APPROACH &middot; 80%</span>
+          <div class="absolute inset-x-0 -translate-y-1/2 flex items-center pointer-events-none" style={`top: ${yPct(APPROACH_MBPS)}%`}>
+            <span class="mono-label text-[11px] text-[var(--color-amber-text)] px-2 bg-[var(--color-paper)] ml-2"><span class="sm:hidden">{approachPct}%</span><span class="hidden sm:inline">APPROACH &middot; {approachPct}%</span></span>
             <span class="flex-1 border-t border-dotted border-[var(--color-amber)]"></span>
           </div>
 
           <!-- The ECG trace -->
           <svg viewBox="0 0 1600 160" preserveAspectRatio="none" class="w-full h-full absolute inset-0" aria-hidden="true">
-            <path d={richPath} class="ecg-trace ecg-trace--slow"/>
+            <path d={richPath} pathLength="2400" class="ecg-trace ecg-trace--slow"/>
           </svg>
 
-          <!-- Annotation callouts -->
-          <div class="absolute left-[22%] top-[60%] text-[var(--color-ink-2)] pointer-events-none hidden md:block">
-            <div class="mono-label text-[10px]">&uarr; peak event &middot; 14:41</div>
+          <!-- Ring on the highest point of the trace -->
+          <span
+            class="absolute w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[var(--color-red)] pointer-events-none"
+            style={`left: ${xPct(peakX)}%; top: ${yPct(peakMbps)}%`}
+            aria-hidden="true"
+          ></span>
+
+          <!-- Annotation callouts. The peak label sits under the spike it names (below the dip,
+               where no trace passes), at the time that x position has on the axis below. -->
+          <div class="absolute top-[92%] -translate-x-1 text-[var(--color-ink-2)] pointer-events-none hidden md:block" style={`left: ${xPct(peakX)}%`}>
+            <div class="mono-label text-[11px] whitespace-nowrap">&uarr; {t('chartDemo.peakEvent')} &middot; {timeAt(peakX)}</div>
           </div>
-          <div class="absolute right-[6%] top-[25%] text-[var(--color-signal-dark)] pointer-events-none hidden md:block">
-            <div class="mono-label text-[10px]">&larr; returning to baseline</div>
+          <!-- Only where the quiet tail after the last beat is wide enough to hold the label without crossing a spike. -->
+          <div class="absolute right-[3%] top-[56%] text-[var(--color-signal-dark)] pointer-events-none hidden lg:block">
+            <div class="mono-label text-[11px]">&larr; {t('chartDemo.returningToBaseline')}</div>
           </div>
         </div>
       </div>
@@ -129,20 +174,20 @@ const richPath = [
       <!-- Footer strip: readings -->
       <div class="border-t border-[var(--color-grid-bold)] bg-[var(--color-paper-dim)] px-5 py-3 flex flex-wrap items-center gap-x-8 gap-y-2">
         <div class="flex items-baseline gap-2">
-          <span class="mono-label text-[9px] text-[var(--color-ink-3)]">AVG</span>
-          <span class="readout text-[14px] text-[var(--color-ink)]">182.6 <span class="mono-label text-[var(--color-ink-3)] text-[10px]">Mbps</span></span>
+          <span class="mono-label text-[11px] text-[var(--color-ink-3)]">AVG</span>
+          <span class="readout text-[14px] text-[var(--color-ink)]">182.6 <span class="mono-label text-[var(--color-ink-3)] text-[11px]">Mbps</span></span>
         </div>
         <div class="flex items-baseline gap-2">
-          <span class="mono-label text-[9px] text-[var(--color-ink-3)]">PEAK</span>
-          <span class="readout text-[14px] text-[var(--color-red)]">471.8 <span class="mono-label text-[var(--color-ink-3)] text-[10px]">Mbps</span></span>
+          <span class="mono-label text-[11px] text-[var(--color-ink-3)]">PEAK</span>
+          <span class="readout text-[14px] text-[var(--color-red-text)]">{peakMbps.toFixed(1)} <span class="mono-label text-[var(--color-ink-3)] text-[11px]">Mbps</span></span>
         </div>
         <div class="flex items-baseline gap-2">
-          <span class="mono-label text-[9px] text-[var(--color-ink-3)]">DIP</span>
-          <span class="readout text-[14px] text-[var(--color-ink)]">18.2 <span class="mono-label text-[var(--color-ink-3)] text-[10px]">Mbps</span></span>
+          <span class="mono-label text-[11px] text-[var(--color-ink-3)]">DIP</span>
+          <span class="readout text-[14px] text-[var(--color-ink)]">18.2 <span class="mono-label text-[var(--color-ink-3)] text-[11px]">Mbps</span></span>
         </div>
         <div class="flex items-baseline gap-2">
-          <span class="mono-label text-[9px] text-[var(--color-ink-3)]">NEAR-PEAK HITS</span>
-          <span class="readout text-[14px] text-[var(--color-amber)]">3</span>
+          <span class="mono-label text-[11px] text-[var(--color-ink-3)]">NEAR-PEAK HITS</span>
+          <span class="readout text-[14px] text-[var(--color-amber-text)]">3</span>
         </div>
         <div class="ml-auto tag-normal">
           <span class="tag-dot"></span>
@@ -152,13 +197,19 @@ const richPath = [
     </div>
 
     <!-- Below: timestamps like a printed timeline -->
-    <div class="mt-4 grid grid-cols-6 mono-label text-[10px] text-[var(--color-ink-3)]">
-      <span>14:25</span>
-      <span>14:28</span>
-      <span>14:31</span>
-      <span>14:34</span>
-      <span>14:37</span>
-      <span class="text-right">14:40</span>
+    <div class="mt-4 grid grid-cols-[56px_1fr] md:grid-cols-[80px_1fr] mono-label text-[11px] text-[var(--color-ink-3)]">
+      <span aria-hidden="true"></span>
+      <div class="relative h-4">
+        {timeLabels.map(({ pct, label }, i) => (
+          <span
+            class:list={[
+              'absolute top-0 whitespace-nowrap',
+              i === 0 ? '' : i === timeLabels.length - 1 ? '-translate-x-full' : '-translate-x-1/2 hidden sm:inline',
+            ]}
+            style={`left: ${pct}%`}
+          >{label}</span>
+        ))}
+      </div>
     </div>
   </div>
 </section>
