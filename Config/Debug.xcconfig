@@ -4,5 +4,6 @@
 
 #include "Shared.xcconfig"
 
-// No additional debug-specific overrides needed
-// All debug settings use Xcode project defaults
+// Debug builds use a separate bundle ID so they never read or write the real
+// sandbox container (~/Library/Containers/com.bobo52310.BandwidthECG).
+PRODUCT_BUNDLE_IDENTIFIER = com.bobo52310.BandwidthECG.debug

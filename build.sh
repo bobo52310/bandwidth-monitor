@@ -1,36 +1,67 @@
 #!/bin/bash
+# Usage: ./build.sh [debug|release] [--run]
+#
+#   debug    Debug build for arm64 (default). Bundle ID com.bobo52310.BandwidthECG.debug
+#   release  Universal Release build. Uses the REAL bundle ID, so it is never launched.
+#   --run    Launch the app after building. Debug only.
 
-# 建置類型參數 (debug/release)
-CONFIG=${1:-Debug}
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+CONFIG_ARG="Debug"
+RUN=0
+
+for arg in "$@"; do
+    case "$arg" in
+        --run)
+            RUN=1
+            ;;
+        *)
+            CONFIG_ARG="$arg"
+            ;;
+    esac
+done
+
+# Normalize the configuration name (case-insensitive).
+CONFIG_LOWER=$(printf '%s' "$CONFIG_ARG" | tr '[:upper:]' '[:lower:]')
+case "$CONFIG_LOWER" in
+    debug)
+        CONFIG="Debug"
+        DESTINATION="platform=macOS,arch=arm64"
+        ;;
+    release)
+        CONFIG="Release"
+        DESTINATION="generic/platform=macOS"
+        ;;
+    *)
+        echo "Unknown configuration: $CONFIG_ARG (expected debug or release)" >&2
+        echo "Usage: ./build.sh [debug|release] [--run]" >&2
+        exit 2
+        ;;
+esac
+
+# Release uses the real bundle ID and the real sandbox container. Refuse before building.
+if [ "$RUN" -eq 1 ] && [ "$CONFIG" = "Release" ]; then
+    echo "Release uses the real bundle ID; use the QA copy" >&2
+    exit 2
+fi
 
 echo "Building BandwidthECG ($CONFIG)..."
 
-# 建置
 xcodebuild -workspace BandwidthECG.xcworkspace \
            -scheme BandwidthECG \
-           -configuration $CONFIG \
+           -configuration "$CONFIG" \
+           -destination "$DESTINATION" \
+           -derivedDataPath .build/DerivedData \
            build
 
-if [ $? -eq 0 ]; then
-    echo "Build successful!"
+APP_PATH=".build/DerivedData/Build/Products/$CONFIG/BandwidthECG.app"
 
-    # 找到 app 路徑
-    APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData \
-                    -name "BandwidthECG.app" \
-                    -path "*/$CONFIG/*" \
-                    -maxdepth 6 \
-                    2>/dev/null | head -1)
+echo "Build successful!"
+echo "$APP_PATH"
 
-    if [ -n "$APP_PATH" ]; then
-        echo "Launching app: $APP_PATH"
-        open "$APP_PATH"
-    else
-        echo "Could not find built app"
-        # 備用路徑
-        echo "Trying alternative path..."
-        open ~/Library/Developer/Xcode/DerivedData/BandwidthECG-*/Build/Products/$CONFIG/BandwidthECG.app
-    fi
-else
-    echo "Build failed!"
-    exit 1
+if [ "$RUN" -eq 1 ]; then
+    echo "Launching $APP_PATH"
+    open "$APP_PATH"
 fi
