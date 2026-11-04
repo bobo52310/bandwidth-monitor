@@ -80,7 +80,7 @@
         "no": "06",
         "title": "極低系統負載",
         "subtitle": "Ultra lightweight",
-        "description": "採用 macOS 原生 API 開發，CPU 使用率低於 1%，記憶體佔用極小，絲毫不影響效能。",
+        "description": "採用 macOS 原生 API 開發。原生輕量設計，常駐選單列。",
         "range": "Native performance",
         "tag": "OPTIMIZED"
       }
@@ -139,7 +139,7 @@
       },
       {
         "question": "常駐執行會拖慢我的電腦效能嗎？",
-        "answer": "不會。我們採用極致輕量化的原生開發，CPU 佔用率通常在 1% 以下，記憶體也僅需極小空間，完全不會影響日常工作。"
+        "answer": "不會。原生輕量設計，常駐選單列，不會拖慢日常工作。"
       },
       {
         "question": "如果我不想用了，該怎麼完全移除？",
@@ -159,7 +159,7 @@
     "features": [
       "無廣告・免註冊",
       "App 不收集使用資料",
-      "極低系統負載"
+      "原生輕量設計，常駐選單列"
     ]
   },
   "footer": {

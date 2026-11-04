@@ -79,9 +79,9 @@
       {
         "no": "06",
         "title": "Low-draw instrument",
-        "subtitle": "CPU <1%, RAM <50MB",
+        "subtitle": "Native and lightweight",
         "description": "Built on native APIs. You'll forget it's running — which is the point of a good monitor.",
-        "range": "Vitals · CPU <1% · RAM <50MB",
+        "range": "Native performance",
         "tag": "LIGHTWEIGHT"
       }
     ]
@@ -139,7 +139,7 @@
       },
       {
         "question": "Will it slow down my Mac?",
-        "answer": "It won't. Monitoring uses native APIs — typically under 1% CPU and under 50 MB of RAM."
+        "answer": "It won't. Native and lightweight, it lives in the menu bar and stays out of your way."
       },
       {
         "question": "How do I fully uninstall?",
@@ -159,7 +159,7 @@
     "features": [
       "No ads · No account",
       "100% local — no data uploaded",
-      "CPU < 1% · RAM < 50 MB"
+      "Native and lightweight, lives in the menu bar"
     ]
   },
   "footer": {
