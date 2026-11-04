@@ -29,6 +29,10 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
     /// The highest of the daily peaks, each against the plan of its own day.
     public let highestDownloadDayRatio: Double?
     public let highestUploadDayRatio: Double?
+    /// The counted days the recommendation rests on, when that is fewer than `daysMonitored`:
+    /// a month that also holds days from an older version, which kept no per-day detail.
+    /// `nil` means every monitored day counts.
+    public let recommendationDays: Int?
 
     public init(
         id: UUID = UUID(),
@@ -53,7 +57,8 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
         peakDownloadTime: Date? = nil,
         peakUploadTime: Date? = nil,
         highestDownloadDayRatio: Double? = nil,
-        highestUploadDayRatio: Double? = nil
+        highestUploadDayRatio: Double? = nil,
+        recommendationDays: Int? = nil
     ) {
         self.id = id
         self.month = month
@@ -78,6 +83,7 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
         self.peakUploadTime = peakUploadTime
         self.highestDownloadDayRatio = highestDownloadDayRatio
         self.highestUploadDayRatio = highestUploadDayRatio
+        self.recommendationDays = recommendationDays
     }
 
     /// Reads every format this type has been stored in. The fields of the first version are
@@ -108,6 +114,7 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
         peakUploadTime = try container.decodeIfPresent(Date.self, forKey: .peakUploadTime)
         highestDownloadDayRatio = try container.decodeIfPresent(Double.self, forKey: .highestDownloadDayRatio)
         highestUploadDayRatio = try container.decodeIfPresent(Double.self, forKey: .highestUploadDayRatio)
+        recommendationDays = try container.decodeIfPresent(Int.self, forKey: .recommendationDays)
     }
 
     // MARK: - Building from Daily Records
@@ -157,6 +164,68 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
         )
     }
 
+    /// The month an older version was still accumulating when the user upgraded, together with
+    /// what this version has recorded since (final review F1). Neither hides the other.
+    ///
+    /// - Peaks take the higher one; a peak time is only known for a daily peak.
+    /// - Approaches, disconnects and downtime add up. The old days are counted too.
+    /// - Averages are weighted by days, each side by the days it has data for.
+    /// - The plan and the recommendation come from the daily records alone: the old format has
+    ///   no per-day peaks, so it cannot show saturation or a P95.
+    ///
+    /// The old data is only ever read, so calling this again on a later launch gives the same month.
+    ///
+    /// `legacyDayLimit` caps the old day count (re-review N1). The old format kept a count, not
+    /// dates, so a day both versions recorded (the upgrade day) cannot be found; the caller passes
+    /// the most old days that can be distinct from the counted daily days.
+    public func merging(legacy: MonthlySummary, recordedDays: Int, legacyDayLimit: Int? = nil) -> MonthlySummary {
+        let legacyDays = max(0, min(legacy.daysMonitored, legacyDayLimit ?? legacy.daysMonitored))
+        func weighted(_ legacyValue: Double, _ legacyDays: Int, _ dailyValue: Double, _ dailyDays: Int) -> Double {
+            let total = legacyDays + dailyDays
+            guard total > 0 else { return 0 }
+            return (legacyValue * Double(legacyDays) + dailyValue * Double(dailyDays)) / Double(total)
+        }
+        /// A mean of 0 means "no sample" for latency and jitter, so it carries no weight.
+        func weightedPresent(_ legacyValue: Double, _ dailyValue: Double) -> Double {
+            weighted(legacyValue, legacyValue > 0 ? legacyDays : 0,
+                     dailyValue, dailyValue > 0 ? recordedDays : 0)
+        }
+        let plan = (download: planDownloadMbps > 0 ? planDownloadMbps : legacy.planDownloadMbps,
+                    upload: planUploadMbps > 0 ? planUploadMbps : legacy.planUploadMbps)
+        func ratio(_ peak: Double, _ plan: Double) -> Double? { plan > 0 ? peak / plan : nil }
+        func highest(_ daily: Double?, _ legacy: Double?) -> Double? {
+            [daily, legacy].compactMap { $0 }.max()
+        }
+        let legacyDownloadWins = legacy.peakDownloadMbps > peakDownloadMbps
+        let legacyUploadWins = legacy.peakUploadMbps > peakUploadMbps
+
+        return MonthlySummary(
+            month: month,
+            peakDownloadMbps: max(peakDownloadMbps, legacy.peakDownloadMbps),
+            peakUploadMbps: max(peakUploadMbps, legacy.peakUploadMbps),
+            avgDownloadMbps: weighted(legacy.avgDownloadMbps, legacyDays, avgDownloadMbps, recordedDays),
+            avgUploadMbps: weighted(legacy.avgUploadMbps, legacyDays, avgUploadMbps, recordedDays),
+            planDownloadMbps: plan.download,
+            planUploadMbps: plan.upload,
+            peakApproachCount: peakApproachCount + legacy.peakApproachCount,
+            disconnectCount: disconnectCount + legacy.disconnectCount,
+            totalDowntimeSeconds: totalDowntimeSeconds + legacy.totalDowntimeSeconds,
+            avgLatencyMs: weightedPresent(legacy.avgLatencyMs, avgLatencyMs),
+            avgJitterMs: weightedPresent(legacy.avgJitterMs, avgJitterMs),
+            daysMonitored: daysMonitored + legacyDays,
+            monthKey: monthKey,
+            saturatedDays: saturatedDays,
+            downloadDailyPeakP95Ratio: downloadDailyPeakP95Ratio,
+            uploadDailyPeakP95Ratio: uploadDailyPeakP95Ratio,
+            latencyFailureCount: latencyFailureCount,
+            peakDownloadTime: legacyDownloadWins ? nil : peakDownloadTime,
+            peakUploadTime: legacyUploadWins ? nil : peakUploadTime,
+            highestDownloadDayRatio: highest(highestDownloadDayRatio, ratio(legacy.peakDownloadMbps, plan.download)),
+            highestUploadDayRatio: highest(highestUploadDayRatio, ratio(legacy.peakUploadMbps, plan.upload)),
+            recommendationDays: recommendationDayCount
+        )
+    }
+
     /// Nearest-rank 95th percentile: the value at index `ceil(0.95 * n) - 1` of the sorted values.
     public static func percentile95(_ values: [Double]) -> Double? {
         guard !values.isEmpty else { return nil }
@@ -195,6 +264,9 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
     public var formattedMonth: String {
         monthKey.replacingOccurrences(of: "-", with: "/")
     }
+
+    /// The counted days behind the recommendation; see `recommendationDays`.
+    public var recommendationDayCount: Int { recommendationDays ?? daysMonitored }
 
     // MARK: - Plan Recommendation
 
@@ -250,12 +322,15 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
 
     /// Recommendation from the month's daily sustained peaks, using `ReportRules`.
     ///
+    /// Only days with daily records count (`recommendationDayCount`).
+    ///
     /// - Too few counted days, or a summary with no daily data: `.insufficientData`
     /// - Enough distinct days saturated in either direction: `.considerUpgrade`
     /// - Both directions' P95 low over enough days, with no saturated day: `.considerDowngrade`
     /// - Otherwise: `.planFits`
     public var recommendation: PlanRecommendation {
-        guard daysMonitored >= ReportRules.minDaysForRecommendation,
+        let days = recommendationDayCount
+        guard days >= ReportRules.minDaysForRecommendation,
               let saturatedDays,
               let downloadDailyPeakP95Ratio,
               let uploadDailyPeakP95Ratio else {
@@ -264,7 +339,7 @@ public struct MonthlySummary: Codable, Identifiable, Sendable {
         if saturatedDays >= ReportRules.saturatedDaysForUpgrade {
             return .considerUpgrade
         }
-        if daysMonitored >= ReportRules.minDaysForDowngrade,
+        if days >= ReportRules.minDaysForDowngrade,
            saturatedDays == 0,
            downloadDailyPeakP95Ratio < ReportRules.downgradeP95Ratio,
            uploadDailyPeakP95Ratio < ReportRules.downgradeP95Ratio {

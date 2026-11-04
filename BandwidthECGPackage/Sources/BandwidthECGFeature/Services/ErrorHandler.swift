@@ -21,19 +21,21 @@ public class ErrorHandler {
     private let logToFile: Bool
     private let defaults: UserDefaults
 
-    // Log file URL
-    private var logFileURL: URL? {
-        let appDirectory = AppPaths.supportDirectory
+    // Log file location. The log rolls over to `error_log.1.txt` above `maxLogFileBytes`, and
+    // only that one old generation is kept, so the two files together stay near 2 MB.
+    private let logDirectory: URL
+    private let maxLogFileBytes = 1_048_576
+    private var logFileURL: URL { logDirectory.appendingPathComponent("error_log.txt") }
+    private var rotatedLogFileURL: URL { logDirectory.appendingPathComponent("error_log.1.txt") }
 
-        // Create directory if it doesn't exist
-        try? FileManager.default.createDirectory(at: appDirectory, withIntermediateDirectories: true)
-
-        return appDirectory.appendingPathComponent("error_log.txt")
-    }
-
-    public init(logToFile: Bool = true, defaults: UserDefaults = .standard) {
+    public init(
+        logToFile: Bool = true,
+        defaults: UserDefaults = .standard,
+        logDirectory: URL = AppPaths.supportDirectory
+    ) {
         self.logToFile = logToFile
         self.defaults = defaults
+        self.logDirectory = logDirectory
         self.isLoggingEnabled = defaults.object(forKey: "errorLoggingEnabled") as? Bool ?? true
     }
 
@@ -117,22 +119,43 @@ public class ErrorHandler {
     }
 
     private func writeToFile(_ message: String) {
-        guard let logFileURL = logFileURL else { return }
-
         let logMessage = message + "\n"
+        guard let data = logMessage.data(using: .utf8) else { return }
+
+        if FileManager.default.fileExists(atPath: logFileURL.path) {
+            rotateIfNeeded()
+        }
 
         if FileManager.default.fileExists(atPath: logFileURL.path) {
             // Append to existing file
             if let fileHandle = try? FileHandle(forWritingTo: logFileURL) {
                 fileHandle.seekToEndOfFile()
-                if let data = logMessage.data(using: .utf8) {
-                    fileHandle.write(data)
-                }
+                fileHandle.write(data)
                 fileHandle.closeFile()
             }
         } else {
-            // Create new file
-            try? logMessage.write(to: logFileURL, atomically: true, encoding: .utf8)
+            // Create new file. The directory is only created here, not on every write.
+            try? FileManager.default.createDirectory(at: logDirectory, withIntermediateDirectories: true)
+            try? data.write(to: logFileURL, options: .atomic)
+        }
+    }
+
+    /// Moves the log to `error_log.1.txt` once it is larger than `maxLogFileBytes`, replacing the
+    /// previous old generation. If the move fails, the oversized file is deleted instead so the
+    /// log can never grow without bound.
+    private func rotateIfNeeded() {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: logFileURL.path),
+              let size = (attributes[.size] as? NSNumber)?.intValue,
+              size > maxLogFileBytes else {
+            return
+        }
+
+        try? FileManager.default.removeItem(at: rotatedLogFileURL)
+        do {
+            try FileManager.default.moveItem(at: logFileURL, to: rotatedLogFileURL)
+        } catch {
+            logger.error("Log rotation failed: \(error.localizedDescription)")
+            try? FileManager.default.removeItem(at: logFileURL)
         }
     }
 
@@ -145,14 +168,13 @@ public class ErrorHandler {
 
     /// Clear log file
     public func clearLogFile() {
-        guard let logFileURL = logFileURL else { return }
         try? FileManager.default.removeItem(at: logFileURL)
+        try? FileManager.default.removeItem(at: rotatedLogFileURL)
     }
 
     /// Get log file size
     public func getLogFileSize() -> String? {
-        guard let logFileURL = logFileURL,
-              let attributes = try? FileManager.default.attributesOfItem(atPath: logFileURL.path),
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: logFileURL.path),
               let fileSize = attributes[.size] as? Int64 else {
             return nil
         }
@@ -162,8 +184,7 @@ public class ErrorHandler {
 
     /// Export log file
     public func exportLogFile() -> URL? {
-        guard let logFileURL = logFileURL,
-              FileManager.default.fileExists(atPath: logFileURL.path) else {
+        guard FileManager.default.fileExists(atPath: logFileURL.path) else {
             return nil
         }
 

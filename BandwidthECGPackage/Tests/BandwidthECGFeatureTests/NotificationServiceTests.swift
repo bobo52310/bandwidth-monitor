@@ -108,6 +108,31 @@ struct NotificationServiceTests {
 
     // MARK: - Failures are visible
 
+    /// The cooldown counts real elapsed time. Setting the clock back must not hold alerts back
+    /// for the hours it went back, and setting it forward must not end the cooldown early.
+    @Test func cooldown_followsElapsedTimeNotTheWallClock() async {
+        let delivery = FakeNotificationDelivery()
+        let service = await makeService(delivery)
+        func trigger() async {
+            service.checkAndNotify(downloadSpeed: 300, uploadSpeed: 0, downloadPlanSpeed: 300, uploadPlanSpeed: 300)
+            await service.lastDeliveryTask?.value
+        }
+
+        await trigger()
+        #expect(delivery.delivered.count == 1)
+
+        // The wall clock goes back a day; an hour of real time passes.
+        clock.setWall(clock.now.addingTimeInterval(-86_400))
+        clock.advance(by: 3600)
+        await trigger()
+        #expect(delivery.delivered.count == 2, "a clock set back suppressed the alert")
+
+        // The wall clock jumps a day forward with no real time passing: still cooling down.
+        clock.setWall(clock.now.addingTimeInterval(86_400 * 2))
+        await trigger()
+        #expect(delivery.delivered.count == 2, "a clock set forward ended the cooldown")
+    }
+
     @Test func deliverFailure_surfaced() async {
         let delivery = FakeNotificationDelivery()
         let service = await makeService(delivery)

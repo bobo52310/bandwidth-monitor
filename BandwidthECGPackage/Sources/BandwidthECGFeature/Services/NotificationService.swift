@@ -27,7 +27,9 @@ public class NotificationService {
     private let delivery: any NotificationDelivering
     private let logger = Logger(subsystem: "com.bandwidthecg", category: "Notifications")
 
-    private var lastNotificationTime: Date?
+    /// `clock.monotonic()` of the last alert. Elapsed time, not the wall clock: setting the clock
+    /// back must not hold alerts back, and setting it forward must not end the cooldown.
+    private var lastNotificationMonotonic: TimeInterval?
     private let cooldownInterval: TimeInterval = 3600 // 1 hour cooldown
 
     /// The authorization request started by `init`. Internal so tests can await it.
@@ -72,12 +74,11 @@ public class NotificationService {
     private func shouldSendNotification() -> Bool {
         guard isEnabled else { return false }
 
-        guard let lastTime = lastNotificationTime else {
+        guard let lastTime = lastNotificationMonotonic else {
             return true
         }
 
-        let timeSinceLastNotification = clock.now().timeIntervalSince(lastTime)
-        return timeSinceLastNotification >= cooldownInterval
+        return clock.monotonic() - lastTime >= cooldownInterval
     }
 
     /// A plan speed that is safe to divide by and to convert to `Int`: finite and positive,
@@ -136,7 +137,7 @@ public class NotificationService {
         if let titlePlan = triggeredPlans.max() {
             let title = L10n.notificationApproachingLimit(Int(titlePlan))
             sendNotification(title: title, body: message)
-            lastNotificationTime = clock.now()
+            lastNotificationMonotonic = clock.monotonic()
         }
     }
 

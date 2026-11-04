@@ -431,6 +431,67 @@ struct ViewModelIntegrationTests {
         #expect(reloaded.records[DayKey.day(for: clock.now, calendar: clock.calendar)]?.disconnectCount ?? 0 == 0)
     }
 
+    // MARK: - Quit (final review F2)
+
+    /// An outage still open when the app quits is recorded, ending at quit, and reaches the file.
+    @Test func quit_recordsTheOpenOutage() async throws {
+        let clock = TestClock(2026, 11, 4, 9)
+        let path = FakePathSource()
+        let blobs = InMemoryBlobStore()
+        let viewModel = makeViewModel(clock, pathSource: path, blobs: blobs)
+        viewModel.disconnectTracker.startMonitoring()
+        path.emit(pathUp)
+        path.emit(pathDown)
+        #expect(await eventually { !viewModel.disconnectTracker.isConnected })
+        clock.advance(by: 600)
+
+        viewModel.prepareForQuit()
+
+        let day = DayKey.day(for: clock.now, calendar: clock.calendar)
+        #expect(viewModel.dailyStore.records[day]?.disconnectCount == 1, "open outage dropped at quit")
+        #expect(viewModel.dailyStore.records[day]?.downtimeSeconds == 600)
+        let reloaded = DailyRecordStore(store: blobs, clock: clock.appClock)
+        #expect(reloaded.records[day]?.disconnectCount == 1)
+        #expect(reloaded.records[day]?.downtimeSeconds == 600)
+        #expect(path.stopCount == 1)
+    }
+
+    /// The path can drop as the Mac shuts down, just before the app is told to quit; that is
+    /// not an outage, as it is not one before sleep.
+    @Test func quit_discardsAnOutageThatBeganJustBefore() {
+        let clock = TestClock(2026, 11, 4, 9)
+        let viewModel = makeViewModel(clock)
+        viewModel.disconnectTracker.handle(pathUp)
+        viewModel.disconnectTracker.handle(pathDown)
+        clock.advance(by: 1)
+
+        viewModel.prepareForQuit()
+
+        #expect(viewModel.disconnectTracker.events.isEmpty)
+        #expect(today(viewModel, clock)?.disconnectCount ?? 0 == 0)
+    }
+
+    /// Deferred minor: both the sleep hook and the quit hook leave the daily records and the
+    /// chart history written.
+    @Test func sleepAndQuit_bothWriteTheDailyRecordsAndTheHistory() {
+        for hook in ["sleep", "quit"] {
+            let clock = TestClock(2026, 11, 4, 9)
+            let blobs = InMemoryBlobStore()
+            let viewModel = makeViewModel(clock, steps: Array(repeating: Step(download: 50), count: 11), blobs: blobs)
+            tick(viewModel, clock, times: 11)
+            #expect(blobs.contents(of: DailyRecordStore.fileName) == nil, "\(hook)")
+            #expect(blobs.contents(of: NetworkHistoryRecorder.fileName) == nil, "\(hook)")
+
+            if hook == "sleep" { viewModel.handleSleep() } else { viewModel.prepareForQuit() }
+
+            let reloaded = DailyRecordStore(store: blobs, clock: clock.appClock)
+            #expect(reloaded.records == viewModel.dailyStore.records, "\(hook)")
+            #expect(!reloaded.records.isEmpty, "\(hook)")
+            let history = makeViewModel(clock, blobs: blobs).historyRecorder.oneHourData
+            #expect(history.count == 1, "\(hook)")
+        }
+    }
+
     @Test func sleepAndWake_reachTrackerAndLatency() async throws {
         let clock = TestClock(2026, 11, 2, 21)
         let probe = FakeLatencyProbe(seconds: [0.500, 0.080, 0.600, 0.090])

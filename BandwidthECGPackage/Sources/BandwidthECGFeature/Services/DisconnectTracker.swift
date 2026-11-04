@@ -125,8 +125,11 @@ public class DisconnectTracker {
         }
     }
 
-    /// Stops monitoring network connectivity.
+    /// Stops monitoring network connectivity. Called on quit, so an outage still open ends here
+    /// and is recorded (final review F2), as it is before sleep.
     public func stopMonitoring() {
+        endOpenOutage()
+        resetProbeFailures()
         guard isStarted else { return }
         isStarted = false
         pathSource.stop()
@@ -167,11 +170,7 @@ public class DisconnectTracker {
     /// with the sleep can be reported just before `willSleep`.
     public func handleSleep() {
         guard !isAsleep else { return }
-        if let outageStartMonotonic, clock.monotonic() - outageStartMonotonic < Self.preSleepGraceSeconds {
-            discardOutage()
-        } else {
-            closeOutage(at: clock.now())
-        }
+        endOpenOutage()
         isAsleep = true
         resetProbeFailures()
         wakeGraceEnd = nil
@@ -286,6 +285,17 @@ public class DisconnectTracker {
         outageInterfaceType = lastKnownInterfaceType == "unknown" ? currentInterfaceType : lastKnownInterfaceType
         outageOpenedInGrace = wakeGraceEnd.map { clock.monotonic() < $0 } ?? false
         isConnected = false
+    }
+
+    /// Ends an open outage now, before sleep or quit. One that began less than
+    /// `preSleepGraceSeconds` ago is dropped: the network going down with the Mac can be
+    /// reported just before the app hears about it.
+    private func endOpenOutage() {
+        if let outageStartMonotonic, clock.monotonic() - outageStartMonotonic < Self.preSleepGraceSeconds {
+            discardOutage()
+        } else {
+            closeOutage(at: clock.now())
+        }
     }
 
     /// Ends the open outage without recording it.

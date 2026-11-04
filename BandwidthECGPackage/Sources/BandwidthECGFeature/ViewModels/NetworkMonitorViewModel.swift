@@ -22,6 +22,10 @@ public class NetworkMonitorViewModel {
     public let defaults: UserDefaults
     /// The save panel and the result alert of an export. A test replaces it.
     @ObservationIgnored public var exportPresenter: any ExportPresenting = SystemExportPresenter()
+    /// Called once when an export is over: after a cancel, or after the user has dismissed the
+    /// result. The save panel and the alert made the app active; the status bar controller uses
+    /// this to give the focus back (final review F4) without the view model touching AppKit.
+    @ObservationIgnored public var onExportFinished: (@MainActor () -> Void)?
 
     // Chart choices. The popover's views are released when it closes (D10), so what must
     // survive a close and reopen lives here. Not persisted: a relaunch starts from the defaults.
@@ -248,7 +252,9 @@ public class NetworkMonitorViewModel {
         let presenter = exportPresenter
         let errorHandler = errorHandler
         // The closure owns the data, the presenter and the logger. It outlives any view.
-        presenter.chooseDestination(suggestedFilename: suggestedFilename) { url in
+        presenter.chooseDestination(suggestedFilename: suggestedFilename) { [weak self] url in
+            // `report` is modal, so this runs once the user has seen the result.
+            defer { self?.onExportFinished?() }
             guard let url else {
                 errorHandler.log("Export cancelled", level: .info, context: "Export")
                 completion(.success(nil))
@@ -372,6 +378,13 @@ public class NetworkMonitorViewModel {
     }
 
     // MARK: - Persistence
+
+    /// On quit: stops monitoring, which ends and records an open outage (final review F2), then
+    /// writes pending data, that outage included.
+    public func prepareForQuit() {
+        stopMonitoring()
+        flushPersistence()
+    }
 
     /// Writes pending data now. Called before sleep and on quit.
     public func flushPersistence() {

@@ -2,7 +2,8 @@ import Foundation
 
 /// Derives monthly reports from the daily records, so there is nothing to keep up to date and
 /// nothing to lose: a report always reflects the samples recorded so far, today's included.
-/// Months from before the daily records existed are shown from what older versions stored.
+/// Months from before the daily records existed are shown from what older versions stored, and
+/// merged with the daily records for the month that was in progress when the user upgraded.
 @MainActor
 public class MonthlyReportService {
     private let dailyStore: DailyRecordStore
@@ -35,10 +36,32 @@ public class MonthlyReportService {
         return months.contains(currentMonthKey) ? currentMonthKey : months.first
     }
 
+    /// A month that an older version had started and this one continued shows both: the old
+    /// data is merged in, never hidden (final review F1).
     public func summary(for monthKey: String) -> MonthlySummary? {
         let days = dailyStore.records(inMonth: monthKey)
-        guard !days.isEmpty else { return legacySummaries[monthKey] }
-        return MonthlySummary.make(monthKey: monthKey, month: firstInstant(of: monthKey), days: days)
+        let legacy = legacySummaries[monthKey]
+        guard !days.isEmpty else { return legacy }
+        let recorded = MonthlySummary.make(monthKey: monthKey, month: firstInstant(of: monthKey), days: days)
+        guard let legacy else { return recorded }
+        let recordedDays = days.filter { $0.sampleCount > 0 }
+        return recorded.merging(
+            legacy: legacy,
+            recordedDays: recordedDays.count,
+            legacyDayLimit: Self.legacyDayLimit(firstRecordedDay: recordedDays.min { $0.dayKey < $1.dayKey })
+        )
+    }
+
+    /// The most old-version days that can be distinct from the counted daily days (re-review N1).
+    ///
+    /// The old format kept a day count and no dates, so the overlap cannot be seen directly. It
+    /// can only hold days up to the first day this version recorded: (that day of month - 1)
+    /// before it, plus that day itself when it is not a counted daily day. This is the tightest
+    /// bound the data allows; the upgrade day is then counted once.
+    static func legacyDayLimit(firstRecordedDay: DailyRecord?) -> Int? {
+        guard let first = firstRecordedDay,
+              let dayOfMonth = first.dayKey.split(separator: "-").last.flatMap({ Int($0) }) else { return nil }
+        return dayOfMonth - 1 + (first.isCounted ? 0 : 1)
     }
 
     /// Generate a CSV string export of the given monthly summary.

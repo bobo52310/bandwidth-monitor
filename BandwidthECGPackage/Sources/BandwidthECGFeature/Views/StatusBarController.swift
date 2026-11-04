@@ -23,6 +23,11 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         setupStatusBar()
         setupPopover()
         setupPinStateObserver()
+        // The save panel and the export alert make the app active. Once they are gone, the
+        // focus goes back as it does when the popover closes (final review F4).
+        viewModel.onExportFinished = { [weak self] in
+            self?.handBackFocusAfterWindowCloses()
+        }
         viewModel.initialize()
         checkAndShowOnboarding()
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -424,8 +429,7 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
 
     public func cleanUp() {
         removeEventMonitor()
-        viewModel.stopMonitoring()
-        viewModel.flushPersistence()
+        viewModel.prepareForQuit()
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         statusBarItem = nil
     }
@@ -450,12 +454,18 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
     /// `showPopover()` made the app active so that Esc works. Left active, the app would stay in
     /// front after the popover is gone, and the next ⌘Q meant for the user's own app would quit
     /// this one. So when nothing of ours is left on screen, give the focus back.
-    private func handBackFocusIfIdle(ignoring popoverWindow: NSWindow?) {
-        // An ordinary window is a titled one: a save panel, an alert, onboarding, the pinned
-        // panel. The popover, the status item and menus are not.
-        let hasOtherWindow = isShowingContextMenu || NSApp.windows.contains {
-            $0 !== popoverWindow && $0.isVisible && $0.styleMask.contains(.titled)
+    ///
+    /// `closingWindow` is a window that is going away but may still report itself visible: the
+    /// popover's, or onboarding's in `windowWillClose`.
+    private func handBackFocusIfIdle(ignoring closingWindow: NSWindow?) {
+        let windows = NSApp.windows.map {
+            PopoverFocusPolicy.WindowState(
+                isVisible: $0.isVisible,
+                isTitled: $0.styleMask.contains(.titled),
+                isClosing: $0 === closingWindow
+            )
         }
+        let hasOtherWindow = PopoverFocusPolicy.hasOtherWindow(windows, isShowingContextMenu: isShowingContextMenu)
         guard PopoverFocusPolicy.shouldHandBackFocus(
             activationPolicy: NSApp.activationPolicy(),
             isAppActive: NSApp.isActive,
@@ -468,6 +478,14 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         NSApp.hide(nil)
     }
 
+    /// After the export save panel or the export alert has closed. Checked on the next turn of
+    /// the run loop, so the panel or alert has left the screen by then.
+    private func handBackFocusAfterWindowCloses() {
+        DispatchQueue.main.async { [weak self] in
+            self?.handBackFocusIfIdle(ignoring: nil)
+        }
+    }
+
     public func popoverShouldDetach(_ popover: NSPopover) -> Bool {
         return false // Prevent detaching the popover
     }
@@ -478,6 +496,9 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
         if let window = notification.object as? NSWindow, window === onboardingWindow {
             viewModel.defaults.set(true, forKey: "hasCompletedOnboarding")
             onboardingWindow = nil
+            // Onboarding made the app active. With nothing else of ours on screen, the focus
+            // goes back to the app the user was in (final review F4).
+            handBackFocusIfIdle(ignoring: window)
             return
         }
         // When user closes the panel via close button, unpin it
@@ -503,7 +524,8 @@ public class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate 
     }
 }
 
-/// Whether the app should give the focus back when its popover closes.
+/// Whether the app should give the focus back when its popover, the export save panel or alert,
+/// or the onboarding window closes.
 ///
 /// Only an app that has no Dock icon (`.accessory`) does: its popover is a transient thing, like
 /// a menu, and the user was in another app a moment ago. An app that shows in the Dock is a
@@ -518,5 +540,22 @@ enum PopoverFocusPolicy {
         hasOtherWindow: Bool
     ) -> Bool {
         activationPolicy == .accessory && isAppActive && !isPinnedPanelVisible && !hasOtherWindow
+    }
+
+    /// What the decision needs to know about one of the app's windows.
+    struct WindowState: Equatable {
+        var isVisible: Bool
+        /// An ordinary window is a titled one: a save panel, an alert, onboarding, the pinned
+        /// panel. The popover, the status item and menus are not.
+        var isTitled: Bool
+        /// Going away now, though it may still report itself visible (the popover's window, or
+        /// onboarding's in `windowWillClose`).
+        var isClosing: Bool
+    }
+
+    /// Whether something of ours is still on screen: an ordinary window that is not the one
+    /// closing, or the status item's menu.
+    static func hasOtherWindow(_ windows: [WindowState], isShowingContextMenu: Bool) -> Bool {
+        isShowingContextMenu || windows.contains { $0.isVisible && $0.isTitled && !$0.isClosing }
     }
 }

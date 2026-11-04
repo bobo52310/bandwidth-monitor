@@ -292,17 +292,21 @@ struct MonthlyReportServiceTests {
         #expect(service.summary(for: "2026-10")?.peakDownloadMbps == 280)
     }
 
-    @Test func dailyTakesPrecedenceOverLegacy() throws {
+    /// Final review F1: a month with both old data and daily records shows both, merged.
+    @Test func legacyAndDailyForTheSameMonth_areMerged() throws {
         let clock = TestClock(2026, 11, 2, 9)
         let defaults = MemoryDefaults.make()
-        try seedLegacy(defaults, [legacyEntry(month: monthStart(2026, 11), peak: 999)])
+        try seedLegacy(defaults, [legacyEntry(month: monthStart(2026, 11), daysMonitored: 1, peak: 999)])
         let store = makeStore(clock)
         feed(store, clock, mbps: 50, seconds: 5)
 
         let service = makeService(store, clock, defaults: defaults)
 
         #expect(service.availableMonths == ["2026-11"])
-        #expect(service.summary(for: "2026-11")?.peakDownloadMbps == 50)
+        let summary = try #require(service.summary(for: "2026-11"))
+        #expect(summary.peakDownloadMbps == 999)
+        #expect(summary.daysMonitored == 1)
+        #expect(summary.disconnectCount == 1)
     }
 
     @Test func availableMonths_mergesDailyAndLegacy_newestFirst() throws {
@@ -429,5 +433,180 @@ struct MonthlyReportServiceTests {
         let csv = service.exportToCSV(try #require(service.summary(for: "2026-09")))
 
         #expect(csv.components(separatedBy: "\n").contains("Latency Probe Failures,N/A"))
+    }
+
+    // MARK: - The month in progress when the user upgraded (final review F1)
+
+    /// The old version's accumulators for November: 20 days, every one with a 290 Mbps peak.
+    private func seedNovemberInProgress(_ defaults: UserDefaults) {
+        defaults.set([
+            "dailyPeakDownloads": Array(repeating: 290.0, count: 20),
+            "dailyPeakUploads": Array(repeating: 20.0, count: 20),
+            "dailyAvgDownloads": Array(repeating: 30.0, count: 20),
+            "dailyAvgUploads": Array(repeating: 3.0, count: 20),
+            "monthlyPeakApproachCount": 4,
+            "monthlyDisconnectCount": 2,
+            "monthlyTotalDowntime": 90.0,
+            "dailyLatencies": Array(repeating: 20.0, count: 20),
+            "dailyJitters": Array(repeating: 4.0, count: 20),
+            "daysRecorded": 20,
+            "currentMonthStart": monthStart(2026, 11).timeIntervalSince1970,
+        ] as [String: Any], forKey: "monthlyReportAccumulators")
+    }
+
+    /// Feeds `days` counted days (600 samples each) starting today, one calendar day apart.
+    private func feedCountedDays(_ store: DailyRecordStore, _ clock: TestClock, mbps: Double, days: Int) {
+        for day in 0..<days {
+            feed(store, clock, mbps: mbps, seconds: ReportRules.minDailySamples)
+            if day < days - 1 { clock.advance(by: 86_400 - Double(ReportRules.minDailySamples)) }
+        }
+    }
+
+    @Test func legacyCurrentMonth_survivesFirstSample() throws {
+        let clock = TestClock(2026, 11, 21, 9)
+        let defaults = MemoryDefaults.make()
+        seedNovemberInProgress(defaults)
+        let store = makeStore(clock)
+        let service = makeService(store, clock, defaults: defaults)
+        let before = try #require(service.summary(for: "2026-11"))
+        #expect(before.daysMonitored == 20)
+        #expect(before.peakDownloadMbps == 290)
+
+        store.ingest(speed(5), planDownloadMbps: 300, planUploadMbps: 300)
+
+        let after = try #require(service.summary(for: "2026-11"))
+        #expect(after.daysMonitored == 20, "legacy days hidden: \(after.daysMonitored)")
+        #expect(after.peakDownloadMbps == 290, "legacy peak hidden: \(after.peakDownloadMbps)")
+        #expect(after.peakApproachCount == 4)
+        #expect(after.disconnectCount == 2)
+        #expect(after.totalDowntimeSeconds == 90)
+        #expect(after.avgLatencyMs == 20)
+        #expect(after.avgJitterMs == 4)
+    }
+
+    @Test func legacyCurrentMonth_mergesWithCountedDays() throws {
+        let clock = TestClock(2026, 11, 21, 9)
+        let defaults = MemoryDefaults.make()
+        seedNovemberInProgress(defaults)
+        let store = makeStore(clock)
+        feedCountedDays(store, clock, mbps: 100, days: 1)
+
+        let summary = try #require(makeService(store, clock, defaults: defaults).summary(for: "2026-11"))
+
+        #expect(summary.daysMonitored == 21)
+        #expect(summary.peakDownloadMbps == 290)
+        // The legacy peak has no time; the time shown belongs to the daily peak only when it wins.
+        #expect(summary.peakDownloadTime == nil)
+        // Averages are weighted by days: 20 days at 30, 1 day at 100.
+        #expect(abs(summary.avgDownloadMbps - (30.0 * 20 + 100) / 21) < 0.001)
+        #expect(summary.disconnectCount == 2)
+        #expect(summary.totalDowntimeSeconds == 90)
+        // No probe in the daily record: the legacy latency stands alone.
+        #expect(summary.avgLatencyMs == 20)
+        #expect(summary.planDownloadMbps == 300)
+        #expect(abs(summary.downloadPlanUtilization - 290.0 / 300 * 100) < 0.001)
+        // The recommendation rests on the daily records alone: 1 counted day is not enough.
+        #expect(summary.recommendationDayCount == 1)
+        #expect(summary.recommendation == .insufficientData)
+    }
+
+    @Test func legacyCurrentMonth_higherDailyPeakWins() throws {
+        let clock = TestClock(2026, 11, 21, 9)
+        let defaults = MemoryDefaults.make()
+        seedNovemberInProgress(defaults)
+        let store = makeStore(clock)
+        feed(store, clock, mbps: 400, seconds: 5)
+
+        let summary = try #require(makeService(store, clock, defaults: defaults).summary(for: "2026-11"))
+
+        #expect(summary.peakDownloadMbps == 400)
+        #expect(summary.peakDownloadTime != nil)
+    }
+
+    /// Legacy days never count towards the 14 days a downgrade needs.
+    @Test func legacyCurrentMonth_legacyDaysDoNotUnlockADowngrade() throws {
+        let clock = TestClock(2026, 11, 21, 9)
+        let defaults = MemoryDefaults.make()
+        seedNovemberInProgress(defaults)
+        let store = makeStore(clock)
+        feedCountedDays(store, clock, mbps: 10, days: ReportRules.minDaysForRecommendation)
+
+        let summary = try #require(makeService(store, clock, defaults: defaults).summary(for: "2026-11"))
+
+        #expect(summary.daysMonitored == 20 + ReportRules.minDaysForRecommendation)
+        #expect(summary.recommendationDayCount == ReportRules.minDaysForRecommendation)
+        #expect(summary.recommendation == .planFits)
+    }
+
+    /// The old data is read, never written, so a second launch shows the same month.
+    @Test func legacyCurrentMonth_secondLaunch_countsOnce() throws {
+        let clock = TestClock(2026, 11, 21, 9)
+        let defaults = MemoryDefaults.make()
+        seedNovemberInProgress(defaults)
+        let blobs = InMemoryBlobStore()
+        let store = makeStore(clock, blobs)
+        feedCountedDays(store, clock, mbps: 100, days: 1)
+        let first = try #require(makeService(store, clock, defaults: defaults).summary(for: "2026-11"))
+        store.flush()
+
+        let second = try #require(makeService(makeStore(clock, blobs), clock, defaults: defaults).summary(for: "2026-11"))
+
+        #expect(second.daysMonitored == first.daysMonitored)
+        #expect(second.daysMonitored == 21)
+        #expect(second.peakApproachCount == first.peakApproachCount)
+        #expect(second.disconnectCount == first.disconnectCount)
+        #expect(second.totalDowntimeSeconds == first.totalDowntimeSeconds)
+        #expect(second.avgDownloadMbps == first.avgDownloadMbps)
+    }
+
+    // MARK: - The upgrade day counted once (re-review N1)
+
+    /// The old format keeps a day count, not dates. Legacy days can only lie on or before the
+    /// first daily day, so with the first daily day counted they add at most (its day of month
+    /// - 1) days: November 1-21 by the old version plus November 21-30 by the new one is 30 days.
+    @Test func legacyThroughTheUpgradeDay_countsThatDayOnce() throws {
+        let clock = TestClock(2026, 11, 21, 9)
+        let defaults = MemoryDefaults.make()
+        seedNovemberInProgress(defaults)
+        var stored = try #require(defaults.dictionary(forKey: "monthlyReportAccumulators"))
+        stored["daysRecorded"] = 21  // the old version also snapshotted November 21
+        defaults.set(stored, forKey: "monthlyReportAccumulators")
+        let store = makeStore(clock)
+        feedCountedDays(store, clock, mbps: 100, days: 10)  // November 21-30
+
+        let summary = try #require(makeService(store, clock, defaults: defaults).summary(for: "2026-11"))
+
+        #expect(summary.daysMonitored == 30, "upgrade day counted twice: \(summary.daysMonitored)")
+        #expect(summary.recommendationDayCount == 10)
+    }
+
+    /// When the first daily day is not counted yet, a legacy day may still be the only record
+    /// of it, so it can count.
+    @Test func legacyThroughTheUpgradeDay_uncountedFirstDay_keepsTheLegacyDay() throws {
+        let clock = TestClock(2026, 11, 21, 9)
+        let defaults = MemoryDefaults.make()
+        seedNovemberInProgress(defaults)
+        var stored = try #require(defaults.dictionary(forKey: "monthlyReportAccumulators"))
+        stored["daysRecorded"] = 22  // more than November 1-21 can hold
+        defaults.set(stored, forKey: "monthlyReportAccumulators")
+        let store = makeStore(clock)
+        feed(store, clock, mbps: 5, seconds: 5)
+
+        let summary = try #require(makeService(store, clock, defaults: defaults).summary(for: "2026-11"))
+
+        #expect(summary.daysMonitored == 21)
+    }
+
+    /// A legacy month that ended before the upgrade day is untouched.
+    @Test func legacyBeforeTheUpgradeDay_keepsEveryDay() throws {
+        let clock = TestClock(2026, 11, 21, 9)
+        let defaults = MemoryDefaults.make()
+        seedNovemberInProgress(defaults)
+        let store = makeStore(clock)
+        feedCountedDays(store, clock, mbps: 100, days: 10)
+
+        let summary = try #require(makeService(store, clock, defaults: defaults).summary(for: "2026-11"))
+
+        #expect(summary.daysMonitored == 30)
     }
 }

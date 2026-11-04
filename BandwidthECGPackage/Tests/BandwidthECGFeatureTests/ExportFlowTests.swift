@@ -288,4 +288,35 @@ struct ExportFlowTests {
 
         #expect(presenter.reports.isEmpty)
     }
+
+    // MARK: - Handing the focus back (final review F4)
+
+    /// The save panel and the alert made the app active. When the export is over, whatever the
+    /// outcome, the view model says so once, after the user has seen the result, so the focus
+    /// can go back to the app the user was in.
+    @Test func exportFinished_isAnnouncedOnceForEveryOutcome() throws {
+        let directory = try DataExportTests.makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let outcomes: [(String, URL?)] = [
+            ("cancel", nil),
+            ("success", directory.appendingPathComponent("ok.csv")),
+            ("failure", directory.appendingPathComponent("missing").appendingPathComponent("x.csv")),
+        ]
+        for (name, destination) in outcomes {
+            let clock = TestClock(2026, 11, 2, 9)
+            let presenter = FakeExportPresenter(destination: destination)
+            presenter.holdPanel = true
+            let viewModel = makeViewModel(clock, presenter: presenter)
+            var reportsSeenAtFinish: [Int] = []
+            viewModel.onExportFinished = { reportsSeenAtFinish.append(presenter.reports.count) }
+
+            viewModel.exportData(format: .recent24Hours)
+            #expect(reportsSeenAtFinish.isEmpty, "\(name): announced while the panel is open")
+
+            presenter.finishPanel(with: destination)
+
+            let expectedReports = destination == nil ? 0 : 1
+            #expect(reportsSeenAtFinish == [expectedReports], "\(name)")
+        }
+    }
 }

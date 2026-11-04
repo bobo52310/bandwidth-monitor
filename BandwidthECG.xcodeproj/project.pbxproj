@@ -36,6 +36,13 @@
 			);
 			target = 8BC2655B2DEDD3F400F279A4 /* BandwidthECG */;
 		};
+		8BD71C1F2DEE424400CEDD92 /* Exceptions for "BandwidthECG" folder in "BandwidthECG" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BandwidthECG.xctestplan,
+			);
+			target = 8BC2655B2DEDD3F400F279A4 /* BandwidthECG */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -49,6 +56,9 @@
 		};
 		8BC2655E2DEDD3F400F279A4 /* BandwidthECG */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8BD71C1F2DEE424400CEDD92 /* Exceptions for "BandwidthECG" folder in "BandwidthECG" target */,
+			);
 			path = BandwidthECG;
 			sourceTree = "<group>";
 		};
@@ -181,6 +191,9 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hant",
+				ja,
+				ko,
 			);
 			mainGroup = 8BC265532DEDD3F400F279A4;
 			minimizedProjectReferenceProxies = 1;
@@ -242,7 +255,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -250,7 +263,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -260,7 +273,7 @@
 			baseConfigurationReferenceRelativePath = Debug.xcconfig;
 			buildSettings = {
 				INFOPLIST_KEY_CFBundleDisplayName = "$(PRODUCT_DISPLAY_NAME)";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -270,7 +283,7 @@
 			baseConfigurationReferenceRelativePath = Release.xcconfig;
 			buildSettings = {
 				INFOPLIST_KEY_CFBundleDisplayName = "$(PRODUCT_DISPLAY_NAME)";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -279,7 +292,7 @@
 			baseConfigurationReferenceAnchor = 8B90D1BC2DEE373300FBD189 /* Config */;
 			baseConfigurationReferenceRelativePath = Tests.xcconfig;
 			buildSettings = {
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -288,7 +301,7 @@
 			baseConfigurationReferenceAnchor = 8B90D1BC2DEE373300FBD189 /* Config */;
 			baseConfigurationReferenceRelativePath = Tests.xcconfig;
 			buildSettings = {
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};

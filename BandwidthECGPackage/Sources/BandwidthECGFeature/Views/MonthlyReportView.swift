@@ -117,8 +117,16 @@ public struct MonthlyReportView: View {
                     .font(.title3)
                     .fontWeight(.bold)
                     .foregroundColor(recommendationColor(summary.recommendation))
-                if summary.daysMonitored < ReportRules.minDaysForRecommendation {
-                    Text(L10n.reportCollectingDays(summary.daysMonitored, ReportRules.minDaysForRecommendation))
+                // The plan the advice was judged against, so a wrong plan can be noticed.
+                if let plan = MonthlyReportText.plan(summary) {
+                    Text(plan)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .monospacedDigit()
+                }
+                // Days kept by an older version show in the count but do not feed the advice.
+                if summary.recommendationDayCount < ReportRules.minDaysForRecommendation {
+                    Text(L10n.reportCollectingDays(summary.recommendationDayCount, ReportRules.minDaysForRecommendation))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -149,12 +157,9 @@ public struct MonthlyReportView: View {
 
     private func connectionCard(_ summary: MonthlySummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            // A month without a single successful probe (offline, or latency switched off)
-            // averages to 0, which no real round trip can be.
-            let hasLatency = summary.avgLatencyMs > 0
             HStack(spacing: 24) {
-                statItem(L10n.reportAvgLatency, value: hasLatency ? String(format: "%.0f ms", summary.avgLatencyMs) : "—")
-                statItem(L10n.reportAvgJitter, value: hasLatency ? String(format: "%.1f ms", summary.avgJitterMs) : "—")
+                statItem(L10n.reportAvgLatency, value: MonthlyReportText.latency(summary))
+                statItem(L10n.reportAvgJitter, value: MonthlyReportText.jitter(summary))
             }
             HStack(spacing: 24) {
                 statItem(L10n.reportDisconnects, value: "\(summary.disconnectCount)")
@@ -243,5 +248,29 @@ public struct MonthlyReportView: View {
     /// and tells the user whether it worked, so nothing here has to be on screen to see it.
     private func exportReport(_ summary: MonthlySummary) {
         viewModel.exportMonthlyReport(summary)
+    }
+}
+
+/// The report's text that follows a rule, kept out of the view so it can be tested.
+enum MonthlyReportText {
+    /// "方案 ↓500 / ↑50 Mbps", in whole Mbps. `nil` for a month with no plan on record.
+    static func plan(_ summary: MonthlySummary) -> String? {
+        guard summary.planDownloadMbps > 0 || summary.planUploadMbps > 0 else { return nil }
+        return L10n.reportPlanSpeeds(
+            String(format: "%.0f", summary.planDownloadMbps),
+            String(format: "%.0f", summary.planUploadMbps)
+        )
+    }
+
+    /// A month without a single successful probe (offline, or latency switched off) averages
+    /// to 0, which no real round trip can be: "—", as the CSV leaves the cell empty.
+    static func latency(_ summary: MonthlySummary) -> String {
+        summary.avgLatencyMs > 0 ? String(format: "%.0f ms", summary.avgLatencyMs) : "—"
+    }
+
+    /// Jitter needs two probes. A month with one has latency but no jitter: "—", not "0.0 ms",
+    /// matching the CSV (final review F5).
+    static func jitter(_ summary: MonthlySummary) -> String {
+        summary.avgLatencyMs > 0 && summary.avgJitterMs > 0 ? String(format: "%.1f ms", summary.avgJitterMs) : "—"
     }
 }

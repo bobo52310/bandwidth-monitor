@@ -66,6 +66,63 @@ struct PopoverFocusTests {
     }
 }
 
+/// Final review F4: the same hand-back after the export save panel, the export alert and the
+/// onboarding window close. These decide whether a window of ours is still on screen.
+@Suite("Focus hand-back after our windows close")
+struct WindowFocusTests {
+    private typealias Window = PopoverFocusPolicy.WindowState
+
+    private func handBack(
+        _ windows: [Window],
+        policy: NSApplication.ActivationPolicy = .accessory,
+        pinnedPanel: Bool = false,
+        contextMenu: Bool = false
+    ) -> Bool {
+        PopoverFocusPolicy.shouldHandBackFocus(
+            activationPolicy: policy,
+            isAppActive: true,
+            isPinnedPanelVisible: pinnedPanel,
+            hasOtherWindow: PopoverFocusPolicy.hasOtherWindow(windows, isShowingContextMenu: contextMenu)
+        )
+    }
+
+    private let closedAlert = Window(isVisible: false, isTitled: true, isClosing: false)
+    private let openSavePanel = Window(isVisible: true, isTitled: true, isClosing: false)
+    private let closingOnboarding = Window(isVisible: true, isTitled: true, isClosing: true)
+    private let statusItemWindow = Window(isVisible: true, isTitled: false, isClosing: false)
+
+    @Test func alertJustClosed_givesFocusBack() {
+        #expect(handBack([closedAlert, statusItemWindow]))
+    }
+
+    @Test func savePanelCancelled_givesFocusBack() {
+        let closedPanel = Window(isVisible: false, isTitled: true, isClosing: false)
+        #expect(handBack([closedPanel, statusItemWindow]))
+    }
+
+    @Test func onboardingClosing_givesFocusBack() {
+        // `windowWillClose` runs while the window is still on screen.
+        #expect(handBack([closingOnboarding, statusItemWindow]))
+    }
+
+    @Test func anotherOfOurWindowsStillOpen_keepsFocus() {
+        #expect(!handBack([closedAlert, openSavePanel]))
+        #expect(!handBack([closingOnboarding, openSavePanel]))
+    }
+
+    @Test func dockMode_keepsFocus() {
+        #expect(!handBack([closedAlert], policy: .regular))
+    }
+
+    @Test func pinnedPanelOnScreen_keepsFocus() {
+        #expect(!handBack([closedAlert], pinnedPanel: true))
+    }
+
+    @Test func contextMenuOpen_keepsFocus() {
+        #expect(!handBack([closedAlert], contextMenu: true))
+    }
+}
+
 /// PERF-16.1 and the "Increase contrast" notification: what makes the title be written again.
 @Suite("Menu bar title gate")
 struct MenuBarTitleGateTests {
