@@ -166,6 +166,8 @@
     "copyright": "Bandwidth ECG. All vitals reserved.",
     "stamp": "COMING SOON",
     "platform": "For macOS 14+",
+    "source": "View source on GitHub",
+    "openSource": "Open source · MIT license",
     "madeIn": "Engineered in Taiwan",
     "disclaimer": "Not a medical device. For network health only."
   }

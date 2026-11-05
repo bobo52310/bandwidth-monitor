@@ -30,8 +30,9 @@ const LOCALES = [REFERENCE, 'en', 'ja', 'ko']
 const SHOW_LIMIT = 12
 
 // (b) claims that are false, unverifiable, or retired wording.
+// "GitHub" is allowed: the source is public, and the footer links to the repository.
 const BANNED_CLAIMS =
-  /\bDMG\b|GitHub|App Store|Speedtest|Ookla|エンタープライズ|엔터프라이즈|プロフェッショナル級|전문가급|Network Peak Monitor|ネットワークピークモニター|네트워크 피크 모니터|macOS 13|Ventura|免費|無料|무료|\bfree\b|v1\.0\.0/i
+  /\bDMG\b|App Store|Speedtest|Ookla|エンタープライズ|엔터프라이즈|プロフェッショナル級|전문가급|Network Peak Monitor|ネットワークピークモニター|네트워크 피크 모니터|macOS 13|Ventura|免費|無料|무료|\bfree\b|v1\.0\.0/i
 
 // (c) download actions (the product is not downloadable yet).
 const BANNED_DOWNLOAD_ACTIONS =

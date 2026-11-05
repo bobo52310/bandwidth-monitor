@@ -166,6 +166,8 @@
     "copyright": "Bandwidth ECG. All rights reserved.",
     "stamp": "COMING SOON",
     "platform": "macOS 14 이상 지원",
+    "source": "GitHub에서 소스 코드 보기",
+    "openSource": "오픈 소스 · MIT 라이선스",
     "madeIn": "대만에서 설계 및 개발",
     "disclaimer": "의료기기가 아닙니다. 네트워크 상태 확인용입니다."
   }

@@ -11,6 +11,7 @@ const t = useTranslations(lang)
 const homeHref = getLocalizedPath(lang, '/')
 
 const currentYear = new Date().getFullYear()
+const repoUrl = 'https://github.com/bobo52310/bandwidth-monitor'
 ---
 
 <footer class="bg-[var(--color-paper)] border-t border-[var(--color-ink)] pt-16 pb-10">
@@ -54,6 +55,10 @@ const currentYear = new Date().getFullYear()
             <li><a href="#download" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.download')}</a></li>
             <li><a href="#faq" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('header.faq')}</a></li>
             <li><span class="text-[14px] text-[var(--color-ink-3)]">{t('footer.platform')}</span></li>
+            <li>
+              <a href={repoUrl} target="_blank" rel="noopener" class="text-[14px] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]">{t('footer.source')} <span aria-hidden="true">↗</span></a>
+            </li>
+            <li><span class="text-[14px] text-[var(--color-ink-3)]">{t('footer.openSource')}</span></li>
           </ul>
         </div>
       </div>

@@ -27,7 +27,7 @@ src/
 │   └── sections/    # Hero、Features、HowItWorks、CalibrationStrip、ChartDemo、FAQ、DownloadCTA
 ├── pages/           # index（zh-Hant）、en/、ja/、ko/、404
 └── styles/global.css
-public/              # _headers、_redirects、site.webmanifest、圖示、og-default.png
+public/              # _headers、site.webmanifest、圖示、og-default.png
 scripts/check-i18n.mjs
 ```
 
