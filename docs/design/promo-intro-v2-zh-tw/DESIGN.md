@@ -1,7 +1,7 @@
 # Bandwidth ECG · Promo Intro v2 · Design Baseline
 
 > Visual system inherited unchanged from `docs/design/promo-intro-zh-tw/DESIGN.md`
-> (itself locked to BUSINESS_STRATEGY.md 2.4 + website/src/styles/global.css).
+> (itself locked to its Brand Voice section + website/src/styles/global.css).
 > Copy, numbers and narrative are new. Do not carry over anything from the 2026-05 film's copy.
 
 ## Positioning

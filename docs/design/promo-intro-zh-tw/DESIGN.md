@@ -1,6 +1,6 @@
 # Bandwidth ECG · Promo Intro · Design Baseline
 
-> Locked to BUSINESS_STRATEGY.md 2.4 (Brand Voice) + website/src/styles/global.css.
+> Locked to the Brand Voice below + website/src/styles/global.css.
 > Any visual outside these rules requires explicit override.
 
 ## Positioning

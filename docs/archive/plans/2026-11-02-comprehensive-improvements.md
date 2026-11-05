@@ -51,7 +51,7 @@
 - Toolchain：Xcode 26.0.1、Swift 6.2、macOS 14 deployment target。package 用 Swift 6 模式，不得用 `@preconcurrency` 或 `nonisolated(unsafe)` 掩蓋新錯誤（測試 helper 的 `@unchecked Sendable` 例外）。
 - 預設 shell 是 zsh，無 `PIPESTATUS`。要看 exit code 就先把輸出寫進 log 再 `tail`。
 - 網站：Node 用 `$S/node-22.23.4/bin`。`website/` 已升到 Astro 7，`astro.config.mjs` 的 `compressHTML: true` 與 `cssTarget` 要保留。
-- **不改：** `TODO.md`、`docs/design/`、`docs/promo/`、`website/package.json` 版本、`BUSINESS_STRATEGY.md`、`website/astro.config.mjs`、`website/package-lock.json`。工作樹這些檔案已有使用者未 commit 的修改，不得 revert。
+- **不改：** `TODO.md`、`docs/design/`、`docs/promo/`、`website/package.json` 版本、`website/astro.config.mjs`、`website/package-lock.json`。工作樹這些檔案已有使用者未 commit 的修改，不得 revert。
 - **不 commit、不 push、不部署。** 不用 `git add -A`、`git stash`、`git checkout --`、`git reset`。
 - CORE-01 與 CORE-02 必須同 stage 完成（Stage 4）。
 - CORE-16 不可改用 `if_data64`（報告實測同樣回繞）。
@@ -1241,7 +1241,7 @@ CF Pages 的 `NODE_VERSION` 列入人工驗證（需看 dashboard）。
 | 即將推出 · bandwidth-ecg.bobochen.dev | 與 D12 一致 |
 | `DESIGN.md` 引用 `L10n.swift:328`、`MonthlyReportView.swift:189`、`NetworkMonitorViewModel.swift:172` | 行號可能已移動，字串與語意要相同 |
 
-- [ ] **Step 7：環境與範圍。** 真實容器 plist mtime 與 Stage 1 記錄一致（若使用者自己開過 app 需註明）。`git -C $R status --short` 與 `stage-0-status.txt` 比對：`TODO.md`、`docs/design/`、`docs/promo/`、`BUSINESS_STRATEGY.md`、`website/package.json`、`website/package-lock.json`、`website/astro.config.mjs` 內容與 baseline 相同。repo 根目錄無 `default.profraw`。沒有 commit、沒有 push、沒有部署。
+- [ ] **Step 7：環境與範圍。** 真實容器 plist mtime 與 Stage 1 記錄一致（若使用者自己開過 app 需註明）。`git -C $R status --short` 與 `stage-0-status.txt` 比對：`TODO.md`、`docs/design/`、`docs/promo/`、`website/package.json`、`website/package-lock.json`、`website/astro.config.mjs` 內容與 baseline 相同。repo 根目錄無 `default.profraw`。沒有 commit、沒有 push、沒有部署。
 
 - [ ] **Step 8：回報 team-lead。** 內容：測試總數、四情境數字與 D13 結果、未完成項目、人工驗證清單、宣傳片核對結果。另列使用者記憶需更新（施工者不改）：`MEMORY.md` 的 App Support 路徑實際在容器內、`ErrorHandler` 遷移 helper 已刪、Debug bundle ID 已改。
 

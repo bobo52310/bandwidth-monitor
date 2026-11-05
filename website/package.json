@@ -1,5 +1,14 @@
 {
   "name": "website",
+  "private": true,
+  "license": "MIT",
+  "author": "Bobo Chen <bobo52310@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bobo52310/bandwidth-monitor.git",
+    "directory": "website"
+  },
+  "homepage": "https://bandwidth-ecg.bobochen.dev",
   "type": "module",
   "version": "0.0.1",
   "engines": {

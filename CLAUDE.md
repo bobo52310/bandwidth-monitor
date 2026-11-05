@@ -31,7 +31,7 @@ xcodebuild test -workspace BandwidthECG.xcworkspace \
 ## Project Structure
 
 ```
-BandwidthECG/
+bandwidth-monitor/
 ├── BandwidthECG.xcworkspace/           # Open this in Xcode
 ├── BandwidthECG/                       # App target (minimal)
 │   ├── BandwidthECGApp.swift           # Entry point
@@ -43,9 +43,8 @@ BandwidthECG/
 │   └── Tests/                                # Unit tests
 ├── BandwidthECGUITests/                      # Placeholder; not in the default test plan
 ├── Config/                                   # XCConfig build settings + BandwidthECG.entitlements
-├── screenshots/
-├── website/                                  # Marketing/landing page
-└── docs/
+├── website/                                  # Marketing/landing page (Astro)
+└── docs/                                     # promo/ media, design/ promo compositions, archive/ historical notes (not current docs)
 ```
 
 ## Development Notes
