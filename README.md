@@ -1,413 +1,301 @@
-# 網路峰值監控器 (Bandwidth ECG)
+# Bandwidth ECG
 
-一個現代化的 macOS 選單列應用程式，用於即時監控網路速度並追蹤峰值，幫助您用數據決策是否需要升級網路方案。
+**English** · [繁體中文](README.zh-TW.md)
 
-![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
-![Swift](https://img.shields.io/badge/Swift-6.2+-orange)
-![SwiftUI](https://img.shields.io/badge/SwiftUI-compatible-green)
-![License](https://img.shields.io/badge/license-MIT-green)
+A macOS menu bar app that shows your network speed in real time and keeps track of your peaks, so you can decide with data whether your internet plan is too small, about right, or more than you need.
 
----
+[![macOS](https://img.shields.io/badge/macOS-14.0+-blue)](#requirements)
+[![Swift](https://img.shields.io/badge/Swift-6.2-orange)](#requirements)
+[![SwiftUI](https://img.shields.io/badge/SwiftUI-Charts-green)](#requirements)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-## 🎬 簡介動畫
-
-![Bandwidth ECG · 28 秒看完](docs/promo/intro-zh-tw.gif)
-
-> **28 秒看懂**：你付了 1 Gbps 的錢，實際上只用了 18% — Bandwidth ECG 在選單列安靜地量你 30 天，最後給你一個結論：升級、降級、還是維持現狀。
-
-**[🎞️ English version](docs/promo/intro-en.gif)** · [下載 MP4 (zh-TW)](docs/promo/intro-zh-tw.mp4) · [Download MP4 (EN)](docs/promo/intro-en.mp4)
-
-> 動畫原始檔（HyperFrames composition）：[`docs/design/promo-intro/`](docs/design/promo-intro/) · [`docs/design/promo-intro-zh-tw/`](docs/design/promo-intro-zh-tw/)
+> **Status: pre-release.** There is no prebuilt download yet. To try the app, [build it from source](#build-from-source). Project site: [bandwidth-ecg.bobochen.dev](https://bandwidth-ecg.bobochen.dev).
 
 ---
 
-## ✨ 核心特色
+## Intro animation
 
-### 🎯 一目了然的網路狀態
-- **選單列即時顯示** - 下載/上傳速度一眼掌握
-- **多時段圖表** - 1分鐘、5分鐘、15分鐘、30分鐘、1小時，另有 3、6、12、24 小時的延伸範圍
-- **互動式圖表** - 滑鼠懸停顯示精確時間和速度
-- **24 小時歷史** - 圖表以每 10 秒一點（平均值與最大值）保存 24 小時，重新啟動後仍在
-- **統計卡片** - 即時速度、今日／歷史／1 小時峰值一次看清
+![Bandwidth ECG, a 28-second intro](docs/promo/intro-en.gif)
 
-### 📊 智能峰值追蹤
-- **今日峰值** - 自動記錄當天最高速度
-- **歷史峰值** - 追蹤有史以來的最高紀錄
-- **時段峰值** - 1小時內峰值及發生時間
-- **接近峰值計數** - 持續 30 秒達到方案速度 80% 以上算一次，記錄每日次數與時間
-- **月度報告** - 以每日「持續 3 秒」峰值統計整月，並給出升級／維持／降級建議（見下方說明）
-- **連線品質** - 延遲、抖動、斷線次數與總中斷時間
+> You pay for 1 Gbps and actually use 18% of it. Bandwidth ECG sits quietly in the menu bar for 30 days and then gives you a verdict: upgrade, downgrade, or stay where you are.
 
-### 🎨 彈性顯示選項
-- **多種單位** - Mbps / MB/s 自由切換
-- **顯示模式** - 下載+上傳 / 僅下載 / 僅上傳 / 簡潔模式
-- **即時預覽** - 設定中即時查看效果
-- **視覺警示** - 選單列在達到通知閾值（預設 95%）時變橘色並加 ▲ 標記，達到方案速度時變紅色並加 ▲▲ 標記；標記不依賴顏色，開啟「提高對比」時顏色會關閉、標記保留
-- **多語系** - 繁體中文、English、日本語、한국어，可在設定中切換（切換語言需重新啟動）
+[MP4 (EN)](docs/promo/intro-en.mp4) · [MP4 (zh-TW)](docs/promo/intro-zh-tw.mp4) · [GIF (zh-TW)](docs/promo/intro-zh-tw.gif)
 
-### ⚡ 輕量高效
-- **原生輕量設計** - 以 macOS 原生 API 開發，常駐選單列
-- **自動啟動** - 可在設定中開啟「登入時開啟」（預設關閉；使用系統「登入項目」，由 SMAppService 註冊）
-- **選單列應用** - 預設僅顯示在選單列（不顯示在 Dock，可在設定中啟用）
+The animation sources (HyperFrames compositions) are in [`docs/design/promo-intro/`](docs/design/promo-intro/) and [`docs/design/promo-intro-zh-tw/`](docs/design/promo-intro-zh-tw/).
 
 ---
 
-## 🚀 快速開始
+## Features
 
-### 系統需求
+### See your connection at a glance
+- **Live menu bar readout** of download and upload speed.
+- **Chart ranges** of 1, 5, 15, 30 minutes and 1 hour, plus 3, 6, 12 and 24 hours.
+- **Hover tooltips** on the chart show the exact time and speed.
+- **24-hour history.** The chart keeps one point per 10 seconds (average and maximum) for 24 hours, and it survives a restart.
+- **Stat cards** for the current speed and the today, all-time and 1-hour peaks.
 
-- macOS 14.0 (Sonoma) 或更新版本
-- Xcode 26 (僅開發時需要)
-- Apple Silicon (M1/M2/M3/M4) 或 Intel 處理器
+### Peak tracking and the monthly report
+- **Today / all-time / 1-hour peaks**, with the time each one happened.
+- **Near-limit events.** Staying at or above 80% of your plan speed for 30 seconds counts as one event; the app records the daily count and the times.
+- **Monthly report** built from a full record of every day, using sustained 3-second peaks, with an upgrade / keep / downgrade suggestion ([how it decides](#how-the-upgrade-suggestion-works)).
+- **Connection quality:** latency, jitter, disconnect count and total outage time.
 
-### 安裝方式
+### Flexible display
+- **Units:** Mbps or MB/s.
+- **Menu bar modes:** download + upload, download only, upload only, or compact.
+- **Visual alerts:** the menu bar turns orange with a `▲` marker once speed reaches the notification threshold (default 95% of your plan), and red with `▲▲` at the plan speed. The markers do not rely on colour, and with "Increase contrast" on, the colours are dropped and the markers stay.
+- **Languages:** English, Traditional Chinese, Japanese and Korean, selectable in Settings (a language change needs a restart).
 
-#### 方法一：從原始碼建置
-
-```bash
-# 1. 克隆專案
-git clone https://github.com/bobo52310/bandwidth-monitor.git
-cd bandwidth-monitor
-
-# 2. 開啟專案
-open BandwidthECG.xcworkspace
-
-# 3. 在 Xcode 中按 Cmd+R 建置並執行
-```
-
-#### 方法二：使用建置腳本
-
-```bash
-# Debug 版本（只建置，不啟動）
-./build.sh
-
-# Debug 版本，建置後啟動
-./build.sh debug --run
-
-# Release 版本（Universal，只建置；不能搭配 --run）
-./build.sh release
-```
-
-建置產物在 `.build/DerivedData/Build/Products/<Debug|Release>/BandwidthECG.app`。
-
-> **Debug 與 Release 使用不同的 Bundle ID。** Debug 為 `com.bobo52310.BandwidthECG.debug`，Release 為 `com.bobo52310.BandwidthECG`。App 在沙盒內執行，兩者的資料各在自己的容器裡，所以開發時的 Debug 版不會讀寫正式版的資料。
-
-### 首次設定
-
-1. **啟動應用程式**
-   - 第一次啟動會先顯示新手引導視窗（之後可在設定中重新顯示）
-   - 應用程式圖示會出現在選單列（右上角）
-   - 預設不會顯示在 Dock 中（如需顯示，請在設定中開啟「顯示在 Dock」）
-
-2. **設定網路方案**
-   - 點擊選單列圖示 → 設定 (⚙️)
-   - 輸入您的網路方案速度（下載與上傳分開設定，例如：300/300 Mbps）
-   - 建議勾選「登入時開啟」（App 需放在「應用程式」資料夾，必要時要到「系統設定 > 一般 > 登入項目」允許）
-
-3. **開始監控**
-   - 設定完成後即自動開始監控
-   - 選單列會顯示即時網路速度
+### Behaves like a menu bar app
+- Menu bar only by default (no Dock icon); "Show in Dock" is a setting.
+- Optional **Launch at Login** (off by default, registered with `SMAppService`).
+- Optional **system notifications** when speed approaches your plan.
+- **CSV export** of the last 24 hours and of your peak records.
 
 ---
 
-## 📖 功能說明
+## Requirements
 
-### 選單列顯示格式
-
-根據設定的顯示模式，選單列會顯示不同格式：
-
-- **顯示兩者**: `↓ 288.9 ↑ 15.2 Mbps`
-- **僅顯示下載**: `↓ 288.9 Mbps`
-- **僅顯示上傳**: `↑ 15.2 Mbps`
-- **簡潔模式**: `↓288.9/↑15.2 Mbps`（下載在前）
-
-下載與上傳都和各自的方案速度比較，取較高的那一個決定警示等級：
-
-| 速度 | 選單列 |
-|---|---|
-| 低於通知閾值（預設方案的 95%，可選 90／95／98%） | 一般顯示 |
-| 達到通知閾值 | 橘色，前面加 `▲`，例如 `▲ ↓ 288.9 ↑ 15.2 Mbps` |
-| 達到方案速度 | 紅色，前面加 `▲▲` |
-
-警示等級升高會立刻顯示，降回去則會保留 3 秒，避免速度在門檻附近時一秒閃一次。
-
-### 操作方式
-
-- **左鍵點選單列圖示** - 開啟或關閉詳細資訊視窗；已釘選時則切換釘選面板
-- **右鍵（或 Control+點擊）選單列圖示** - 開啟選單：「開啟 Bandwidth ECG」、「結束」
-- **再次開啟 App**（從 Finder 或 Spotlight） - 會顯示面板，選單列太滿而圖示被擠出時，這是叫出面板的方法；面板以釘選面板的形式出現
-- **按 Esc 或點視窗外** - 關閉詳細資訊視窗（釘選面板不受影響）
-
-### 詳細資訊視窗
-
-點擊選單列圖示後會顯示（示意，實際數值與排版依你的設定與視窗大小而定）：
-
-```
-Bandwidth ECG                              [釘選] [設定]
-
-  [1分鐘 5分鐘 15分鐘 30分鐘 1小時]  [更長時間範圍 ▾]
-  （圖表：下載／上傳曲線，滑鼠移上去顯示時間與速度）
-
-接近速率上限 (↓300 / ↑300 Mbps)                  3 次
-  觸發時間：09:15  13:42  14:35
-
-下載統計                        上傳統計
-  今日峰值: 295.4 Mbps           今日峰值: 250.7 Mbps
-  歷史總峰值: 298.1 Mbps  (x)    歷史總峰值: 280.5 Mbps  (x)
-  1小時峰值: 290.2 Mbps          1小時峰值: 245.1 Mbps
-            14:35                          14:22
-
-網路狀態：穩定
-連線品質：延遲 24 ms   抖動 3.1 ms
-斷線記錄：今日斷線 0 次
-
-[導出數據 ▾]  [查看月度報告]  [重置峰值記錄]  [退出應用程式]
-```
-
-- 峰值達到通知閾值時，數字會變橘色並加粗，旁邊顯示是多久以前發生的
-- 歷史總峰值旁的 `(x)` 可以單獨清除該方向的歷史峰值（清除前會確認）
-- 「釘選」會把視窗變成固定在畫面上的面板，位置會被記住，重新啟動後仍在
-- 延遲監測關閉時，連線品質區塊會顯示「延遲監測已關閉」
-
-### 月度報告
-
-點「查看月度報告」可以看每個月的統計：下載／上傳峰值、平均速度、方案速度、方案使用率、接近上限次數、斷線次數、平均延遲與抖動、監控天數，並可匯出成 CSV（CSV 另含總中斷時間）。
-
-- 報告由每天的完整紀錄推導，不是定時抓一張快照，所以傍晚或夜間的尖峰也算得進去
-- 峰值是「持續 3 秒」的速度（連續 3 筆樣本中最低的那一筆），單秒尖峰不會把結果拉高
-- 只計算這台 Mac 的流量，包含區網傳輸
-- 當天累積監測至少 10 分鐘，才算一個監控天數
-- 每天用當天的方案速度計算，月中改方案不會回頭改寫前面的天數
-- 重置峰值記錄不會清掉月度報告的資料，但會一併清除接近上限計數與 24 小時圖表歷史
-
-### 導出數據
-
-「導出數據」選單有兩種格式，都是 CSV，並透過系統的儲存視窗讓你選位置：
-
-- **導出最近 24 小時數據** - 最近 24 小時每 10 秒一筆，含平均與最大值
-- **導出峰值記錄** - 今日、歷史與 1 小時峰值
-
-### 資料與隱私
-
-- **網路請求** - 延遲監測每 30 秒對 `www.apple.com` 送一次 HTTPS `HEAD` 請求來量測延遲，請求內容不含你的監控資料。可在「設定 > 網路設定 > 啟用延遲監測」關閉，關閉後不再送出。這是 App 唯一的對外網路請求，沒有帳號、沒有廣告。
-- **資料位置** - App 在沙盒內執行，資料都在容器裡：`~/Library/Containers/com.bobo52310.BandwidthECG/Data/Library/Application Support/BandwidthECG/`
-  - `daily-records.json` - 每日紀錄（月度報告的來源，保留 400 天）
-  - `history-10s.json` - 圖表的 24 小時歷史
-  - `error_log.txt` - 錯誤日誌，超過 1 MB 會換成 `error_log.1.txt`，只保留一份舊檔
-  - 偏好設定在容器的 `Library/Preferences/com.bobo52310.BandwidthECG.plist`
-- **匯出權限** - 匯出的 CSV 只會寫到你在儲存視窗中選的位置（沙盒的「使用者選取的檔案」權限）
-
-### 如何判斷是否需要升級網路
-
-月度報告會依下列規則給出建議，所有門檻集中在 `ReportRules.swift`：
-
-| 建議 | 條件 |
-|---|---|
-| 資料不足 | 監控天數少於 7 天 |
-| 建議升級方案 | 至少 3 天的持續峰值超過方案的 90%（下載或上傳任一方向） |
-| 可考慮降級方案 | 監控至少 14 天、沒有任何一天超過 90%，且下載與上傳每日持續峰值的 P95 都低於方案的 30% |
-| 目前方案合適 | 其餘情況 |
-
-自己觀察時也可以：
-
-1. **看峰值趨勢** - 今日峰值和歷史峰值經常貼近方案上限時，考慮升級
-2. **找出瓶頸時段** - 選單列出現橘色／紅色警示、或「接近速率上限」次數增加的時段，就是頻寬吃緊的時候
-3. **偶爾達到峰值是正常現象** - 不必急著升級；看的是「持續」而不是單次尖峰
+- macOS 14.0 (Sonoma) or later. There is no fallback for older systems.
+- Xcode 26 (Swift 6.2) to build from source.
+- Apple Silicon or Intel. Release builds are universal; `./build.sh` builds Debug for arm64 only.
 
 ---
 
-## 🏗️ 專案架構
-
-使用現代化的 **workspace + SPM package** 架構：
-
-```
-BandwidthECG/
-├── BandwidthECG.xcworkspace/      # 在 Xcode 中開啟此檔案
-├── BandwidthECG.xcodeproj/        # 應用程式殼層
-├── BandwidthECG/                  # 應用程式目標（最小化）
-│   ├── Assets.xcassets/                 # 應用程式資源（含 App 圖示）
-│   ├── Localizable.xcstrings            # 在地化字串（繁中、英、日、韓）
-│   ├── BandwidthECG.xctestplan          # 測試計畫（不會打包進 App）
-│   └── BandwidthECGApp.swift      # 應用程式入口
-├── Config/                        # XCConfig 建置設定與 entitlements
-│   ├── Shared.xcconfig / Debug.xcconfig / Release.xcconfig / Tests.xcconfig
-│   └── BandwidthECG.entitlements  # 沙盒設定
-├── BandwidthECGPackage/           # 主要開發區域
-│   ├── Package.swift                    # 套件配置
-│   ├── Sources/BandwidthECGFeature/     # 功能代碼
-│   └── Tests/                           # 單元測試（Swift Testing）
-├── BandwidthECGUITests/           # UI 測試（目前只有範例，不在預設測試計畫內）
-├── build.sh                       # 建置腳本
-├── website/                       # 官網（Astro）
-└── docs/                          # 文件與宣傳動畫
-```
-
-### 核心組件
-
-- **NetworkMonitor** - 每秒取樣網路流量
-- **PeakRecorder** - 今日／歷史／1 小時峰值
-- **PeakApproachTracker** - 接近峰值事件計數
-- **NetworkHistoryRecorder** - 圖表歷史（每 10 秒的平均與最大值，保存 24 小時）
-- **DailyRecordStore** - 每日紀錄，月度報告的資料來源
-- **MonthlyReportService** - 由每日紀錄推導月度報告與方案建議
-- **LatencyMonitor** / **DisconnectTracker** / **NetworkAnomalyDetector** - 延遲、斷線與異常偵測
-- **NotificationService** - 接近方案上限的通知
-- **DataExportService** - CSV 匯出
-- **NetworkMonitorViewModel** - 主要業務邏輯
-- **StatusBarController** - 選單列控制器
-- **UserPreferences** - 使用者偏好設定
-
----
-
-## 🛠️ 開發指南
-
-### 開發環境設定
+## Build from source
 
 ```bash
 git clone https://github.com/bobo52310/bandwidth-monitor.git
 cd bandwidth-monitor
-open BandwidthECG.xcworkspace
+
+# Option 1: Xcode
+open BandwidthECG.xcworkspace      # then press Cmd+R
+
+# Option 2: the build script
+./build.sh                         # Debug build for arm64. Builds only, does not launch
+./build.sh debug --run             # Debug build, then launch it
+./build.sh release                 # Universal Release build. Builds only (cannot be combined with --run)
 ```
 
-### 專案結構
+The app lands in `.build/DerivedData/Build/Products/<Debug|Release>/BandwidthECG.app`.
 
-- 主要功能代碼：`BandwidthECGPackage/Sources/BandwidthECGFeature/`
-- 應用程式入口：`BandwidthECG/BandwidthECGApp.swift`
-- 單元測試：`BandwidthECGPackage/Tests/`
-- UI 測試：`BandwidthECGUITests/`
+**Signing**
 
-### 建置配置
+- **Debug builds** are ad hoc signed ("Sign to Run Locally") and use the bundle ID `com.bobo52310.BandwidthECG.debug`. You do **not** need an Apple Developer team or account.
+- **Release builds** use the bundle ID `com.bobo52310.BandwidthECG` and no signing team is configured in this repository. To run or distribute a Release build you need to sign it yourself with your own team (and, for your own fork, your own bundle ID in `Config/Shared.xcconfig`).
+- Debug and Release use different bundle IDs. The app is sandboxed, so each one keeps its data in its own container, and a Debug build never touches the data of an installed Release build.
 
-建置設定透過 `Config/` 中的 **XCConfig 檔案** 管理：
-
-- `Config/Shared.xcconfig` - 共用設定（Bundle ID、部署目標 macOS 14.0、Info.plist 鍵：選單列 App 不顯示 Dock 圖示、App 分類、版權）
-- `Config/Debug.xcconfig` - Debug 設定（Bundle ID 加上 `.debug`）
-- `Config/Release.xcconfig` - Release 設定
-- `Config/Tests.xcconfig` - 測試設定
-- `Config/BandwidthECG.entitlements` - 沙盒、對外網路連線、使用者選取檔案的讀寫
-
-專案的 Swift 語言模式為 Swift 6。
-
-### 執行測試
+### Run the tests
 
 ```bash
-# 只跑套件的單元測試（不編譯 App，最快）
+# Package unit tests only (does not build the app target, fastest)
 swift test --package-path BandwidthECGPackage
 
-# 透過 Xcode 的 scheme 跑（預設測試計畫只含單元測試）
+# Through the Xcode scheme (the default test plan contains the unit tests only)
 xcodebuild test -workspace BandwidthECG.xcworkspace \
                 -scheme BandwidthECG \
                 -destination 'platform=macOS,arch=arm64'
 ```
 
-`BandwidthECGUITests` 目前只有一個範例測試，已從預設測試計畫移除，所以上面的指令不會啟動 App。
-
-### 手動測試時不要動到正式資料
-
-App 在沙盒內執行，正式版的偏好設定與資料都在 `~/Library/Containers/com.bobo52310.BandwidthECG`。`CFFIXED_USER_HOME` 之類的環境變數**無法**隔離它。
-
-- 用 `./build.sh debug --run` 啟動 Debug 版：它的 Bundle ID 是 `com.bobo52310.BandwidthECG.debug`，容器與正式版分開。
-- **不要啟動 Release 版**，它用的是正式 Bundle ID。需要手動檢查 Release 行為時，複製一份 `.app`，把 `Info.plist` 的 `CFBundleIdentifier` 改成臨時 ID，用 `codesign --force --sign -` 重新簽章，只啟動這份複本，並且不要從專案資料夾內啟動。
+Check that the log says `Test run with N tests` with N greater than 0. `BandwidthECGUITests` holds a single placeholder test and is not part of the default test plan, so these commands do not launch the app.
 
 ---
 
-## ❓ 常見問題
+## Using the app
 
-### 安裝問題
+### First launch
 
-**Q: 建置失敗，出現 Swift 並發相關錯誤**
-A: 確保使用 Xcode 26 或更新版本，並且 macOS 部署目標為 14.0+（專案使用 Swift 6 語言模式）
+1. The first launch shows a short onboarding window (you can bring it back from Settings). The icon appears at the right of the menu bar.
+2. Click the icon, open **Settings**, and enter your plan speed (download and upload are separate, for example 300 / 300 Mbps).
+3. Monitoring starts straight away and the menu bar shows live speeds.
 
-**Q: 無法開啟 `.xcworkspace` 檔案**
-A: 請確保已安裝 Xcode，並使用 `open BandwidthECG.xcworkspace` 命令開啟
+### Menu bar formats
 
-### 功能問題
+- **Show both:** `↓ 288.9 ↑ 15.2 Mbps`
+- **Download only:** `↓ 288.9 Mbps`
+- **Upload only:** `↑ 15.2 Mbps`
+- **Compact:** `↓288.9/↑15.2 Mbps`
 
-**Q: 選單列看不到圖示或網速**
-A:
-1. 選單列太滿時，圖示可能被擠出螢幕。再次開啟 Bandwidth ECG（從 Finder 或 Spotlight）會顯示面板
-2. 在設定中改用「簡潔模式」或「僅顯示下載／上傳」，縮短選單列的寬度
-3. 重新啟動應用程式
+Download and upload are each compared with their own plan speed, and the higher of the two decides the alert level:
 
-**Q: 網速顯示為 0 或不準確**
-A:
-1. 確認電腦有網路連接
-2. 嘗試下載檔案或瀏覽網頁以產生網路流量
-3. 檢查是否使用 VPN（可能影響測量準確性）
+| Speed | Menu bar |
+|---|---|
+| Below the notification threshold (default 95% of plan; 90, 95 or 98%) | Normal |
+| At or above the notification threshold | Orange, `▲` in front, e.g. `▲ ↓ 288.9 ↑ 15.2 Mbps` |
+| At or above the plan speed | Red, `▲▲` in front |
 
-**Q: 應用程式佔用太多資源**
-A:
-1. 視窗關閉、只顯示選單列時，CPU 用量應該很低；開著視窗看圖表時用量較高，關閉後會回落
-2. 如果異常，請重啟應用程式
+The alert level rises at once and falls back only after 3 seconds, so it does not flicker when your speed hovers around a threshold.
 
-### 設定問題
+### Controls
 
-**Q: 如何讓應用程式顯示在 Dock 中？**
-A:
-1. 點擊選單列圖示 → 設定 (⚙️)
-2. 在「系統與維護」區塊中勾選「顯示在 Dock」
-3. Dock 圖示會立即出現，設定會自動儲存
+- **Left-click** the menu bar icon to open or close the panel (when the panel is pinned, it toggles the pinned panel).
+- **Right-click** (or Control-click) the icon for a menu with "Open Bandwidth ECG" and "Quit".
+- **Open the app again** from Finder or Spotlight to show the panel. This is the way to reach it when a crowded menu bar hides the icon; the panel appears as a pinned panel.
+- **Esc** or a click outside closes the panel (a pinned panel stays).
 
-**Q: 登入時開啟不工作**
-A:
-1. 把 App 移到「應用程式」資料夾（`/Applications` 或 `~/Applications`）後再勾選「登入時開啟」。從磁碟映像檔或「下載」資料夾執行時，登入項目重啟後會失效，所以設定中的開關會停用並提示先移動 App
-2. 如果設定中出現需要允許的提示，到「系統設定 > 一般 > 登入項目」允許 Bandwidth ECG
-3. 開關反映的是系統目前的登入項目狀態；若在系統設定中手動移除，下次開啟設定時會顯示為關閉
+### The panel
 
-**Q: 月度報告一直顯示「資料不足」**
-A: 需要至少 7 個監控天數才會給建議，而且當天要累積監測至少 10 分鐘才算一天
+An illustration; the real values and layout depend on your settings and window size.
 
-**Q: 不想讓 App 對外送出任何請求**
-A: 到「設定 > 網路設定」關閉「啟用延遲監測」。延遲監測是唯一會對外連線的功能（每 30 秒對 apple.com 送一次 HEAD 請求）
+```
+Bandwidth ECG                              [Pin] [Settings]
 
----
+  [1m 5m 15m 30m 1h]  [Longer ranges ▾]
+  (chart: download / upload lines, hover for time and speed)
 
-## 🤝 貢獻
+Approaching speed limit (↓300 / ↑300 Mbps)             3
+  Triggered at: 09:15  13:42  14:35
 
-歡迎提交 Issue 和 Pull Request！
+Download                         Upload
+  Today's peak: 295.4 Mbps         Today's peak: 250.7 Mbps
+  All-time peak: 298.1 Mbps  (x)   All-time peak: 280.5 Mbps  (x)
+  1-hour peak: 290.2 Mbps          1-hour peak: 245.1 Mbps
+               14:35                            14:22
 
-### 回報問題
+Network: Stable
+Connection quality: latency 24 ms   jitter 3.1 ms
+Disconnects today: 0
 
-- 詳細描述問題和重現步驟
-- 提供 macOS 版本和 Xcode 版本
-- 如可能，請附上錯誤截圖
+[Export Data ▾]  [Monthly Report]  [Reset Peaks]  [Quit Application]
+```
 
-### 提交功能建議
+- A peak that reaches the notification threshold turns orange and bold, with how long ago it happened.
+- The `(x)` next to an all-time peak clears that direction only (after a confirmation).
+- "Pin" turns the window into a panel that stays on screen; its position is remembered across restarts.
+- When latency monitoring is off, the connection quality row reads "Latency monitoring is off".
 
-- 說明功能的用途和好處
-- 考慮是否符合應用程式的設計理念
-- 提供 UI 設計稿（如果相關）
+### Monthly report
 
-### 開發流程
+"Monthly Report" shows, per month: download / upload peak, average speed, plan speed, plan usage, near-limit events, disconnects, average latency and jitter, and days monitored. It exports to CSV (the CSV also includes total outage time).
 
-1. Fork 專案
-2. 創建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交變更 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟 Pull Request
+- It is derived from a full record of every day, not from periodic snapshots, so an evening or overnight peak counts.
+- A peak is a **sustained 3-second** speed (the lowest of three consecutive samples), so a one-second spike does not inflate the result.
+- It counts traffic of this Mac only, including local network transfers.
+- A day counts as monitored once at least 10 minutes were recorded.
+- Each day is judged against the plan speed set on that day, so changing plans mid-month does not rewrite earlier days.
+- "Reset Peaks" does not touch the monthly report data. It does clear the near-limit counts and the 24-hour chart history.
 
----
+### How the upgrade suggestion works
 
-## 📄 授權
+All thresholds live in [`ReportRules.swift`](BandwidthECGPackage/Sources/BandwidthECGFeature/Models/ReportRules.swift).
 
-本專案使用 MIT 授權條款。詳見 [LICENSE](LICENSE) 檔案。
+| Suggestion | Condition |
+|---|---|
+| Not enough data | Fewer than 7 monitored days |
+| Upgrade recommended | The sustained peak is above 90% of the plan on at least 3 days (download or upload) |
+| Consider downgrading | At least 14 monitored days, no day above 90%, and the P95 of the daily sustained peaks is below 30% of the plan for both download and upload |
+| Current plan fits | Everything else |
 
----
+A short peak now and then is normal. What matters is whether you stay close to the limit for a sustained time.
 
-## 🙏 致謝
+### Export
 
-- 使用 [SwiftUI Charts](https://developer.apple.com/documentation/charts) 製作圖表
-- 專案架構受 [XcodeBuildMCP](https://github.com/cameroncooke/XcodeBuildMCP) 啟發
+"Export Data" offers two CSV files and always goes through the system save panel, so you choose the location:
 
----
-
-## 📬 聯絡
-
-如有問題或建議，請透過以下方式聯絡：
-
-- 提交 [GitHub Issue](https://github.com/bobo52310/bandwidth-monitor/issues)
-- 發起 [GitHub Discussion](https://github.com/bobo52310/bandwidth-monitor/discussions)
+- **Export Last 24 Hours:** one row per 10 seconds, with average and maximum.
+- **Export Peak History:** today, all-time and 1-hour peaks.
 
 ---
 
-**⭐ 如果這個專案對您有幫助，請給我們一個 Star！**
+## Data and privacy
+
+- **Network requests.** Latency monitoring sends one HTTPS `HEAD` request to `www.apple.com` every 30 seconds to measure round-trip time. The request carries none of your monitoring data. You can turn it off in **Settings > Network Settings > Enable Latency Monitoring**, after which nothing is sent. This is the app's only outgoing request. There are no accounts and no ads.
+- **Where data lives.** The app is sandboxed, so everything is inside its container: `~/Library/Containers/com.bobo52310.BandwidthECG/Data/Library/Application Support/BandwidthECG/` (Debug builds use `com.bobo52310.BandwidthECG.debug`).
+  - `daily-records.json`: one record per day (the source of the monthly report), kept for 400 days.
+  - `history-10s.json`: the 24-hour chart history.
+  - `error_log.txt`: the error log. Above 1 MB it rolls over to `error_log.1.txt`, and only one older file is kept.
+  - Preferences are in the container's `Library/Preferences/` plist.
+- **Export permission.** An exported CSV is written only to the location you pick in the save panel (the sandbox's "user selected file" entitlement).
+
+---
+
+## Project structure
+
+The project is an Xcode workspace plus a local Swift package:
+
+```
+bandwidth-monitor/
+├── BandwidthECG.xcworkspace/      # Open this in Xcode
+├── BandwidthECG.xcodeproj/        # App shell
+├── BandwidthECG/                  # App target (minimal)
+│   ├── Assets.xcassets/                 # Assets, including the app icon
+│   ├── Localizable.xcstrings            # Strings (zh-Hant, en, ja, ko)
+│   ├── BandwidthECG.xctestplan          # Test plan (not shipped in the app)
+│   └── BandwidthECGApp.swift            # App entry point
+├── Config/                        # XCConfig build settings and entitlements
+│   ├── Shared.xcconfig / Debug.xcconfig / Release.xcconfig / Tests.xcconfig
+│   └── BandwidthECG.entitlements        # Sandbox settings
+├── BandwidthECGPackage/           # Where almost all of the code lives
+│   ├── Package.swift
+│   ├── Sources/BandwidthECGFeature/     # Feature code
+│   └── Tests/                           # Unit tests (Swift Testing)
+├── BandwidthECGUITests/           # UI tests (a placeholder, not in the default test plan)
+├── build.sh                       # Build script
+├── website/                       # Landing page (Astro)
+└── docs/                          # Promo media and compositions; docs/archive/ is historical notes
+```
+
+### Core components
+
+- **NetworkMonitor:** samples network traffic once per second.
+- **PeakRecorder:** today / all-time / 1-hour peaks.
+- **PeakApproachTracker:** near-limit event counting.
+- **NetworkHistoryRecorder:** chart history (10-second average and maximum, 24 hours).
+- **DailyRecordStore:** daily records, the source of the monthly report.
+- **MonthlyReportService:** derives the monthly report and the plan suggestion.
+- **LatencyMonitor / DisconnectTracker / NetworkAnomalyDetector:** latency, disconnect and anomaly detection.
+- **NotificationService:** notifications when speed approaches your plan.
+- **DataExportService:** CSV export.
+- **NetworkMonitorViewModel:** the main coordinator.
+- **StatusBarController:** the menu bar item and panel.
+- **UserPreferences:** user settings.
+
+### Build configuration
+
+Build settings are managed in `Config/*.xcconfig`: `Shared.xcconfig` (bundle ID, deployment target macOS 14.0, Info.plist keys such as "no Dock icon", app category, copyright), `Debug.xcconfig` (adds `.debug` to the bundle ID), `Release.xcconfig` and `Tests.xcconfig`. The entitlements are the sandbox, outgoing network connections and user-selected file read/write. The project uses the Swift 6 language mode.
+
+---
+
+## Troubleshooting
+
+**The build fails with Swift concurrency errors.** Use Xcode 26 or later with a macOS 14.0+ deployment target (the project uses the Swift 6 language mode).
+
+**I can't see the menu bar icon or speed.** A crowded menu bar can push the icon off screen. Open Bandwidth ECG again from Finder or Spotlight to bring up the panel. A shorter menu bar mode (compact, download only, upload only) also helps.
+
+**The speed shows 0 or looks wrong.** Check that the Mac is online and generate some traffic. A VPN can affect the numbers.
+
+**The app seems to use a lot of resources.** Long chart ranges (3 to 24 hours) draw more points than short ones. Close the panel or pick a shorter range, and if it keeps happening open an issue with your macOS version.
+
+**Launch at Login does not work.** Move the app to `/Applications` or `~/Applications` first. A copy that runs from a disk image or the Downloads folder does not survive a login-item restart, so the toggle is disabled with a hint. If Settings asks for permission, allow Bandwidth ECG in **System Settings > General > Login Items**. The toggle shows the system's current state, so removing the item in System Settings turns it off.
+
+**The monthly report says "Not enough data".** It needs at least 7 monitored days, and a day only counts after 10 minutes of monitoring.
+
+**I don't want the app to send any request.** Turn off **Enable Latency Monitoring** in Settings > Network Settings.
+
+---
+
+## Manual testing without touching real data
+
+The installed app keeps its preferences and data in `~/Library/Containers/com.bobo52310.BandwidthECG`. Environment variables such as `CFFIXED_USER_HOME` do **not** isolate a sandboxed app.
+
+- Use `./build.sh debug --run`. The Debug build has its own bundle ID and container.
+- Avoid launching a Release build with the real bundle ID if you also use the released app. To check Release behaviour, copy the `.app` out of the repository, change `CFBundleIdentifier` in its `Info.plist` to a throwaway ID, re-sign it ad hoc with `codesign --force --sign -`, and launch only the copy.
+
+---
+
+## Contributing
+
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first: it covers how to build and test, the localisation rule for user-facing strings, and the commit style. Security problems go through [SECURITY.md](SECURITY.md), not public issues.
+
+## License
+
+Released under the [MIT License](LICENSE). Copyright (c) 2026 Bobo Chen.
+
+## Acknowledgements
+
+- Charts are drawn with [SwiftUI Charts](https://developer.apple.com/documentation/charts).
+- The project layout was inspired by [XcodeBuildMCP](https://github.com/cameroncooke/XcodeBuildMCP).
+
+## Contact
+
+Questions and ideas: open a [GitHub issue](https://github.com/bobo52310/bandwidth-monitor/issues).

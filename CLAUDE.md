@@ -26,7 +26,12 @@ swift test --package-path BandwidthECGPackage    # fast; log must say "Test run 
 xcodebuild test -workspace BandwidthECG.xcworkspace \
                 -scheme BandwidthECG \
                 -destination 'platform=macOS,arch=arm64'
+
+# Website (Astro; needs Node 22.23.4, see website/.node-version)
+cd website && npm ci && npm run build && node scripts/check-i18n.mjs --dist
 ```
+
+Contributor workflow, commit style and PR expectations are in `CONTRIBUTING.md`; `AGENTS.md` has the repository guidelines for coding agents.
 
 ## Project Structure
 
@@ -57,8 +62,7 @@ bandwidth-monitor/
 - Chart ranges: 1, 5, 15, 30 min and 1 h, plus 3, 6, 12, 24 h
 - Menu bar only by default (no Dock icon, `LSUIElement`); Dock visibility is a user setting. Right click opens a menu; opening the app again shows the panel
 - Launch at login uses `SMAppService`; export goes through the save panel (sandbox)
-- User-facing strings go in `Utilities/L10n.swift` and `Localizable.xcstrings` (`L10nCatalogTests` enforces it)
-- Target performance: CPU < 1%, memory < 50MB
+- User-facing strings go in `Utilities/L10n.swift` and `Localizable.xcstrings` (`L10nCatalogTests` enforces it); website copy goes in `website/src/i18n/locales/*.json` (`node scripts/check-i18n.mjs`)
 - Min macOS 14.0 (no fallback for older systems), Xcode 26
 
 ## Launching the App (read before running anything)

@@ -11,6 +11,7 @@
   - `Sources/BandwidthECGFeature/Utilities/`: `L10n.swift` (every user-facing string), injected clock and dependencies, paths.
   - `Sources/BandwidthECGFeature/Models/`: domain models and preferences.
 - `Config/`: `.xcconfig` build settings + `BandwidthECG.entitlements`.
+- `website/`: the Astro landing page (4 locales). `docs/`: promo media in `docs/promo/`, video compositions in `docs/design/`, and `docs/archive/` (historical planning notes, not current documentation).
 - Tests:
   - `BandwidthECGPackage/Tests/BandwidthECGFeatureTests/`: unit tests (Swift Testing).
   - `BandwidthECGUITests/`: UI tests.
@@ -33,6 +34,9 @@ xcodebuild test -workspace BandwidthECG.xcworkspace -scheme BandwidthECG -destin
 
 # Run package tests faster (no app build)
 swift test --package-path BandwidthECGPackage
+
+# Website (Node 22.23.4, see website/.node-version)
+cd website && npm ci && npm run build && node scripts/check-i18n.mjs --dist
 ```
 
 `swift test` does not build the app target; run `./build.sh` too after touching `BandwidthECG/`, `Config/` or public API. Check that the test log says `Test run with N tests` with N > 0: a run can discover 0 tests and still exit 0.
@@ -48,6 +52,7 @@ swift test --package-path BandwidthECGPackage
 - Swift 6 + SwiftUI; keep types `UpperCamelCase`, members `lowerCamelCase`.
 - Indentation: 4 spaces; prefer small focused types and readable SwiftUI view composition.
 - User-facing strings live in `Utilities/L10n.swift` with a Traditional Chinese (Taiwan) `defaultValue`; the app ships zh-Hant, en, ja and ko in `BandwidthECG/Localizable.xcstrings`. Add a key to both. `L10nCatalogTests` fails on a missing key, an orphan key, a missing translation or a hard-coded Chinese string in UI code.
+- Website copy lives in `website/src/i18n/locales/{zh-Hant,en,ja,ko}.json`; every locale needs the same keys. `node scripts/check-i18n.mjs --dist` checks the key sets and bans unverifiable claims.
 - No repo-wide linter/formatter is enforced; keep diffs minimal and let Xcode format.
 
 ## Testing Guidelines
@@ -58,12 +63,13 @@ swift test --package-path BandwidthECGPackage
 
 ## Commit & Pull Request Guidelines
 
-- Use Conventional Commits seen in history: `feat:`, `fix:`, `docs:`, `chore:` (optional scope if helpful).
+- Use Conventional Commits seen in history: `feat:`, `fix:`, `docs:`, `chore:`, `ci:` (optional scope if helpful).
+- Never skip hooks (`--no-verify`), and never disable or skip a failing test to get a change in. See `CONTRIBUTING.md`.
 - PRs should include: problem/solution summary, testing steps (Xcode / CLI), and screenshots or screen recordings for UI changes.
 - If changing entitlements or configs, call it out explicitly (files in `Config/`).
 
 ## Security & Configuration Tips
 
 - Don’t commit secrets, personal data, or local paths (e.g., DerivedData).
-- The app is sandboxed (`Config/BandwidthECG.entitlements`: app sandbox, outgoing network, user-selected files read/write). The only outgoing request is the latency probe (HTTPS HEAD to apple.com every 30 seconds, switchable in Settings). Document any new network access or entitlement in `README.md`.
+- The app is sandboxed (`Config/BandwidthECG.entitlements`: app sandbox, outgoing network, user-selected files read/write). The only outgoing request is the latency probe (HTTPS HEAD to apple.com every 30 seconds, switchable in Settings). Document any new network access or entitlement in `README.md` and `README.zh-TW.md`.
 - Don’t change the Release bundle ID or the Application Support location (`~/Library/Application Support/BandwidthECG`, inside the container); existing user data lives there.
