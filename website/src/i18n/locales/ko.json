@@ -12,7 +12,7 @@
     "howItWorks": "사용 방법",
     "chart": "추이 그래프",
     "faq": "자주 묻는 질문",
-    "download": "출시 예정",
+    "download": "소스 코드",
     "menu": "메뉴",
     "skipToContent": "본문으로 건너뛰기",
     "switchLanguage": "언어 전환"
@@ -22,7 +22,7 @@
     "titleEn": "Network speed, visualized.",
     "titleZh": "네트워크 불안과 작별하고, 데이터로 말하세요",
     "subtitle": "메뉴 막대에 상주하는 간단한 네트워크 속도 모니터. 대역폭 피크와 일일 사용량을 정확하게 기록하여, 감에 의존하지 않고 객관적인 데이터로 요금제 업그레이드가 정말 필요한지 판단하세요.",
-    "ctaDownload": "출시 예정",
+    "ctaDownload": "GitHub에서 받기",
     "ctaLearn": "자세히 보기",
     "leadDown": "DOWNLOAD",
     "leadUp": "UPLOAD",
@@ -127,7 +127,7 @@
     "items": [
       {
         "question": "요금이 있나요?",
-        "answer": "가격과 배포 방식은 출시 때 안내해 드립니다. 어느 쪽이든 광고는 없으며 계정 등록도 필요하지 않습니다."
+        "answer": "Bandwidth ECG는 MIT 라이선스의 오픈 소스입니다. 소스 코드는 GitHub에 공개되어 있으며 README 안내에 따라 직접 빌드할 수 있습니다. 광고가 없고 계정 등록도 필요하지 않습니다."
       },
       {
         "question": "내 네트워크 사용 기록이 업로드되나요?",
@@ -149,13 +149,14 @@
   },
   "download": {
     "sectionEyebrow": "GET STARTED",
-    "sectionTitleEn": "Coming to your Mac.",
+    "sectionTitleEn": "Open source, on your Mac.",
     "sectionTitleZh": "요금제 판단은 데이터로.",
     "sectionSubtitle": "로컬에서 동작하고 매우 가볍습니다. 요금제를 바꿀지 판단하는 일을 데이터로 돕습니다.",
     "requirements": "macOS 14.0 이상 필요 · Apple Silicon / Intel",
-    "badge": "출시 예정 · macOS 14+",
+    "badge": "GitHub에서 소스 보기",
+    "buildNote": "아직 빌드된 앱은 없습니다. README 안내에 따라 Xcode 26으로 직접 빌드해 주세요.",
     "dosage": "상주 · 로컬 동작",
-    "stamp": "COMING SOON",
+    "stamp": "OPEN SOURCE",
     "features": [
       "광고 없음 · 가입 불필요",
       "앱은 사용 데이터를 수집하지 않습니다",
@@ -164,7 +165,7 @@
   },
   "footer": {
     "copyright": "Bandwidth ECG. All rights reserved.",
-    "stamp": "COMING SOON",
+    "stamp": "OPEN SOURCE",
     "platform": "macOS 14 이상 지원",
     "source": "GitHub에서 소스 코드 보기",
     "openSource": "오픈 소스 · MIT 라이선스",

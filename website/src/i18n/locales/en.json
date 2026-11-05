@@ -12,7 +12,7 @@
     "howItWorks": "Quick start",
     "chart": "Charts",
     "faq": "FAQ",
-    "download": "Coming soon",
+    "download": "Get the source",
     "menu": "Menu",
     "skipToContent": "Skip to content",
     "switchLanguage": "Switch language"
@@ -22,7 +22,7 @@
     "titleEn": "Network speed, visualized.",
     "titleZh": "No more network anxiety — let the data speak.",
     "subtitle": "A minimal speed monitor that lives in your menu bar. Track bandwidth peaks and daily usage accurately, stop guessing, and let objective data decide whether you really need to upgrade your plan.",
-    "ctaDownload": "Coming soon",
+    "ctaDownload": "Get it on GitHub",
     "ctaLearn": "Learn more",
     "leadDown": "LEAD I · DOWN",
     "leadUp": "LEAD II · UP",
@@ -127,7 +127,7 @@
     "items": [
       {
         "question": "How much does it cost?",
-        "answer": "Pricing and availability will be announced at launch. Either way: no ads, no account required."
+        "answer": "Bandwidth ECG is open source under the MIT license. The source is on GitHub and you can build it yourself by following the README. No ads, no account required."
       },
       {
         "question": "Does my data leave my computer?",
@@ -149,13 +149,14 @@
   },
   "download": {
     "sectionEyebrow": "DISCHARGE",
-    "sectionTitleEn": "Coming to your Mac.",
+    "sectionTitleEn": "Open source, on your Mac.",
     "sectionTitleZh": "Let the data settle your plan.",
     "sectionSubtitle": "Local and lightweight. Decide with data, not gut feel.",
     "requirements": "Requires macOS 14.0+ · Apple Silicon & Intel",
-    "badge": "Coming soon · macOS 14+",
+    "badge": "View the source on GitHub",
+    "buildNote": "No pre-built app yet. Build it from source with Xcode 26 by following the README.",
     "dosage": "Always on · Runs locally",
-    "stamp": "COMING SOON",
+    "stamp": "OPEN SOURCE",
     "features": [
       "No ads · No account",
       "100% local — no data uploaded",
@@ -164,7 +165,7 @@
   },
   "footer": {
     "copyright": "Bandwidth ECG. All vitals reserved.",
-    "stamp": "COMING SOON",
+    "stamp": "OPEN SOURCE",
     "platform": "For macOS 14+",
     "source": "View source on GitHub",
     "openSource": "Open source · MIT license",

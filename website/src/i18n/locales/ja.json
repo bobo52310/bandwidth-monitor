@@ -12,7 +12,7 @@
     "howItWorks": "使い方",
     "chart": "推移グラフ",
     "faq": "よくある質問",
-    "download": "近日公開",
+    "download": "ソースコード",
     "menu": "メニュー",
     "skipToContent": "メインコンテンツへ移動",
     "switchLanguage": "言語を切り替え"
@@ -22,7 +22,7 @@
     "titleEn": "Network speed, visualized.",
     "titleZh": "ネットワークの不安に、データで答えを",
     "subtitle": "メニューバーに常駐するシンプルな通信速度モニター。帯域のピークと日々の使用量を正確に記録し、勘に頼らず、客観的なデータで回線プランのアップグレードが本当に必要かを判断できます。",
-    "ctaDownload": "近日公開",
+    "ctaDownload": "GitHub で入手",
     "ctaLearn": "詳しく見る",
     "leadDown": "DOWNLOAD",
     "leadUp": "UPLOAD",
@@ -127,7 +127,7 @@
     "items": [
       {
         "question": "料金はかかりますか？",
-        "answer": "価格と入手方法は公開時にお知らせします。いずれの場合も、広告はなく、アカウント登録も不要です。"
+        "answer": "Bandwidth ECG は MIT ライセンスのオープンソースです。ソースコードは GitHub で公開しており、README の手順でご自身でビルドできます。広告はなく、アカウント登録も不要です。"
       },
       {
         "question": "ネットワークの使用記録はアップロードされますか？",
@@ -149,13 +149,14 @@
   },
   "download": {
     "sectionEyebrow": "GET STARTED",
-    "sectionTitleEn": "Coming to your Mac.",
+    "sectionTitleEn": "Open source, on your Mac.",
     "sectionTitleZh": "回線プランの判断は、データで。",
     "sectionSubtitle": "ローカルで動作し、とても軽量。回線プランを見直す判断を、データで支えます。",
     "requirements": "macOS 14.0 以降が必要 · Apple Silicon / Intel",
-    "badge": "近日公開 · macOS 14+",
+    "badge": "GitHub でソースを見る",
+    "buildNote": "ビルド済みのアプリはまだありません。README の手順に沿って Xcode 26 でビルドしてください。",
     "dosage": "常駐 · ローカル動作",
-    "stamp": "COMING SOON",
+    "stamp": "OPEN SOURCE",
     "features": [
       "広告なし・登録不要",
       "アプリは使用データを収集しません",
@@ -164,7 +165,7 @@
   },
   "footer": {
     "copyright": "Bandwidth ECG. All rights reserved.",
-    "stamp": "COMING SOON",
+    "stamp": "OPEN SOURCE",
     "platform": "macOS 14 以降に対応",
     "source": "GitHub でソースコードを見る",
     "openSource": "オープンソース · MIT ライセンス",

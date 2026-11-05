@@ -42,11 +42,14 @@ const features = translations[lang].download.features
           </p>
 
           <div class="mt-8">
-            <span class="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-[3px] border-2 border-dashed border-[var(--color-ink)] text-[var(--color-ink)] font-display text-[15px] font-[600] cursor-default select-none">
-              <span class="w-2 h-2 rounded-full bg-[var(--color-amber)] live-dot"></span>
+            <a href="https://github.com/bobo52310/bandwidth-monitor" target="_blank" rel="noopener noreferrer" class="btn-signal">
+              <span class="w-2 h-2 rounded-full bg-current live-dot" aria-hidden="true"></span>
               {t('download.badge')}
-            </span>
+              <span aria-hidden="true">&rarr;</span>
+            </a>
           </div>
+
+          <p class="mt-5 text-[14px] leading-[1.6] text-[var(--color-ink-2)] max-w-[520px]">{t('download.buildNote')}</p>
 
           <p class="mt-5 mono-label text-[11px] text-[var(--color-ink-3)]">{t('download.requirements')}</p>
         </div>

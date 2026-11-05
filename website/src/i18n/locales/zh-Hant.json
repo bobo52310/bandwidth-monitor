@@ -12,7 +12,7 @@
     "howItWorks": "輕鬆上手",
     "chart": "趨勢圖表",
     "faq": "常見問題",
-    "download": "即將推出",
+    "download": "取得原始碼",
     "menu": "選單",
     "skipToContent": "跳到主要內容",
     "switchLanguage": "切換語言"
@@ -22,7 +22,7 @@
     "titleEn": "Network speed, visualized.",
     "titleZh": "告別網路焦慮，用數據說話",
     "subtitle": "常駐選單列的極簡網速監控工具。精準追蹤頻寬峰值與日常用量，不再憑感覺猜測，用客觀數據決定你是否真的需要升級網路方案。",
-    "ctaDownload": "即將推出",
+    "ctaDownload": "在 GitHub 取得",
     "ctaLearn": "了解更多",
     "leadDown": "DOWNLOAD",
     "leadUp": "UPLOAD",
@@ -127,7 +127,7 @@
     "items": [
       {
         "question": "需要付費嗎？",
-        "answer": "價格與取得方式將在發行時公布。無論如何，App 不含廣告，也不需要註冊帳號。"
+        "answer": "Bandwidth ECG 是 MIT 授權的開源專案，原始碼公開在 GitHub，可依 README 自行建置。App 不含廣告，也不需要註冊帳號。"
       },
       {
         "question": "我的網路使用紀錄會被上傳嗎？",
@@ -149,13 +149,14 @@
   },
   "download": {
     "sectionEyebrow": "GET STARTED",
-    "sectionTitleEn": "Coming to your Mac.",
+    "sectionTitleEn": "Open source, on your Mac.",
     "sectionTitleZh": "換不換方案，交給數據。",
     "sectionSubtitle": "本機運作、極致輕量。讓數據成為你判斷網路方案的依據。",
     "requirements": "需要 macOS 14.0 或以上 · Apple Silicon 與 Intel",
-    "badge": "即將推出 · macOS 14+",
+    "badge": "在 GitHub 查看原始碼",
+    "buildNote": "目前沒有打包好的安裝檔，請依 README 用 Xcode 26 自行建置。",
     "dosage": "常駐選單列 · 本機運作",
-    "stamp": "COMING SOON",
+    "stamp": "OPEN SOURCE",
     "features": [
       "無廣告・免註冊",
       "App 不收集使用資料",
@@ -164,7 +165,7 @@
   },
   "footer": {
     "copyright": "Bandwidth ECG. All rights reserved.",
-    "stamp": "COMING SOON",
+    "stamp": "OPEN SOURCE",
     "platform": "適用 macOS 14+",
     "source": "在 GitHub 查看原始碼",
     "openSource": "開源專案 · MIT 授權",
